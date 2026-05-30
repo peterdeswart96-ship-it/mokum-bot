@@ -72,7 +72,7 @@ function SpeechBubble({ hovered }) {
       }}>
         {!hovered ? (
           <span style={{ fontSize: "13px", fontWeight: "600", color: "#111", fontFamily: "Arial, sans-serif" }}>
-            Stel al je vragen aan de Mokum 8 Ball
+            Stel al je vragen aan de Mokum Magic 8 Ball
           </span>
         ) : (
           <div style={{ fontSize: "12px", color: "#111", lineHeight: "1.7", fontFamily: "Arial, sans-serif" }}>
@@ -143,7 +143,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Hey! Ik ben Mokum 8 Ball 🎱 Hoe kan ik je helpen?",
+      content: "Hey! Ik ben de Mokum Magic 8 Ball 🎱 Hoe kan ik je helpen?",
     },
   ])
   const [input, setInput] = useState("")
@@ -208,7 +208,7 @@ export default function ChatWidget() {
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <EightBallIcon size={38} />
               <div>
-                <div style={{ fontWeight: "800", color: C.white, fontSize: "15px", letterSpacing: "0.06em" }}>MOKUM 8 BALL</div>
+                <div style={{ fontWeight: "800", color: C.white, fontSize: "15px", letterSpacing: "0.06em" }}>MOKUM MAGIC 8 BALL</div>
                 <div style={{ color: C.red, fontSize: "11px", marginTop: "1px" }}>Pool & Darts Amsterdam</div>
               </div>
             </div>
