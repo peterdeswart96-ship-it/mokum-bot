@@ -57,10 +57,10 @@ const SUGGESTED_QUESTIONS = {
     "Wat kost deelname?",
   ],
   spelregels: [
-    "Wat zijn de regels van 8-ball?",
-    "Hoe werkt 9-ball?",
-    "Wat zijn de regels van darts (501)?",
-    "Wat is straight pool?",
+    "Leg de regels van 8-ball uit",
+    "Hoe speel je 9-ball?",
+    "Hoe werkt 501 darts?",
+    "Wat zijn de regels van biljart?",
   ],
   locatie: [
     "Waar is Mokum gevestigd?",
