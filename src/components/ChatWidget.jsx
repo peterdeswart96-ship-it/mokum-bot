@@ -100,7 +100,6 @@ function EightBallIcon({ size = 64 }) {
 function SpeechBubble({ hovered }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
-      {/* Bubbel */}
       <div style={{
         backgroundColor: "white",
         borderRadius: "20px",
@@ -124,7 +123,6 @@ function SpeechBubble({ hovered }) {
           </div>
         )}
       </div>
-      {/* Staartje rechtsonder — klassiek strip-stijl */}
       <div style={{
         position: "absolute",
         bottom: "-10px",
@@ -175,7 +173,7 @@ export default function ChatWidget() {
           "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
           messages: newMessages,
@@ -201,7 +199,6 @@ export default function ChatWidget() {
   return (
     <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
 
-      {/* Chat venster */}
       {open && (
         <div style={{
           marginBottom: "16px",
@@ -214,7 +211,6 @@ export default function ChatWidget() {
           flexDirection: "column",
           backgroundColor: C.black,
         }}>
-          {/* Header */}
           <div style={{
             backgroundColor: C.blackCard,
             borderBottom: `1px solid ${C.border}`,
@@ -237,7 +233,6 @@ export default function ChatWidget() {
             }}>✕</button>
           </div>
 
-          {/* Berichten */}
           <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
@@ -292,7 +287,6 @@ export default function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
           <div style={{
             borderTop: `1px solid ${C.border}`,
             backgroundColor: C.blackCard,
@@ -332,7 +326,6 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Bubbel + knop — alleen als chat dicht is */}
       {!open && (
         <div
           style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}
@@ -340,7 +333,6 @@ export default function ChatWidget() {
           onMouseLeave={() => setHovered(false)}
         >
           <SpeechBubble hovered={hovered} />
-
           <button
             onClick={() => setOpen(true)}
             style={{
@@ -357,7 +349,6 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Sluitknop als chat open is */}
       {open && (
         <button
           onClick={() => setOpen(false)}
