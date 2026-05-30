@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
+import ReactMarkdown from "react-markdown"
 
-const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api.azurewebsites.net"
+const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
 
 const QUICK_REPLIES = [
   "Wat zijn de openingstijden?",
@@ -99,6 +100,43 @@ function SpeechBubble({ hovered }) {
   )
 }
 
+const markdownStyles = {
+  p: { margin: "0 0 6px 0", lineHeight: "1.55" },
+  strong: { color: "#ffffff", fontWeight: "700" },
+  ul: { margin: "4px 0", paddingLeft: "16px" },
+  ol: { margin: "4px 0", paddingLeft: "16px" },
+  li: { margin: "2px 0", lineHeight: "1.6" },
+  a: { color: "#ff6b6b", textDecoration: "underline" },
+}
+
+function BotMessage({ content }) {
+  return (
+    <div style={{
+      maxWidth: "85%",
+      padding: "10px 14px",
+      borderRadius: "12px 12px 12px 2px",
+      fontSize: "14px",
+      lineHeight: "1.55",
+      backgroundColor: C.blackCard,
+      color: C.white,
+      border: `1px solid ${C.border}`,
+    }}>
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p style={markdownStyles.p}>{children}</p>,
+          strong: ({ children }) => <strong style={markdownStyles.strong}>{children}</strong>,
+          ul: ({ children }) => <ul style={markdownStyles.ul}>{children}</ul>,
+          ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
+          li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
+          a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -128,12 +166,8 @@ export default function ChatWidget() {
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: newMessages,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
       })
 
       const data = await response.json()
@@ -141,10 +175,7 @@ export default function ChatWidget() {
     } catch (err) {
       setMessages([
         ...newMessages,
-        {
-          role: "assistant",
-          content: "Oeps, er ging iets mis. Probeer het nog eens! 🎱",
-        },
+        { role: "assistant", content: "Oeps, er ging iets mis. Probeer het nog eens! 🎱" },
       ])
     } finally {
       setLoading(false)
@@ -191,18 +222,21 @@ export default function ChatWidget() {
           <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                <div style={{
-                  maxWidth: "85%",
-                  padding: "10px 14px",
-                  borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-                  fontSize: "14px",
-                  lineHeight: "1.55",
-                  backgroundColor: msg.role === "user" ? C.red : C.blackCard,
-                  color: C.white,
-                  border: msg.role === "user" ? "none" : `1px solid ${C.border}`,
-                }}>
-                  {msg.content}
-                </div>
+                {msg.role === "user" ? (
+                  <div style={{
+                    maxWidth: "85%",
+                    padding: "10px 14px",
+                    borderRadius: "12px 12px 2px 12px",
+                    fontSize: "14px",
+                    lineHeight: "1.55",
+                    backgroundColor: C.red,
+                    color: C.white,
+                  }}>
+                    {msg.content}
+                  </div>
+                ) : (
+                  <BotMessage content={msg.content} />
+                )}
               </div>
             ))}
 
