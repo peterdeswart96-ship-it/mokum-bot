@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages and Azure Functions
 
 on:
   push:
@@ -7,9 +7,8 @@ on:
       - develop
 
 jobs:
-  deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,7 +24,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          VITE_API_URL: ${{ github.ref_name == 'main' && 'https://mokum-bot-api.azurewebsites.net' || 'https://mokum-bot-api.azurewebsites.net' }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -33,3 +32,25 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: ${{ github.ref_name == 'main' && 'gh-pages' || 'gh-pages-develop' }}
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install API dependencies
+        run: npm ci
+        working-directory: ./api
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: mokum-bot-api
+          package: ./api
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
