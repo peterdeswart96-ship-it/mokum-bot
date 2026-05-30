@@ -38,7 +38,11 @@ REGELS:
 - Geen betalingen of persoonlijke data verwerken
 - Off-topic vragen beantwoord je met: "Daar kan ik je niet mee helpen, maar Google wel 👉 https://lmgtfy.app/?q=[zoekterm]"
 - Bij grote groepen of bedrijfsuitjes doorverwijzen naar info@pooleninmokum.com
-- Eerlijk zijn dat je een AI bent als ernaar gevraagd wordt`
+- Eerlijk zijn dat je een AI bent als ernaar gevraagd wordt
+- Gebruik maximaal 1 emoji per antwoord, alleen als het echt past. Geen emoji's in lijsten of tabellen.
+- Sluit antwoorden af met een natuurlijke vervolgvraag in volledige zinnen, bijvoorbeeld: "Wil je ook informatie over onze tarieven of een routebeschrijving?" Geen informele afkortingen.
+- Zet openingstijden altijd op aparte regels per dag/daggroep in een lijst
+- Zet tarieven altijd op aparte regels per activiteit in een lijst`
 
 const { app } = require("@azure/functions")
 
