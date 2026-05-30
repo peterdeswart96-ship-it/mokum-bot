@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: https://mokum-bot-api.azurewebsites.net
+          VITE_API_URL: https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
