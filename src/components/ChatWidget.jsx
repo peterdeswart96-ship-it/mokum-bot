@@ -20,6 +20,7 @@ const TOPICS = [
   { id: "openingstijden",emoji: "📅", label: "Openingstijden" },
   { id: "tarieven",      emoji: "💶", label: "Tarieven" },
   { id: "toernooien",    emoji: "🏆", label: "Toernooien" },
+  { id: "spelregels",    emoji: "📖", label: "Spelregels" },
   { id: "locatie",       emoji: "📍", label: "Locatie & Parkeren" },
   { id: "anders",        emoji: "❓", label: "Anders" },
 ]
@@ -54,6 +55,12 @@ const SUGGESTED_QUESTIONS = {
     "Hoe schrijf ik me in?",
     "Wat is de Mokum 8ball Ranking?",
     "Wat kost deelname?",
+  ],
+  spelregels: [
+    "Wat zijn de regels van 8-ball?",
+    "Hoe werkt 9-ball?",
+    "Wat zijn de regels van darts (501)?",
+    "Wat is straight pool?",
   ],
   locatie: [
     "Waar is Mokum gevestigd?",
