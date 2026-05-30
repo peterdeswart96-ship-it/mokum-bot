@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: ${{ github.ref_name == 'main' && 'https://mokum-bot-api.azurewebsites.net' || 'https://mokum-bot-api.azurewebsites.net' }}
+          VITE_API_URL: https://mokum-bot-api.azurewebsites.net
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -45,7 +45,7 @@ jobs:
           node-version: 20
 
       - name: Install API dependencies
-        run: npm ci
+        run: npm install
         working-directory: ./api
 
       - name: Deploy to Azure Functions
