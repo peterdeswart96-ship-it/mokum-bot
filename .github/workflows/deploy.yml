@@ -57,7 +57,7 @@ jobs:
         run: |
           USERNAME=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userName=")[^"]+')
           PASSWORD=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userPWD=")[^"]+')
-          SCM_URL=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=publishUrl=")[^"]+' | head -1)
+          SCM_URL=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=publishUrl=")[^"]+' | head -1 | sed 's/:443//')
           echo "USERNAME lengte: ${#USERNAME}"
           echo "PASSWORD lengte: ${#PASSWORD}"
           echo "SCM URL: $SCM_URL"
