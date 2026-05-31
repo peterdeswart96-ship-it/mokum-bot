@@ -121,20 +121,20 @@ function EightBallIcon({ size = 64, animate = false }) {
             <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
           </radialGradient>
         </defs>
-        <ellipse cx="100" cy="214" rx="56" ry="6" fill="#0a0a0a" opacity="0.4"/>
+        {/* schaduw verwijderd */}
         <circle cx="100" cy="140" r="68" fill="url(#ballGrad)"/>
         <ellipse cx="80" cy="118" rx="19" ry="12" fill="url(#shineGrad)" transform="rotate(-20,80,118)"/>
         <circle cx="100" cy="144" r="24" fill="url(#circleGrad)"/>
         <text x="100" y="153" textAnchor="middle" fontFamily="Georgia, serif" fontSize="26" fontWeight="700" fill="#0a0a0a">8</text>
         <circle cx="100" cy="140" r="68" fill="none" stroke="#2a2a2a" strokeWidth="0.8"/>
         <ellipse cx="100" cy="76" rx="54" ry="10" fill="url(#brimGrad)"/>
-        <ellipse cx="100" cy="76" rx="54" ry="10" fill="none" stroke="#282828" strokeWidth="0.5"/>
+        <ellipse cx="100" cy="76" rx="54" ry="10" fill="none" stroke="#ffffff" strokeWidth="1.2" opacity="0.25"/>
         <ellipse cx="86" cy="73" rx="22" ry="3.5" fill="#ffffff" opacity="0.06" transform="rotate(-4,86,73)"/>
         <rect x="60" y="6" width="80" height="71" rx="3" fill="url(#hatBodyGrad)"/>
         <ellipse cx="100" cy="6" rx="40" ry="6.5" fill="#181818"/>
         <ellipse cx="100" cy="6" rx="40" ry="6.5" fill="none" stroke="#282828" strokeWidth="0.5"/>
         <rect x="63" y="9" width="16" height="63" rx="2" fill="#ffffff" opacity="0.035"/>
-        <rect x="60" y="6" width="80" height="71" rx="3" fill="none" stroke="#282828" strokeWidth="0.5"/>
+        <rect x="60" y="6" width="80" height="71" rx="3" fill="none" stroke="#ffffff" strokeWidth="1.2" opacity="0.25"/>
         <g transform="translate(100,41) scale(0.56) translate(-100,-38)">
           <circle cx="100" cy="38" r="28" fill="#0a0a0a"/>
           <circle cx="100" cy="38" r="28" fill="none" stroke="#ffffff" strokeWidth="2.2"/>
@@ -162,14 +162,15 @@ function SpeechBubble({ hovered }) {
     <div style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
       <div style={{
         backgroundColor: "white",
-        borderRadius: "20px",
+        borderRadius: "18px 18px 18px 4px",
         padding: "10px 16px",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+        boxShadow: "0 4px 16px rgba(0,0,0,0.25), 2px 2px 0px #cc0000",
         whiteSpace: "nowrap",
+        border: "2px solid #111",
       }}>
         {!hovered ? (
-          <span style={{ fontSize: "13px", fontWeight: "600", color: "#111", fontFamily: "Arial, sans-serif" }}>
-            Stel al je vragen aan de Mokum Magic 8 Ball
+          <span style={{ fontSize: "13px", fontWeight: "800", color: "#111", fontFamily: "Arial Black, Arial, sans-serif", letterSpacing: "0.02em" }}>
+            ASK ME ANYTHING!
           </span>
         ) : (
           <div style={{ fontSize: "12px", color: "#111", lineHeight: "1.7", fontFamily: "Arial, sans-serif" }}>
@@ -185,11 +186,21 @@ function SpeechBubble({ hovered }) {
       </div>
       <div style={{
         position: "absolute",
-        bottom: "-10px",
-        right: "24px",
+        bottom: "-12px",
+        right: "20px",
         width: 0,
         height: 0,
-        borderLeft: "10px solid transparent",
+        borderLeft: "8px solid #111",
+        borderRight: "0px solid transparent",
+        borderTop: "14px solid #111",
+      }}/>
+      <div style={{
+        position: "absolute",
+        bottom: "-9px",
+        right: "21px",
+        width: 0,
+        height: 0,
+        borderLeft: "7px solid white",
         borderRight: "0px solid transparent",
         borderTop: "12px solid white",
       }}/>
