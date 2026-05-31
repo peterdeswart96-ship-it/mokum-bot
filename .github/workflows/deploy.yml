@@ -48,9 +48,25 @@ jobs:
         run: npm install
         working-directory: ./api
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v1
-        with:
-          app-name: mokum-bot-api
-          package: ./api
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+      - name: Create zip
+        run: |
+          cd api
+          zip -r ../api.zip .
+
+      - name: Deploy via Kudu zip deploy
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+        run: |
+          USERNAME=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userName=")[^"]+')
+          PASSWORD=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userPWD=")[^"]+')
+          
+          curl -X POST \
+            "https://mokum-bot-api-enchhkeydye0fnek.scm.westeurope-01.azurewebsites.net/api/zipdeploy" \
+            -u "$USERNAME:$PASSWORD" \
+            -H "Content-Type: application/zip" \
+            --data-binary @api.zip \
+            --fail \
+            --silent \
+            --show-error
+          
+          echo "Backend deploy geslaagd"
