@@ -161,7 +161,7 @@ function SpeechBubble({ hovered }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
       {!hovered ? (
-        <svg width="150" height="56" viewBox="0 0 190 70" xmlns="http://www.w3.org/2000/svg">
+        <svg width="105" height="39" viewBox="0 0 190 70" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M16,4 L174,4 Q186,4 186,16 L186,46 Q186,58 174,58 L172,58 L164,68 L156,58 L16,58 Q4,58 4,46 L4,16 Q4,4 16,4 Z"
             fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
@@ -169,7 +169,7 @@ function SpeechBubble({ hovered }) {
           <text x="95" y="36" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">ASK ME ANYTHING!</text>
         </svg>
       ) : (
-        <svg width="170" height="158" viewBox="0 0 210 196" xmlns="http://www.w3.org/2000/svg">
+        <svg width="119" height="111" viewBox="0 0 210 196" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M16,4 L194,4 Q206,4 206,16 L206,172 Q206,184 194,184 L192,184 L184,194 L176,184 L16,184 Q4,184 4,172 L4,16 Q4,4 16,4 Z"
             fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
@@ -262,6 +262,7 @@ export default function ChatWidget() {
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [language, setLanguage] = useState("nl")
   const [showLangMenu, setShowLangMenu] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   const [messages, setMessages] = useState([
     {
@@ -350,8 +351,8 @@ export default function ChatWidget() {
       {open && (
         <div style={{
           marginBottom: "16px",
-          width: "380px",
-          height: "580px",
+          width: expanded ? "min(80vw, 900px)" : "380px",
+          height: expanded ? "80vh" : "580px",
           borderRadius: "16px",
           overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
@@ -432,6 +433,22 @@ export default function ChatWidget() {
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                title={expanded ? "Verkleinen" : "Maximaliseren"}
+                style={{
+                  background: "none",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "6px",
+                  color: C.gray,
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  padding: "4px 8px",
+                  letterSpacing: "0.03em",
+                }}
+              >
+                {expanded ? "⊡" : "⊞"}
+              </button>
               <button onClick={() => setOpen(false)} style={{
                 background: "none", border: "none", color: C.gray,
                 cursor: "pointer", fontSize: "18px", fontWeight: "bold",
