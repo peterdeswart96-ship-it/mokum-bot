@@ -160,50 +160,43 @@ function EightBallIcon({ size = 64, animate = false }) {
 function SpeechBubble({ hovered }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
-      <div style={{
-        backgroundColor: "white",
-        borderRadius: "18px 18px 18px 4px",
-        padding: "10px 16px",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.25), 2px 2px 0px #cc0000",
-        whiteSpace: "nowrap",
-        border: "2px solid #111",
-      }}>
-        {!hovered ? (
-          <span style={{ fontSize: "13px", fontWeight: "800", color: "#111", fontFamily: "Arial Black, Arial, sans-serif", letterSpacing: "0.02em" }}>
-            ASK ME ANYTHING!
-          </span>
-        ) : (
-          <div style={{ fontSize: "12px", color: "#111", lineHeight: "1.7", fontFamily: "Arial, sans-serif" }}>
-            <div style={{ fontWeight: "700", marginBottom: "4px" }}>Ik weet alles over:</div>
-            <div>🕐 Openingstijden</div>
-            <div>💶 Tarieven & activiteiten</div>
-            <div>🏆 Toernooien & inschrijven</div>
-            <div>📍 Route & parkeren</div>
-            <div>🎯 Darts, biljart & shuffleboard</div>
-            <div>🏢 Bedrijfsuitjes & groepen</div>
-          </div>
-        )}
-      </div>
-      <div style={{
-        position: "absolute",
-        bottom: "-12px",
-        right: "20px",
-        width: 0,
-        height: 0,
-        borderLeft: "8px solid #111",
-        borderRight: "0px solid transparent",
-        borderTop: "14px solid #111",
-      }}/>
-      <div style={{
-        position: "absolute",
-        bottom: "-9px",
-        right: "21px",
-        width: 0,
-        height: 0,
-        borderLeft: "7px solid white",
-        borderRight: "0px solid transparent",
-        borderTop: "12px solid white",
-      }}/>
+      {!hovered ? (
+        <svg width="160" height="70" viewBox="0 0 200 88" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M18,4 Q100,4 182,4 Q196,4 196,22 Q196,54 182,62 Q166,70 100,70 Q60,70 44,70 Q36,75 28,84 Q30,70 18,70 Q4,70 4,54 Q4,22 18,4 Z"
+            fill="white"
+            stroke="#111111"
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+          <text
+            x="100"
+            y="42"
+            textAnchor="middle"
+            fontFamily="Arial Black, Arial, sans-serif"
+            fontSize="16"
+            fontWeight="900"
+            fill="#111111"
+            letterSpacing="0.5"
+          >ASK ME ANYTHING!</text>
+        </svg>
+      ) : (
+        <svg width="160" height="130" viewBox="0 0 200 165" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M18,4 Q100,4 182,4 Q196,4 196,22 Q196,120 182,128 Q166,136 100,136 Q60,136 44,136 Q36,141 28,150 Q30,136 18,136 Q4,136 4,120 Q4,22 18,4 Z"
+            fill="white"
+            stroke="#111111"
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+          <text x="100" y="32" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="13" fontWeight="700" fill="#111">Ik weet alles over:</text>
+          <text x="100" y="52" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fill="#111">🕐 Openingstijden</text>
+          <text x="100" y="68" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fill="#111">💶 Tarieven &amp; activiteiten</text>
+          <text x="100" y="84" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fill="#111">🏆 Toernooien &amp; inschrijven</text>
+          <text x="100" y="100" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fill="#111">📍 Route &amp; parkeren</text>
+          <text x="100" y="116" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fill="#111">🎯 Darts, biljart &amp; shuffleboard</text>
+        </svg>
+      )}
     </div>
   )
 }
