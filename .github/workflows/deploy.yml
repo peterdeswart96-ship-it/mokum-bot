@@ -35,6 +35,7 @@ jobs:
 
   deploy-backend:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,9 +59,6 @@ jobs:
           USERNAME=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userName=")[^"]+')
           PASSWORD=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userPWD=")[^"]+')
           SCM_URL=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=publishUrl=")[^"]+' | head -1 | sed 's/:443//')
-          echo "USERNAME lengte: ${#USERNAME}"
-          echo "PASSWORD lengte: ${#PASSWORD}"
-          echo "SCM URL: $SCM_URL"
           curl -X POST \
             "https://$SCM_URL/api/zipdeploy" \
             -u "$USERNAME:$PASSWORD" \
