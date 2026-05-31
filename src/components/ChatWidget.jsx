@@ -161,17 +161,19 @@ function SpeechBubble({ hovered }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
       {!hovered ? (
-        <svg width="150" height="52" viewBox="0 0 190 66" xmlns="http://www.w3.org/2000/svg">
-          <rect x="4" y="4" width="182" height="46" rx="12" ry="12" fill="white" stroke="#111" strokeWidth="4"/>
-          <polygon points="148,50 160,62 168,50" fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"/>
-          <polygon points="149,49 159,59 169,49" fill="white" stroke="white" strokeWidth="2"/>
-          <text x="95" y="33" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">ASK ME ANYTHING!</text>
+        <svg width="150" height="56" viewBox="0 0 190 70" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16,4 L174,4 Q186,4 186,16 L186,46 Q186,58 174,58 L172,58 L164,68 L156,58 L16,58 Q4,58 4,46 L4,16 Q4,4 16,4 Z"
+            fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
+          />
+          <text x="95" y="36" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">ASK ME ANYTHING!</text>
         </svg>
       ) : (
-        <svg width="170" height="148" viewBox="0 0 210 184" xmlns="http://www.w3.org/2000/svg">
-          <rect x="4" y="4" width="202" height="164" rx="12" ry="12" fill="white" stroke="#111" strokeWidth="4"/>
-          <polygon points="160,168 172,180 180,168" fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"/>
-          <polygon points="161,167 171,177 181,167" fill="white" stroke="white" strokeWidth="2"/>
+        <svg width="170" height="158" viewBox="0 0 210 196" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16,4 L194,4 Q206,4 206,16 L206,172 Q206,184 194,184 L192,184 L184,194 L176,184 L16,184 Q4,184 4,172 L4,16 Q4,4 16,4 Z"
+            fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
+          />
           <text x="105" y="28" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="10" fontWeight="900" fill="#cc0000">IK WEET ALLES OVER:</text>
           <line x1="20" y1="36" x2="190" y2="36" stroke="#eeeeee" strokeWidth="1"/>
           <text x="22" y="56" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🕐 Openingstijden</text>
