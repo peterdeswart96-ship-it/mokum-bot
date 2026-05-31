@@ -70,42 +70,90 @@ const SUGGESTED_QUESTIONS = {
   ],
 }
 
-function EightBallIcon({ size = 64 }) {
+function EightBallIcon({ size = 64, animate = false }) {
+  const animStyle = animate ? {
+    animation: "mokumBounce 1.2s ease-in-out 3, mokumIdle 3s ease-in-out 3.6s infinite",
+  } : {}
+
   return (
-    <svg width={size} height={size + 14} viewBox="0 0 64 78" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="ballGrad" cx="38%" cy="32%" r="60%">
-          <stop offset="0%" stopColor="#555555"/>
-          <stop offset="40%" stopColor="#1a1a1a"/>
-          <stop offset="100%" stopColor="#000000"/>
-        </radialGradient>
-        <radialGradient id="shineGrad" cx="40%" cy="30%" r="50%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.35"/>
-          <stop offset="100%" stopColor="white" stopOpacity="0"/>
-        </radialGradient>
-        <radialGradient id="circleGrad" cx="50%" cy="40%" r="55%">
-          <stop offset="0%" stopColor="#2a2a2a"/>
-          <stop offset="100%" stopColor="#111111"/>
-        </radialGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-          <feMerge>
-            <feMergeNode in="coloredBlur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      <circle cx="32" cy="30" r="29" fill="url(#ballGrad)"/>
-      <circle cx="32" cy="30" r="29" fill="url(#shineGrad)"/>
-      <circle cx="32" cy="32" r="12" fill="url(#circleGrad)" stroke="#333" strokeWidth="0.5"/>
-      <text x="32" y="37" textAnchor="middle" fill="#cc0000" fontSize="14" fontWeight="900" fontFamily="Arial Black, Arial, sans-serif" filter="url(#glow)">8</text>
-      <circle cx="20" cy="16" r="3.5" fill="white" opacity="0.18"/>
-      <circle cx="20" cy="16" r="1.5" fill="white" opacity="0.4"/>
-      <line x1="22" y1="57" x2="18" y2="72" stroke="#333333" strokeWidth="4" strokeLinecap="round"/>
-      <ellipse cx="16" cy="73" rx="5" ry="2.5" fill="#222222"/>
-      <line x1="42" y1="57" x2="46" y2="72" stroke="#333333" strokeWidth="4" strokeLinecap="round"/>
-      <ellipse cx="48" cy="73" rx="5" ry="2.5" fill="#222222"/>
-    </svg>
+    <>
+      <style>{`
+        @keyframes mokumBounce {
+          0%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-18px); }
+          60% { transform: translateY(-10px); }
+        }
+        @keyframes mokumIdle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+      `}</style>
+      <svg
+        width={size}
+        height={Math.round(size * 1.1)}
+        viewBox="0 0 200 220"
+        xmlns="http://www.w3.org/2000/svg"
+        style={animStyle}
+      >
+        <title>Mokum Magic 8 Ball</title>
+        <defs>
+          <radialGradient id="ballGrad" cx="38%" cy="32%" r="62%">
+            <stop offset="0%" stopColor="#3a3a3a"/>
+            <stop offset="40%" stopColor="#111111"/>
+            <stop offset="100%" stopColor="#0a0a0a"/>
+          </radialGradient>
+          <radialGradient id="circleGrad" cx="42%" cy="38%" r="58%">
+            <stop offset="0%" stopColor="#ffffff"/>
+            <stop offset="70%" stopColor="#f0f0f0"/>
+            <stop offset="100%" stopColor="#cccccc"/>
+          </radialGradient>
+          <radialGradient id="hatBodyGrad" cx="38%" cy="20%" r="70%">
+            <stop offset="0%" stopColor="#2e2e2e"/>
+            <stop offset="50%" stopColor="#141414"/>
+            <stop offset="100%" stopColor="#0a0a0a"/>
+          </radialGradient>
+          <radialGradient id="brimGrad" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#222222"/>
+            <stop offset="100%" stopColor="#0a0a0a"/>
+          </radialGradient>
+          <radialGradient id="shineGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.16"/>
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="100" cy="214" rx="56" ry="6" fill="#0a0a0a" opacity="0.4"/>
+        <circle cx="100" cy="140" r="68" fill="url(#ballGrad)"/>
+        <ellipse cx="80" cy="118" rx="19" ry="12" fill="url(#shineGrad)" transform="rotate(-20,80,118)"/>
+        <circle cx="100" cy="144" r="24" fill="url(#circleGrad)"/>
+        <text x="100" y="153" textAnchor="middle" fontFamily="Georgia, serif" fontSize="26" fontWeight="700" fill="#0a0a0a">8</text>
+        <circle cx="100" cy="140" r="68" fill="none" stroke="#2a2a2a" strokeWidth="0.8"/>
+        <ellipse cx="100" cy="76" rx="54" ry="10" fill="url(#brimGrad)"/>
+        <ellipse cx="100" cy="76" rx="54" ry="10" fill="none" stroke="#282828" strokeWidth="0.5"/>
+        <ellipse cx="86" cy="73" rx="22" ry="3.5" fill="#ffffff" opacity="0.06" transform="rotate(-4,86,73)"/>
+        <rect x="60" y="6" width="80" height="71" rx="3" fill="url(#hatBodyGrad)"/>
+        <ellipse cx="100" cy="6" rx="40" ry="6.5" fill="#181818"/>
+        <ellipse cx="100" cy="6" rx="40" ry="6.5" fill="none" stroke="#282828" strokeWidth="0.5"/>
+        <rect x="63" y="9" width="16" height="63" rx="2" fill="#ffffff" opacity="0.035"/>
+        <rect x="60" y="6" width="80" height="71" rx="3" fill="none" stroke="#282828" strokeWidth="0.5"/>
+        <g transform="translate(100,41) scale(0.56) translate(-100,-38)">
+          <circle cx="100" cy="38" r="28" fill="#0a0a0a"/>
+          <circle cx="100" cy="38" r="28" fill="none" stroke="#ffffff" strokeWidth="2.2"/>
+          <g transform="translate(91,27)">
+            <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" strokeWidth="2.2" strokeLinecap="round"/>
+            <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" strokeWidth="2.2" strokeLinecap="round"/>
+          </g>
+          <g transform="translate(109,27)">
+            <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" strokeWidth="2.2" strokeLinecap="round"/>
+            <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" strokeWidth="2.2" strokeLinecap="round"/>
+          </g>
+          <g transform="translate(100,37)">
+            <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" strokeWidth="2.2" strokeLinecap="round"/>
+            <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" strokeWidth="2.2" strokeLinecap="round"/>
+          </g>
+          <text x="100" y="52" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="8" fontWeight="900" fill="#ffffff" letterSpacing="1.5">MOKUM</text>
+        </g>
+      </svg>
+    </>
   )
 }
 
@@ -563,11 +611,11 @@ export default function ChatWidget() {
               border: "none",
               padding: 0,
               cursor: "pointer",
-              transition: "transform 0.2s",
               filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.6))",
               transform: hovered ? "scale(1.1)" : "scale(1)",
+              transition: "transform 0.2s",
             }}>
-            <EightBallIcon size={64} />
+            <EightBallIcon size={64} animate={true} />
           </button>
         </div>
       )}
