@@ -161,41 +161,41 @@ function SpeechBubble({ hovered }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
       {!hovered ? (
-        <svg width="140" height="58" viewBox="0 0 180 75" xmlns="http://www.w3.org/2000/svg">
+        <svg width="130" height="52" viewBox="0 0 180 72" xmlns="http://www.w3.org/2000/svg">
           <path
-            d="M90,6 C40,6 6,20 6,38 C6,56 40,66 90,66 C118,66 138,62 150,56 C156,62 158,70 158,70 C158,70 162,60 164,54 C170,50 174,45 174,38 C174,20 140,6 90,6 Z"
+            d="M90,6 C40,6 6,20 6,36 C6,52 40,60 90,60 C118,60 138,56 150,50 C156,56 160,66 160,66 C160,66 163,56 165,50 C171,46 174,42 174,36 C174,20 140,6 90,6 Z"
             fill="white"
             stroke="#111111"
-            strokeWidth="4.5"
+            strokeWidth="4"
             strokeLinejoin="round"
             strokeLinecap="round"
           />
           <text
             x="90"
-            y="41"
+            y="37"
             textAnchor="middle"
             fontFamily="Arial Black, Arial, sans-serif"
-            fontSize="14"
+            fontSize="13"
             fontWeight="900"
-            fill="#111111"
+            fill="#cc0000"
           >ASK ME ANYTHING!</text>
         </svg>
       ) : (
-        <svg width="140" height="120" viewBox="0 0 180 155" xmlns="http://www.w3.org/2000/svg">
+        <svg width="130" height="100" viewBox="0 0 180 138" xmlns="http://www.w3.org/2000/svg">
           <path
-            d="M90,6 C40,6 6,20 6,38 C6,110 40,142 90,142 C118,142 138,138 150,132 C156,138 158,148 158,148 C158,148 162,136 164,130 C170,126 174,120 174,38 C174,20 140,6 90,6 Z"
+            d="M90,6 C40,6 6,20 6,36 C6,98 40,126 90,126 C118,126 138,122 150,116 C156,122 160,132 160,132 C160,132 163,120 165,114 C171,110 174,105 174,36 C174,20 140,6 90,6 Z"
             fill="white"
             stroke="#111111"
-            strokeWidth="4.5"
+            strokeWidth="4"
             strokeLinejoin="round"
             strokeLinecap="round"
           />
-          <text x="90" y="30" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fontWeight="700" fill="#111">Ik weet alles over:</text>
-          <text x="90" y="48" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🕐 Openingstijden</text>
-          <text x="90" y="64" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">💶 Tarieven &amp; activiteiten</text>
-          <text x="90" y="80" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🏆 Toernooien &amp; inschrijven</text>
-          <text x="90" y="96" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">📍 Route &amp; parkeren</text>
-          <text x="90" y="112" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🎯 Darts, biljart &amp; shuffleboard</text>
+          <text x="90" y="26" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="9" fontWeight="900" fill="#cc0000">IK WEET ALLES OVER:</text>
+          <text x="90" y="42" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Openingstijden</text>
+          <text x="90" y="56" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Tarieven &amp; activiteiten</text>
+          <text x="90" y="70" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Toernooien &amp; inschrijven</text>
+          <text x="90" y="84" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Route &amp; parkeren</text>
+          <text x="90" y="98" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Darts, biljart &amp; shuffleboard</text>
         </svg>
       )}
     </div>
