@@ -161,41 +161,25 @@ function SpeechBubble({ hovered }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
       {!hovered ? (
-        <svg width="130" height="52" viewBox="0 0 180 72" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M90,6 C40,6 6,20 6,36 C6,52 40,60 90,60 C118,60 138,56 150,50 C156,56 160,66 160,66 C160,66 163,56 165,50 C171,46 174,42 174,36 C174,20 140,6 90,6 Z"
-            fill="white"
-            stroke="#111111"
-            strokeWidth="4"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-          <text
-            x="90"
-            y="37"
-            textAnchor="middle"
-            fontFamily="Arial Black, Arial, sans-serif"
-            fontSize="13"
-            fontWeight="900"
-            fill="#cc0000"
-          >ASK ME ANYTHING!</text>
+        <svg width="150" height="52" viewBox="0 0 190 66" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="182" height="46" rx="12" ry="12" fill="white" stroke="#111" strokeWidth="4"/>
+          <polygon points="148,50 160,62 168,50" fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"/>
+          <polygon points="149,49 159,59 169,49" fill="white" stroke="white" strokeWidth="2"/>
+          <text x="95" y="33" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">ASK ME ANYTHING!</text>
         </svg>
       ) : (
-        <svg width="130" height="100" viewBox="0 0 180 138" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M90,6 C40,6 6,20 6,36 C6,98 40,126 90,126 C118,126 138,122 150,116 C156,122 160,132 160,132 C160,132 163,120 165,114 C171,110 174,105 174,36 C174,20 140,6 90,6 Z"
-            fill="white"
-            stroke="#111111"
-            strokeWidth="4"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-          <text x="90" y="26" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="9" fontWeight="900" fill="#cc0000">IK WEET ALLES OVER:</text>
-          <text x="90" y="42" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Openingstijden</text>
-          <text x="90" y="56" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Tarieven &amp; activiteiten</text>
-          <text x="90" y="70" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Toernooien &amp; inschrijven</text>
-          <text x="90" y="84" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Route &amp; parkeren</text>
-          <text x="90" y="98" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="9" fill="#111">Darts, biljart &amp; shuffleboard</text>
+        <svg width="170" height="148" viewBox="0 0 210 184" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="202" height="164" rx="12" ry="12" fill="white" stroke="#111" strokeWidth="4"/>
+          <polygon points="160,168 172,180 180,168" fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"/>
+          <polygon points="161,167 171,177 181,167" fill="white" stroke="white" strokeWidth="2"/>
+          <text x="105" y="28" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="10" fontWeight="900" fill="#cc0000">IK WEET ALLES OVER:</text>
+          <line x1="20" y1="36" x2="190" y2="36" stroke="#eeeeee" strokeWidth="1"/>
+          <text x="22" y="56" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🕐 Openingstijden</text>
+          <text x="22" y="74" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">💶 Tarieven &amp; activiteiten</text>
+          <text x="22" y="92" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🏆 Toernooien &amp; inschrijven</text>
+          <text x="22" y="110" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">📍 Route &amp; parkeren</text>
+          <text x="22" y="128" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🎯 Darts, biljart &amp; shuffleboard</text>
+          <text x="22" y="146" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🏢 Bedrijfsuitjes &amp; groepen</text>
         </svg>
       )}
     </div>
