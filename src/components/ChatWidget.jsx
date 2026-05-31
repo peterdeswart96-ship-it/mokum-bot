@@ -52,8 +52,8 @@ const SUGGESTED_QUESTIONS = {
   ],
   toernooien: [
     "Wanneer is het volgende toernooi?",
-    "Hoe schrijf ik me in?",
-    "Wat is de Mokum 8ball Ranking?",
+    "Welke toernooien zijn er aankomende week?",
+    "Zijn er ook toernooien voor beginnende spelers?",
     "Wat kost deelname?",
   ],
   spelregels: [
