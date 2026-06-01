@@ -14,14 +14,7 @@ const C = {
   gray:       "#888888",
 }
 
-const BUBBLE_TEXTS = [
-  "ASK ME ANYTHING!",
-  "HELLOOO!",
-  "I HAVEN'T GOT ALL DAY!",
-  "I'M BORED, ASK ME SOMETHING",
-  "WANNEER IS HET VOLGENDE TOERNOOI?",
-  "KOM SPELEN!",
-]
+import BUBBLE_TEXTS from "../config/bubbleTexts"
 
 const TOPICS = [
   { id: "pool",          emoji: "🎱", label: "Pool & Biljart" },
@@ -170,13 +163,31 @@ function SpeechBubble({ hovered, text }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
       {!hovered ? (
-        <svg width="auto" height="42" viewBox={`0 0 ${Math.max(160, text.length * 9 + 40)} 70`} xmlns="http://www.w3.org/2000/svg" style={{ width: "auto", maxWidth: "220px", minWidth: "105px" }}>
-          <path
-            d={`M16,4 L${Math.max(144, text.length * 9 + 24)},4 Q${Math.max(156, text.length * 9 + 36)},4 ${Math.max(156, text.length * 9 + 36)},16 L${Math.max(156, text.length * 9 + 36)},46 Q${Math.max(156, text.length * 9 + 36)},58 ${Math.max(144, text.length * 9 + 24)},58 L${Math.max(142, text.length * 9 + 22)},58 L134,68 L126,58 L16,58 Q4,58 4,46 L4,16 Q4,4 16,4 Z`}
-            fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
-          />
-          <text x={Math.max(80, (text.length * 9 + 40) / 2 - 4)} y="36" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">{text}</text>
-        </svg>
+        <div style={{
+          backgroundColor: "white",
+          border: "3.5px solid #111",
+          borderRadius: "12px",
+          padding: "12px 16px",
+          position: "relative",
+          display: "inline-block",
+          maxWidth: "220px",
+        }}>
+          <span style={{
+            fontFamily: "Arial Black, Arial, sans-serif",
+            fontSize: "13px",
+            fontWeight: "900",
+            color: "#cc0000",
+            whiteSpace: "nowrap",
+            display: "block",
+          }}>{text}</span>
+          <svg
+            style={{ position: "absolute", bottom: "-16px", right: "22px" }}
+            width="22" height="18" viewBox="0 0 22 18" xmlns="http://www.w3.org/2000/svg"
+          >
+            <polygon points="0,0 10,0 4,17" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round"/>
+            <polygon points="1,0 9,0 4,14" fill="white" stroke="white" strokeWidth="1"/>
+          </svg>
+        </div>
       ) : (
         <svg width="119" height="111" viewBox="0 0 210 196" xmlns="http://www.w3.org/2000/svg">
           <path
