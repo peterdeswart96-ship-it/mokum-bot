@@ -110,14 +110,14 @@ function EightBallIcon({ size = 64, animate = false }) {
 }
 
 function Arrow() {
-  // Pijltje: breed bovenaan, punt rechtsonder richting de hoed
+  // Pijltje: linkerhoek bovenaan, rechterhoek bovenaan, punt rechtsonder
   return (
     <svg
-      style={{ position: "absolute", bottom: "-16px", right: "16px" }}
-      width="24" height="17" viewBox="0 0 24 17" xmlns="http://www.w3.org/2000/svg"
+      style={{ position: "absolute", bottom: "-16px", right: "14px" }}
+      width="26" height="18" viewBox="0 0 26 18" xmlns="http://www.w3.org/2000/svg"
     >
-      <polygon points="0,0 24,0 22,17" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
-      <polygon points="2,1 22,1 21,14" fill="white" stroke="white" strokeWidth="2"/>
+      <polygon points="2,0 26,0 24,18" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
+      <polygon points="4,1 24,1 22,15" fill="white" stroke="white" strokeWidth="2.5"/>
     </svg>
   )
 }
