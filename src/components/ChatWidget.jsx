@@ -14,6 +14,15 @@ const C = {
   gray:       "#888888",
 }
 
+const BUBBLE_TEXTS = [
+  "ASK ME ANYTHING!",
+  "HELLOOO!",
+  "I HAVEN'T GOT ALL DAY!",
+  "I'M BORED, ASK ME SOMETHING",
+  "WANNEER IS HET VOLGENDE TOERNOOI?",
+  "KOM SPELEN!",
+]
+
 const TOPICS = [
   { id: "pool",          emoji: "🎱", label: "Pool & Biljart" },
   { id: "darts",         emoji: "🎯", label: "Darts" },
@@ -157,16 +166,16 @@ function EightBallIcon({ size = 64, animate = false }) {
   )
 }
 
-function SpeechBubble({ hovered }) {
+function SpeechBubble({ hovered, text }) {
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
       {!hovered ? (
-        <svg width="105" height="39" viewBox="0 0 190 70" xmlns="http://www.w3.org/2000/svg">
+        <svg width="auto" height="42" viewBox={`0 0 ${Math.max(160, text.length * 9 + 40)} 70`} xmlns="http://www.w3.org/2000/svg" style={{ width: "auto", maxWidth: "220px", minWidth: "105px" }}>
           <path
-            d="M16,4 L174,4 Q186,4 186,16 L186,46 Q186,58 174,58 L172,58 L164,68 L156,58 L16,58 Q4,58 4,46 L4,16 Q4,4 16,4 Z"
+            d={`M16,4 L${Math.max(144, text.length * 9 + 24)},4 Q${Math.max(156, text.length * 9 + 36)},4 ${Math.max(156, text.length * 9 + 36)},16 L${Math.max(156, text.length * 9 + 36)},46 Q${Math.max(156, text.length * 9 + 36)},58 ${Math.max(144, text.length * 9 + 24)},58 L${Math.max(142, text.length * 9 + 22)},58 L134,68 L126,58 L16,58 Q4,58 4,46 L4,16 Q4,4 16,4 Z`}
             fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
           />
-          <text x="95" y="36" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">ASK ME ANYTHING!</text>
+          <text x={Math.max(80, (text.length * 9 + 40) / 2 - 4)} y="36" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="14" fontWeight="900" fill="#cc0000">{text}</text>
         </svg>
       ) : (
         <svg width="119" height="111" viewBox="0 0 210 196" xmlns="http://www.w3.org/2000/svg">
@@ -263,6 +272,7 @@ export default function ChatWidget() {
   const [language, setLanguage] = useState("nl")
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
 
   const [messages, setMessages] = useState([
     {
@@ -277,6 +287,14 @@ export default function ChatWidget() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, stage])
+
+  useEffect(() => {
+    if (open) return
+    const interval = setInterval(() => {
+      setBubbleTextIndex((i) => (i + 1) % BUBBLE_TEXTS.length)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [open])
 
   const LANGUAGES = [
     { code: "nl", label: "🇳🇱 Nederlands" },
@@ -611,7 +629,7 @@ export default function ChatWidget() {
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
-          <SpeechBubble hovered={hovered} />
+          <SpeechBubble hovered={hovered} text={BUBBLE_TEXTS[bubbleTextIndex]} />
           <button
             onClick={() => setOpen(true)}
             style={{
