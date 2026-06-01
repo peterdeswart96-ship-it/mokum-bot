@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
-import BUBBLE_TEXTS from "../config/bubbletexts"
+import BUBBLE_TEXTS from "../config/bubbleTexts"
 import translations from "../config/translations"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
@@ -112,11 +112,11 @@ function EightBallIcon({ size = 64, animate = false }) {
 function Arrow() {
   return (
     <svg
-      style={{ position: "absolute", bottom: "-15px", right: "20px" }}
-      width="18" height="16" viewBox="0 0 18 16" xmlns="http://www.w3.org/2000/svg"
+      style={{ position: "absolute", bottom: "-15px", right: "18px" }}
+      width="20" height="16" viewBox="0 0 20 16" xmlns="http://www.w3.org/2000/svg"
     >
-      <polygon points="0,0 18,0 9,16" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
-      <polygon points="2,0 16,0 9,13" fill="white" stroke="white" strokeWidth="1"/>
+      <polygon points="0,0 20,0 17,16" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
+      <polygon points="2,0 18,0 16,13" fill="white" stroke="white" strokeWidth="2"/>
     </svg>
   )
 }
@@ -130,14 +130,16 @@ function SpeechBubble({ hovered, text, lang }) {
           backgroundColor: "white",
           border: "3.5px solid #111",
           borderRadius: "12px",
-          padding: "12px 16px",
+          padding: "10px 14px",
           position: "relative",
           display: "inline-block",
-          maxWidth: "220px",
+          maxWidth: "240px",
+          marginRight: "0px",
+          alignSelf: "flex-end",
         }}>
           <span style={{
             fontFamily: "Arial Black, Arial, sans-serif",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: "900",
             color: "#cc0000",
             whiteSpace: "nowrap",
