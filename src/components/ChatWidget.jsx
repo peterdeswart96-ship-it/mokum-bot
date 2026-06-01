@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
-import BUBBLE_TEXTS from "../config/bubbletexts"
+import BUBBLE_TEXTS from "../config/bubbleTexts"
 import translations from "../config/translations"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
@@ -110,13 +110,14 @@ function EightBallIcon({ size = 64, animate = false }) {
 }
 
 function Arrow() {
+  // Pijltje: breed bovenaan, punt rechtsonder richting de hoed
   return (
     <svg
-      style={{ position: "absolute", bottom: "-15px", right: "18px" }}
-      width="20" height="16" viewBox="0 0 20 16" xmlns="http://www.w3.org/2000/svg"
+      style={{ position: "absolute", bottom: "-16px", right: "16px" }}
+      width="24" height="17" viewBox="0 0 24 17" xmlns="http://www.w3.org/2000/svg"
     >
-      <polygon points="0,0 20,0 17,16" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
-      <polygon points="2,0 18,0 16,13" fill="white" stroke="white" strokeWidth="2"/>
+      <polygon points="0,0 24,0 22,17" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
+      <polygon points="2,1 22,1 21,14" fill="white" stroke="white" strokeWidth="2"/>
     </svg>
   )
 }
