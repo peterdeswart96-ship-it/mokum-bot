@@ -122,6 +122,7 @@ function SpeechBubble({ hovered, text, lang }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <polygon points="0,0 18,0 18,15" fill="#111111" />
+      <polygon points="0,0 18,0 18,11" fill="white" />
     </svg>
   )
 
@@ -143,6 +144,7 @@ function SpeechBubble({ hovered, text, lang }) {
             color: "#cc0000",
             display: "block",
             whiteSpace: "nowrap",
+            textAlign: "center",
           }}>{text}</span>
         </div>
         <ArrowSVG />
