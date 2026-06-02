@@ -109,19 +109,33 @@ function EightBallIcon({ size = 64, animate = false }) {
   )
 }
 
-// Pijltje: volledig zwart, punt rechtsonder richting de 8-ball hoed
+// Pijltje: zwarte rand, witte vulling, punt rechtsonder
 function Arrow() {
   return (
-    <div style={{
-      position: "absolute",
-      bottom: "-16px",
-      right: "14px",
-      width: 0,
-      height: 0,
-      borderTop: "16px solid #111",
-      borderLeft: "14px solid transparent",
-      borderRight: "0px solid transparent",
-    }} />
+    <>
+      {/* Zwarte buitenrand */}
+      <div style={{
+        position: "absolute",
+        bottom: "-19px",
+        right: "13px",
+        width: 0,
+        height: 0,
+        borderTop: "19px solid #111",
+        borderLeft: "16px solid transparent",
+        borderRight: "0px solid transparent",
+      }} />
+      {/* Witte vulling iets kleiner */}
+      <div style={{
+        position: "absolute",
+        bottom: "-14px",
+        right: "15px",
+        width: 0,
+        height: 0,
+        borderTop: "14px solid white",
+        borderLeft: "12px solid transparent",
+        borderRight: "0px solid transparent",
+      }} />
+    </>
   )
 }
 
@@ -140,6 +154,7 @@ function SpeechBubble({ hovered, text, lang }) {
           display: "inline-block",
           maxWidth: "200px",
           alignSelf: "flex-start",
+          overflow: "visible",
         }}>
           <span style={{
             fontFamily: "Arial Black, Arial, sans-serif",
