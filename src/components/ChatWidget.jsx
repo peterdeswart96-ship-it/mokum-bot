@@ -115,30 +115,14 @@ function SpeechBubble({ hovered, text, lang }) {
 
   // SVG pijltje: volledig zwart, punt rechtsonder
   const ArrowSVG = () => (
-    <>
-      {/* Zwarte buitenste driehoek — smal en langwerpig */}
-      <div style={{
-        position: "absolute",
-        bottom: "-28px",
-        right: "0px",
-        width: 0,
-        height: 0,
-        borderStyle: "solid",
-        borderWidth: "28px 0 0 14px",
-        borderColor: "#111 transparent transparent transparent",
-      }} />
-      {/* Witte binnenste driehoek */}
-      <div style={{
-        position: "absolute",
-        bottom: "-22px",
-        right: "3.5px",
-        width: 0,
-        height: 0,
-        borderStyle: "solid",
-        borderWidth: "22px 0 0 10px",
-        borderColor: "white transparent transparent transparent",
-      }} />
-    </>
+    <svg
+      style={{ position: "absolute", bottom: "-28px", right: "8px" }}
+      width="20" height="28"
+      viewBox="0 0 20 28"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <line x1="20" y1="0" x2="0" y2="28" stroke="#111" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
   )
 
   if (!hovered) {
