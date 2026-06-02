@@ -109,56 +109,46 @@ function EightBallIcon({ size = 64, animate = false }) {
   )
 }
 
+// Pijltje: volledig zwart, punt rechtsonder richting de 8-ball hoed
 function Arrow() {
-  // Pijltje via CSS: punt rechtsonder richting de hoed
   return (
     <div style={{
       position: "absolute",
-      bottom: "-14px",
-      right: "18px",
+      bottom: "-16px",
+      right: "14px",
       width: 0,
       height: 0,
-      borderLeft: "18px solid transparent",
+      borderTop: "16px solid #111",
+      borderLeft: "14px solid transparent",
       borderRight: "0px solid transparent",
-      borderTop: "15px solid #111",
-    }}>
-      <div style={{
-        position: "absolute",
-        top: "-13px",
-        left: "-15px",
-        width: 0,
-        height: 0,
-        borderLeft: "15px solid transparent",
-        borderRight: "0px solid transparent",
-        borderTop: "12px solid white",
-      }}/>
-    </div>
+    }} />
   )
 }
 
 function SpeechBubble({ hovered, text, lang }) {
   const t = translations[lang]
   return (
-    <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
+    <div style={{ position: "relative", marginBottom: "2px" }}>
       {!hovered ? (
         <div style={{
           backgroundColor: "white",
           border: "3.5px solid #111",
           borderRadius: "12px",
           padding: "10px 14px",
+          boxSizing: "border-box",
           position: "relative",
           display: "inline-block",
-          maxWidth: "240px",
-          marginRight: "0px",
-          alignSelf: "flex-end",
+          maxWidth: "200px",
+          alignSelf: "flex-start",
         }}>
           <span style={{
             fontFamily: "Arial Black, Arial, sans-serif",
             fontSize: "12px",
             fontWeight: "900",
             color: "#cc0000",
-            whiteSpace: "nowrap",
             display: "block",
+            overflowWrap: "break-word",
+            wordBreak: "break-word",
           }}>{text}</span>
           <Arrow />
         </div>
@@ -168,6 +158,7 @@ function SpeechBubble({ hovered, text, lang }) {
           border: "3.5px solid #111",
           borderRadius: "12px",
           padding: "12px 16px",
+          boxSizing: "border-box",
           position: "relative",
           display: "inline-block",
           width: "180px",
@@ -285,7 +276,6 @@ export default function ChatWidget() {
     const newLang = lang === "nl" ? "en" : "nl"
     setLang(newLang)
     setShowLangMenu(false)
-    // Reset de chat met het welkomstbericht in de nieuwe taal
     setMessages([{ role: "assistant", content: translations[newLang].welcome }])
     setStage("topics")
     setSelectedTopic(null)
@@ -337,7 +327,7 @@ export default function ChatWidget() {
   }
 
   return (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: "380px" }}>
 
       {open && (
         <div style={{
