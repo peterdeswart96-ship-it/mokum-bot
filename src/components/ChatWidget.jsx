@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
+import BUBBLE_TEXTS from "../config/bubble-texts"
+import translations from "../config/translations"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
 
@@ -14,62 +16,11 @@ const C = {
   gray:       "#888888",
 }
 
-import BUBBLE_TEXTS from "../config/bubbleTexts"
+const FLAGS = { nl: "🇳🇱", en: "🇬🇧" }
 
-const TOPICS = [
-  { id: "pool",          emoji: "🎱", label: "Pool & Biljart" },
-  { id: "darts",         emoji: "🎯", label: "Darts" },
-  { id: "openingstijden",emoji: "📅", label: "Openingstijden" },
-  { id: "tarieven",      emoji: "💶", label: "Tarieven" },
-  { id: "toernooien",    emoji: "🏆", label: "Toernooien" },
-  { id: "spelregels",    emoji: "📖", label: "Spelregels" },
-  { id: "locatie",       emoji: "📍", label: "Locatie & Parkeren" },
-  { id: "anders",        emoji: "❓", label: "Anders" },
-]
-
-const SUGGESTED_QUESTIONS = {
-  pool: [
-    "Hoeveel tafels zijn er beschikbaar?",
-    "Moet ik reserveren?",
-    "Wat is het verschil tussen American en English pool?",
-    "Kan ik mijn eigen keu meenemen?",
-  ],
-  darts: [
-    "Wat kost een uur darts?",
-    "Moet ik eigen pijlen meenemen?",
-    "Hoeveel dartsborden zijn er?",
-    "Kan ik darts combineren met pool?",
-  ],
-  openingstijden: [
-    "Wanneer zijn jullie open?",
-    "Zijn jullie ook op feestdagen open?",
-    "Hoe laat is de laatste inloop?",
-    "Zijn de tijden in het weekend anders?",
-  ],
-  tarieven: [
-    "Wat kost een uur poolen?",
-    "Zijn er dagprijzen of avondprijzen?",
-    "Kan ik pinnen?",
-    "Zijn er groepstarieven?",
-  ],
-  toernooien: [
-    "Wanneer is het volgende toernooi?",
-    "Welke toernooien zijn er aankomende week?",
-    "Zijn er ook toernooien voor beginnende spelers?",
-    "Wat kost deelname?",
-  ],
-  spelregels: [
-    "Leg de regels van 8-ball uit",
-    "Hoe speel je 9-ball?",
-    "Hoe werkt 501 darts?",
-    "Wat zijn de regels van biljart?",
-  ],
-  locatie: [
-    "Waar is Mokum gevestigd?",
-    "Hoe kom ik er met het OV?",
-    "Is er parkeergelegenheid?",
-    "Hoe ver is het van Amstel Station?",
-  ],
+function detectLanguage() {
+  const browserLang = navigator.language?.toLowerCase() || "en"
+  return browserLang.startsWith("nl") ? "nl" : "en"
 }
 
 function EightBallIcon({ size = 64, animate = false }) {
@@ -123,7 +74,6 @@ function EightBallIcon({ size = 64, animate = false }) {
             <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
           </radialGradient>
         </defs>
-        {/* schaduw verwijderd */}
         <circle cx="100" cy="140" r="68" fill="url(#ballGrad)"/>
         <ellipse cx="80" cy="118" rx="19" ry="12" fill="url(#shineGrad)" transform="rotate(-20,80,118)"/>
         <circle cx="100" cy="144" r="24" fill="url(#circleGrad)"/>
@@ -159,51 +109,66 @@ function EightBallIcon({ size = 64, animate = false }) {
   )
 }
 
-function SpeechBubble({ hovered, text }) {
-  return (
-    <div style={{ position: "relative", display: "inline-block", marginBottom: "2px" }}>
-      {!hovered ? (
+
+function SpeechBubble({ hovered, text, lang }) {
+  const t = translations[lang]
+
+  // SVG pijltje: volledig zwart, punt rechtsonder
+  const ArrowSVG = () => (
+    <svg
+      style={{ position: "absolute", bottom: "-15px", right: "14px", display: "block" }}
+      width="18" height="15"
+      viewBox="0 0 18 15"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <polygon points="0,0 18,0 18,15" fill="#111111" />
+    </svg>
+  )
+
+  if (!hovered) {
+    return (
+      <div style={{ position: "relative", display: "inline-block", marginBottom: "18px" }}>
         <div style={{
           backgroundColor: "white",
           border: "3.5px solid #111",
           borderRadius: "12px",
-          padding: "12px 16px",
+          padding: "10px 10px",
+          boxSizing: "border-box",
           position: "relative",
-          display: "inline-block",
-          maxWidth: "220px",
         }}>
           <span style={{
             fontFamily: "Arial Black, Arial, sans-serif",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: "900",
             color: "#cc0000",
-            whiteSpace: "nowrap",
             display: "block",
+            whiteSpace: "nowrap",
           }}>{text}</span>
-          <svg
-            style={{ position: "absolute", bottom: "-16px", right: "22px" }}
-            width="22" height="18" viewBox="0 0 22 18" xmlns="http://www.w3.org/2000/svg"
-          >
-            <polygon points="0,0 10,0 4,17" fill="white" stroke="#111" strokeWidth="3.5" strokeLinejoin="round"/>
-            <polygon points="1,0 9,0 4,14" fill="white" stroke="white" strokeWidth="1"/>
-          </svg>
         </div>
-      ) : (
-        <svg width="119" height="111" viewBox="0 0 210 196" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M16,4 L194,4 Q206,4 206,16 L206,172 Q206,184 194,184 L192,184 L184,194 L176,184 L16,184 Q4,184 4,172 L4,16 Q4,4 16,4 Z"
-            fill="white" stroke="#111" strokeWidth="4" strokeLinejoin="round"
-          />
-          <text x="105" y="28" textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize="10" fontWeight="900" fill="#cc0000">IK WEET ALLES OVER:</text>
-          <line x1="20" y1="36" x2="190" y2="36" stroke="#eeeeee" strokeWidth="1"/>
-          <text x="22" y="56" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🕐 Openingstijden</text>
-          <text x="22" y="74" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">💶 Tarieven &amp; activiteiten</text>
-          <text x="22" y="92" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🏆 Toernooien &amp; inschrijven</text>
-          <text x="22" y="110" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">📍 Route &amp; parkeren</text>
-          <text x="22" y="128" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🎯 Darts, biljart &amp; shuffleboard</text>
-          <text x="22" y="146" fontFamily="Arial, sans-serif" fontSize="11" fill="#111">🏢 Bedrijfsuitjes &amp; groepen</text>
-        </svg>
-      )}
+        <ArrowSVG />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: "relative", display: "inline-block", marginBottom: "20px", width: "180px" }}>
+      <div style={{
+        backgroundColor: "white",
+        border: "3.5px solid #111",
+        borderRadius: "12px",
+        padding: "12px 16px",
+        boxSizing: "border-box",
+        position: "relative",
+      }}>
+        <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>
+          {t.hoverTitle}
+        </div>
+        <div style={{ height: "1px", backgroundColor: "#eee", marginBottom: "8px" }} />
+        {t.hoverInfo.map((item) => (
+          <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom: "5px" }}>{item}</div>
+        ))}
+      </div>
+      <ArrowSVG />
     </div>
   )
 }
@@ -245,7 +210,6 @@ function BotMessage({ content }) {
   )
 }
 
-// Knop stijl voor onderwerp- en vraagknoppen
 function ChipButton({ onClick, children, accent = false }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -276,20 +240,17 @@ function ChipButton({ onClick, children, accent = false }) {
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
-
-  // Onboarding flow: "topics" | "questions" | "chat"
   const [stage, setStage] = useState("topics")
   const [selectedTopic, setSelectedTopic] = useState(null)
-  const [language, setLanguage] = useState("nl")
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
+  const [lang, setLang] = useState(detectLanguage)
 
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "Hey! Ik ben de Mokum Magic 8 Ball 🎱 Waar kan ik je mee helpen?",
-    },
+  const t = translations[lang]
+
+  const [messages, setMessages] = useState(() => [
+    { role: "assistant", content: translations[detectLanguage()].welcome },
   ])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -307,14 +268,14 @@ export default function ChatWidget() {
     return () => clearInterval(interval)
   }, [open])
 
-  const LANGUAGES = [
-    { code: "nl", label: "🇳🇱 Nederlands" },
-    { code: "en", label: "🇬🇧 English" },
-    { code: "es", label: "🇪🇸 Español" },
-    { code: "de", label: "🇩🇪 Deutsch" },
-    { code: "zh", label: "🇨🇳 中文" },
-    { code: "other", label: "🌍 Anders" },
-  ]
+  function switchLanguage() {
+    const newLang = lang === "nl" ? "en" : "nl"
+    setLang(newLang)
+    setShowLangMenu(false)
+    setMessages([{ role: "assistant", content: translations[newLang].welcome }])
+    setStage("topics")
+    setSelectedTopic(null)
+  }
 
   async function sendMessage(text) {
     const userMessage = text || input
@@ -338,7 +299,7 @@ export default function ChatWidget() {
     } catch (err) {
       setMessages([
         ...newMessages,
-        { role: "assistant", content: "Oeps, er ging iets mis. Probeer het nog eens! 🎱" },
+        { role: "assistant", content: t.error },
       ])
     } finally {
       setLoading(false)
@@ -354,28 +315,15 @@ export default function ChatWidget() {
     }
   }
 
-  function selectQuestion(question) {
-    sendMessage(question)
-  }
-
-  function handleLanguageChange(lang) {
-    setLanguage(lang.code)
-    setShowLangMenu(false)
-    // Stuur een taalkeuze bericht naar de bot
-    const langNames = { nl: "Nederlands", en: "English", es: "Español", de: "Deutsch", zh: "中文", other: "een andere taal" }
-    const msg = `Spreek mij aan in het ${langNames[lang.code] || lang.label}.`
-    sendMessage(msg)
-  }
-
   function resetChat() {
     setStage("topics")
     setSelectedTopic(null)
-    setMessages([{ role: "assistant", content: "Hey! Ik ben de Mokum Magic 8 Ball 🎱 Waar kan ik je mee helpen?" }])
+    setMessages([{ role: "assistant", content: t.welcome }])
     setInput("")
   }
 
   return (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: "380px" }}>
 
       {open && (
         <div style={{
@@ -388,6 +336,7 @@ export default function ChatWidget() {
           display: "flex",
           flexDirection: "column",
           backgroundColor: C.black,
+          transition: "width 0.3s ease, height 0.3s ease",
         }}>
 
           {/* Header */}
@@ -408,60 +357,26 @@ export default function ChatWidget() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {/* Taalwisselaar */}
-              <div style={{ position: "relative" }}>
-                <button
-                  onClick={() => setShowLangMenu(!showLangMenu)}
-                  title="Change language"
-                  style={{
-                    background: "none",
-                    border: `1px solid ${C.border}`,
-                    borderRadius: "6px",
-                    color: C.gray,
-                    cursor: "pointer",
-                    fontSize: "11px",
-                    padding: "4px 8px",
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  🌐 Taal
-                </button>
-                {showLangMenu && (
-                  <div style={{
-                    position: "absolute",
-                    top: "32px",
-                    right: 0,
-                    backgroundColor: C.blackCard,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    zIndex: 10,
-                    minWidth: "150px",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
-                  }}>
-                    {LANGUAGES.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang)}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px 14px",
-                          background: language === lang.code ? "#2a2a2a" : "none",
-                          border: "none",
-                          color: C.white,
-                          fontSize: "13px",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          borderBottom: `1px solid ${C.border}`,
-                        }}
-                      >
-                        {lang.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+
+              {/* Taalwisselaar met vlaggetje */}
+              <button
+                onClick={switchLanguage}
+                title={lang === "nl" ? "Switch to English" : "Naar Nederlands"}
+                style={{
+                  background: "none",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "6px",
+                  color: C.white,
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  padding: "3px 8px",
+                  lineHeight: 1.4,
+                }}
+              >
+                {FLAGS[lang === "nl" ? "en" : "nl"]}
+              </button>
+
+              {/* Expand knop */}
               <button
                 onClick={() => setExpanded(!expanded)}
                 title={expanded ? "Verkleinen" : "Maximaliseren"}
@@ -473,11 +388,11 @@ export default function ChatWidget() {
                   cursor: "pointer",
                   fontSize: "12px",
                   padding: "4px 8px",
-                  letterSpacing: "0.03em",
                 }}
               >
                 {expanded ? "⊡" : "⊞"}
               </button>
+
               <button onClick={() => setOpen(false)} style={{
                 background: "none", border: "none", color: C.gray,
                 cursor: "pointer", fontSize: "18px", fontWeight: "bold",
@@ -489,7 +404,6 @@ export default function ChatWidget() {
           {/* Chat gebied */}
           <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
 
-            {/* Bestaande berichten */}
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 {msg.role === "user" ? (
@@ -510,7 +424,6 @@ export default function ChatWidget() {
               </div>
             ))}
 
-            {/* Loading indicator */}
             {loading && (
               <div style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div style={{
@@ -521,7 +434,7 @@ export default function ChatWidget() {
                   color: C.gray,
                   border: `1px solid ${C.border}`,
                 }}>
-                  Aan het typen...
+                  {t.typing}
                 </div>
               </div>
             )}
@@ -529,7 +442,7 @@ export default function ChatWidget() {
             {/* Stap 1: Onderwerpknoppen */}
             {stage === "topics" && !loading && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
-                {TOPICS.map((topic) => (
+                {t.topics.map((topic) => (
                   <ChipButton key={topic.id} onClick={() => selectTopic(topic)}>
                     {topic.emoji} {topic.label}
                   </ChipButton>
@@ -541,56 +454,39 @@ export default function ChatWidget() {
             {stage === "questions" && selectedTopic && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
-                  {selectedTopic.emoji} {selectedTopic.label}
+                  {selectedTopic.emoji} {t.topics.find(tp => tp.id === selectedTopic.id)?.label}
                 </div>
-                {SUGGESTED_QUESTIONS[selectedTopic.id].map((q) => (
-                  <ChipButton key={q} onClick={() => selectQuestion(q)}>
+                {(t.questions[selectedTopic.id] || []).map((q) => (
+                  <ChipButton key={q} onClick={() => sendMessage(q)}>
                     {q}
                   </ChipButton>
                 ))}
                 <ChipButton onClick={() => setStage("chat")} accent>
-                  ✏️ Een andere vraag stellen
+                  {t.askOther}
                 </ChipButton>
                 <button
                   onClick={() => setStage("topics")}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: C.gray,
-                    fontSize: "12px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    padding: "4px 0",
-                  }}
+                  style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
                 >
-                  ← Terug naar onderwerpen
+                  {t.backButton}
                 </button>
               </div>
             )}
 
-            {/* Terug knop in chat stage */}
+            {/* Terug knop in chat */}
             {stage === "chat" && messages.length <= 3 && !loading && (
-              <div>
-                <button
-                  onClick={resetChat}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: C.gray,
-                    fontSize: "12px",
-                    cursor: "pointer",
-                    padding: "4px 0",
-                  }}
-                >
-                  ← Terug naar onderwerpen
-                </button>
-              </div>
+              <button
+                onClick={resetChat}
+                style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}
+              >
+                {t.backToTopics}
+              </button>
             )}
 
             <div ref={bottomRef} />
           </div>
 
-          {/* Input gebied */}
+          {/* Input */}
           {(stage === "chat" || stage === "questions") && (
             <div style={{
               borderTop: `1px solid ${C.border}`,
@@ -605,7 +501,7 @@ export default function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Stel een vraag..."
+                placeholder={t.placeholder}
                 style={{
                   flex: 1,
                   padding: "10px 14px",
@@ -640,7 +536,7 @@ export default function ChatWidget() {
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
-          <SpeechBubble hovered={hovered} text={BUBBLE_TEXTS[bubbleTextIndex]} />
+          <SpeechBubble hovered={hovered} text={BUBBLE_TEXTS[bubbleTextIndex]} lang={lang} />
           <button
             onClick={() => setOpen(true)}
             style={{
@@ -657,7 +553,7 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Sluit knop als chat open is */}
+      {/* Sluit knop */}
       {open && (
         <button
           onClick={() => setOpen(false)}
