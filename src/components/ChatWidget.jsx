@@ -116,12 +116,12 @@ function SpeechBubble({ hovered, text, lang }) {
   // SVG pijltje: volledig zwart, punt rechtsonder
   const ArrowSVG = () => (
     <svg
-      style={{ position: "absolute", bottom: "-14px", right: "-2px" }}
-      width="16" height="14"
-      viewBox="0 0 16 14"
+      style={{ position: "absolute", bottom: "-16px", right: "32px" }}
+      width="4" height="16"
+      viewBox="0 0 4 16"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <line x1="16" y1="0" x2="0" y2="14" stroke="#111" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="2" y1="0" x2="2" y2="16" stroke="#111" strokeWidth="3.5" strokeLinecap="round" />
     </svg>
   )
 
