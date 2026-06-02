@@ -20,13 +20,9 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net
-      - name: Inject CNAME
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "mokum-bot.pdscloud.nl" > ./dist/CNAME
-          else
-            echo "mokum-bot.test.pdscloud.nl" > ./dist/CNAME
-          fi
+      - name: Inject CNAME for main
+        if: github.ref_name == 'main'
+        run: echo "mokum-bot.pdscloud.nl" > ./dist/CNAME
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
