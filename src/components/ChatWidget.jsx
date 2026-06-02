@@ -113,19 +113,15 @@ function EightBallIcon({ size = 64, animate = false }) {
 function SpeechBubble({ hovered, text, lang }) {
   const t = translations[lang]
 
-  // SVG pijltje: punt rechtsonder, zwarte border + witte vulling
-  // Viewbox 20x16: rechthoekige bovenkant, punt rechtsonder
+  // SVG pijltje: volledig zwart, punt rechtsonder
   const ArrowSVG = () => (
     <svg
-      style={{ position: "absolute", bottom: "-16px", right: "12px", display: "block" }}
-      width="20" height="16"
-      viewBox="0 0 20 16"
+      style={{ position: "absolute", bottom: "-15px", right: "14px", display: "block" }}
+      width="18" height="15"
+      viewBox="0 0 18 15"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Zwart: volledige driehoek */}
-      <polygon points="0,0 20,0 20,16" fill="#111111" />
-      {/* Wit: iets kleiner, dekt bubble border af aan bovenkant */}
-      <polygon points="0,0 20,0 20,12" fill="white" />
+      <polygon points="0,0 18,0 18,15" fill="#111111" />
     </svg>
   )
 
@@ -136,7 +132,7 @@ function SpeechBubble({ hovered, text, lang }) {
           backgroundColor: "white",
           border: "3.5px solid #111",
           borderRadius: "12px",
-          padding: "10px 12px",
+          padding: "10px 10px",
           boxSizing: "border-box",
           position: "relative",
         }}>
