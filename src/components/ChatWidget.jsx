@@ -109,41 +109,26 @@ function EightBallIcon({ size = 64, animate = false }) {
   )
 }
 
-// Pijltje: zwarte rand, witte vulling, punt rechtsonder
-function Arrow() {
-  return (
-    <>
-      {/* Zwarte buitenrand */}
-      <div style={{
-        position: "absolute",
-        bottom: "-19px",
-        right: "13px",
-        width: 0,
-        height: 0,
-        borderTop: "19px solid #111",
-        borderLeft: "16px solid transparent",
-        borderRight: "0px solid transparent",
-      }} />
-      {/* Witte vulling iets kleiner */}
-      <div style={{
-        position: "absolute",
-        bottom: "-14px",
-        right: "15px",
-        width: 0,
-        height: 0,
-        borderTop: "14px solid white",
-        borderLeft: "12px solid transparent",
-        borderRight: "0px solid transparent",
-      }} />
-    </>
-  )
-}
 
 function SpeechBubble({ hovered, text, lang }) {
   const t = translations[lang]
-  return (
-    <div style={{ position: "relative", marginBottom: "2px" }}>
-      {!hovered ? (
+
+  // SVG pijltje: zwarte buitenlaag + witte vulling die naadloos aansluit
+  const ArrowSVG = () => (
+    <svg
+      style={{ position: "absolute", bottom: "-18px", right: "10px", overflow: "visible" }}
+      width="22" height="18"
+      viewBox="0 0 22 18"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <polygon points="0,0 22,0 22,18" fill="#111111" />
+      <polygon points="3.5,0 22,0 22,14" fill="white" />
+    </svg>
+  )
+
+  if (!hovered) {
+    return (
+      <div style={{ position: "relative", display: "inline-block", marginBottom: "20px" }}>
         <div style={{
           backgroundColor: "white",
           border: "3.5px solid #111",
@@ -151,10 +136,6 @@ function SpeechBubble({ hovered, text, lang }) {
           padding: "10px 14px",
           boxSizing: "border-box",
           position: "relative",
-          display: "inline-block",
-          maxWidth: "200px",
-          alignSelf: "flex-start",
-          overflow: "visible",
         }}>
           <span style={{
             fontFamily: "Arial Black, Arial, sans-serif",
@@ -162,32 +143,33 @@ function SpeechBubble({ hovered, text, lang }) {
             fontWeight: "900",
             color: "#cc0000",
             display: "block",
-            overflowWrap: "break-word",
-            wordBreak: "break-word",
+            whiteSpace: "nowrap",
           }}>{text}</span>
-          <Arrow />
         </div>
-      ) : (
-        <div style={{
-          backgroundColor: "white",
-          border: "3.5px solid #111",
-          borderRadius: "12px",
-          padding: "12px 16px",
-          boxSizing: "border-box",
-          position: "relative",
-          display: "inline-block",
-          width: "180px",
-        }}>
-          <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>
-            {t.hoverTitle}
-          </div>
-          <div style={{ height: "1px", backgroundColor: "#eee", marginBottom: "8px" }}/>
-          {t.hoverInfo.map((item) => (
-            <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom: "5px" }}>{item}</div>
-          ))}
-          <Arrow />
+        <ArrowSVG />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: "relative", display: "inline-block", marginBottom: "20px", width: "180px" }}>
+      <div style={{
+        backgroundColor: "white",
+        border: "3.5px solid #111",
+        borderRadius: "12px",
+        padding: "12px 16px",
+        boxSizing: "border-box",
+        position: "relative",
+      }}>
+        <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>
+          {t.hoverTitle}
         </div>
-      )}
+        <div style={{ height: "1px", backgroundColor: "#eee", marginBottom: "8px" }} />
+        {t.hoverInfo.map((item) => (
+          <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom: "5px" }}>{item}</div>
+        ))}
+      </div>
+      <ArrowSVG />
     </div>
   )
 }
