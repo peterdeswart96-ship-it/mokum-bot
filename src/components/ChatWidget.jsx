@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
-import BUBBLE_TEXTS from "../config/bubbleTexts"
+import BUBBLE_TEXTS from "../config/bubble-texts"
 import translations from "../config/translations"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
