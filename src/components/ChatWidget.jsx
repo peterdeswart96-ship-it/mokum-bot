@@ -116,26 +116,26 @@ function SpeechBubble({ hovered, text, lang }) {
   // SVG pijltje: volledig zwart, punt rechtsonder
   const ArrowSVG = () => (
     <>
-      {/* Zwarte buitenste driehoek */}
+      {/* Zwarte buitenste driehoek — smal en langwerpig */}
       <div style={{
         position: "absolute",
-        bottom: "-22px",
-        right: "10px",
+        bottom: "-28px",
+        right: "0px",
         width: 0,
         height: 0,
         borderStyle: "solid",
-        borderWidth: "22px 0 0 22px",
+        borderWidth: "28px 0 0 14px",
         borderColor: "#111 transparent transparent transparent",
       }} />
       {/* Witte binnenste driehoek */}
       <div style={{
         position: "absolute",
-        bottom: "-17px",
-        right: "13px",
+        bottom: "-22px",
+        right: "3.5px",
         width: 0,
         height: 0,
         borderStyle: "solid",
-        borderWidth: "17px 0 0 17px",
+        borderWidth: "22px 0 0 10px",
         borderColor: "white transparent transparent transparent",
       }} />
     </>
