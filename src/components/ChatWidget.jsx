@@ -121,7 +121,7 @@ function SpeechBubble({ hovered, text, lang }) {
       viewBox="0 0 16 14"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <line x1="0" y1="0" x2="16" y2="14" stroke="#111" strokeWidth="3.5" strokeLinecap="round" />
+      <line x1="16" y1="0" x2="0" y2="14" stroke="#111" strokeWidth="3.5" strokeLinecap="round" />
     </svg>
   )
 
