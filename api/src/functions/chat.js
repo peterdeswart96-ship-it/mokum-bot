@@ -1,5 +1,6 @@
 const Anthropic = require("@anthropic-ai/sdk")
 const https = require("https")
+const crypto = require("crypto")
 
 const SYSTEM_PROMPT = `Je bent Mokum Bot, de digitale gast van Mokum Pool & Darts in Amsterdam Oost. Je helpt bezoekers snel aan de juiste informatie — zonder gedoe.
 
@@ -44,6 +45,97 @@ REGELS:
 - Voor toernooi-info: geef altijd de aanmeldlink als [Inschrijven via Cuescore](https://cuescore.com/mokumpooldarts/tournaments)
 - Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket), darts (301, 501, cricket) en biljart (libre, band) volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.`
 
+const STORAGE_ACCOUNT = "mokumbotrg904a"
+
+function httpsRequest(options, body) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = ""
+      res.on("data", chunk => data += chunk)
+      res.on("end", () => resolve({ status: res.statusCode, body: data }))
+    })
+    req.on("error", reject)
+    if (body) req.write(body)
+    req.end()
+  })
+}
+
+async function saveConversation(messages, reply) {
+  try {
+    const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+    if (!sasToken) {
+      console.log("Geen SAS token gevonden")
+      return
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const random = Math.random().toString(36).substring(2, 8)
+    const blobName = `${timestamp}-${random}.json`
+
+    const content = JSON.stringify({ timestamp: new Date().toISOString(), messages, reply }, null, 2)
+    const contentLength = Buffer.byteLength(content)
+
+    const options = {
+      hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+      path: `/gesprekken/${blobName}?${sasToken}`,
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": contentLength,
+        "x-ms-blob-type": "BlockBlob",
+        "x-ms-version": "2020-04-08",
+      },
+    }
+
+    const result = await httpsRequest(options, content)
+    console.log("Gesprek opgeslagen:", blobName, "status:", result.status)
+  } catch (err) {
+    console.log("Gesprek opslaan mislukt:", err.message, err.stack)
+  }
+}
+
+async function saveTournaments(tournaments) {
+  try {
+    const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+    if (!sasToken) {
+      console.log("Geen SAS token gevonden voor table storage")
+      return
+    }
+
+    for (const t of tournaments) {
+      const partitionKey = t.dateObj.toISOString().split("T")[0]
+      const rowKey = t.id
+
+      const entity = JSON.stringify({
+        PartitionKey: partitionKey,
+        RowKey: rowKey,
+        name: t.name,
+        date: t.date,
+        scraped_at: new Date().toISOString(),
+      })
+
+      const contentLength = Buffer.byteLength(entity)
+
+      const options = {
+        hostname: `${STORAGE_ACCOUNT}.table.core.windows.net`,
+        path: `/toernooistatistieken(PartitionKey='${partitionKey}',RowKey='${rowKey}')?${sasToken}`,
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": contentLength,
+          "Accept": "application/json;odata=nometadata",
+          "x-ms-version": "2020-04-08",
+        },
+      }
+
+      const result = await httpsRequest(options, entity)
+      console.log("Toernooi opgeslagen:", t.name, "status:", result.status, "body:", result.body)
+    }
+  } catch (err) {
+    console.log("Toernooien opslaan mislukt:", err.message, err.stack)
+  }
+}
+
 function fetchUrl(url) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
@@ -57,14 +149,12 @@ function fetchUrl(url) {
   })
 }
 
-
 function parseTournaments(html, today) {
   const upcoming = []
   const dateBlocks = html.split(/class="daterow"/)
 
   for (let i = 1; i < dateBlocks.length; i++) {
     const block = dateBlocks[i]
-
     const dateMatch = block.match(/((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+\w+ \d{1,2},\s+\d{4})/)
     if (!dateMatch) continue
 
@@ -93,26 +183,22 @@ async function getTournamentContext() {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Gebruik de "Komend" filter URL van de publieke club pagina
     const html = await fetchUrl("https://cuescore.com/mokumpooldarts/tournaments?q=&d=0&season=0&s=0")
-
     console.log("Cuescore HTML lengte:", html.length)
 
     const upcoming = parseTournaments(html, today)
-
-    // Sorteer op datum
     upcoming.sort((a, b) => a.dateObj - b.dateObj)
 
     console.log("Toernooien gevonden:", upcoming.length)
+
     if (upcoming.length > 0) {
-      console.log("Eerste:", upcoming[0].date, upcoming[0].name)
+      saveTournaments(upcoming)
     }
 
     if (upcoming.length === 0) {
       return "Er zijn momenteel geen aankomende toernooien gepland. Kijk op [Cuescore](https://cuescore.com/mokumpooldarts/tournaments) voor de meest actuele planning."
     }
 
-    // Groepeer per datum (max 10 toernooien)
     const limited = upcoming.slice(0, 10)
     const byDate = {}
     for (const t of limited) {
@@ -189,10 +275,14 @@ app.http("chat", {
         messages: messages,
       })
 
+      const reply = response.content[0].text
+
+      saveConversation(messages, reply)
+
       return {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ reply: response.content[0].text }),
+        body: JSON.stringify({ reply }),
       }
     } catch (error) {
       context.log("Error:", error)
