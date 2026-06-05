@@ -10,7 +10,9 @@ const translations = {
     error: "Oeps, er ging iets mis. Probeer het nog eens! 🎱",
     backToTopics: "← Terug naar onderwerpen",
     backButton: "← Terug",
-    askOther: "✏️ Een andere vraag stellen",
+    askOther: "✏️ Ik wil een andere vraag stellen",
+    spelregelsIntro: "Je hebt dus een vraag over spelregels... Over welke spelsoort wil je een vraag stellen?",
+    spelregelsBack: "← Terug naar spelregels",
     topics: [
       { id: "pool",           emoji: "🎱", label: "Pool & Biljart" },
       { id: "darts",          emoji: "🎯", label: "Darts" },
@@ -52,17 +54,48 @@ const translations = {
         "Zijn er ook toernooien voor beginnende spelers?",
         "Wat kost deelname?",
       ],
-      spelregels: [
-        "Leg de regels van 8-ball uit",
-        "Hoe speel je 9-ball?",
-        "Hoe werkt 501 darts?",
-        "Wat zijn de regels van biljart?",
-      ],
       locatie: [
         "Waar is Mokum gevestigd?",
         "Hoe kom ik er met het OV?",
         "Is er parkeergelegenheid?",
         "Hoe ver is het van Amstel Station?",
+      ],
+    },
+    spelregelsDisciplines: [
+      { id: "american-pool", emoji: "🎱", label: "American Pool" },
+      { id: "english-pool",  emoji: "🎱", label: "English Pool" },
+      { id: "darts",         emoji: "🎯", label: "Darts" },
+      { id: "biljart",       emoji: "🔵", label: "Biljart" },
+      { id: "shuffleboard",  emoji: "🛝", label: "Shuffleboard" },
+    ],
+    spelregelsQuestions: {
+      "american-pool": [
+        "Wat zijn de regels van 8-ball?",
+        "Hoe speel je 9-ball?",
+        "Wat zijn de regels van 10-ball?",
+        "Hoe werkt Straight Pool?",
+        "Wat zijn de regels van One Pocket?",
+      ],
+      "english-pool": [
+        "Wat zijn de regels van English Pool?",
+        "Wat is het verschil tussen American en English pool?",
+        "Welke ballen gebruik je bij English Pool?",
+      ],
+      "darts": [
+        "Hoe werkt 501 darts?",
+        "Wat zijn de regels van Cricket darts?",
+        "Hoe werkt 301 darts?",
+        "Wat is een checkout in darts?",
+      ],
+      "biljart": [
+        "Wat zijn de regels van libre biljart?",
+        "Hoe werkt bandstoten?",
+        "Wat zijn de regels van driebanden?",
+      ],
+      "shuffleboard": [
+        "Hoe speel je shuffleboard?",
+        "Hoeveel spelers doen mee bij shuffleboard?",
+        "Hoe werkt de puntentelling bij shuffleboard?",
       ],
     },
     hoverInfo: [
@@ -83,7 +116,9 @@ const translations = {
     error: "Oops, something went wrong. Please try again! 🎱",
     backToTopics: "← Back to topics",
     backButton: "← Back",
-    askOther: "✏️ Ask a different question",
+    askOther: "✏️ I want to ask a different question",
+    spelregelsIntro: "So you have a question about game rules... Which discipline would you like to ask about?",
+    spelregelsBack: "← Back to game rules",
     topics: [
       { id: "pool",           emoji: "🎱", label: "Pool & Billiards" },
       { id: "darts",          emoji: "🎯", label: "Darts" },
@@ -125,17 +160,48 @@ const translations = {
         "Are there tournaments for beginners?",
         "How much does it cost to participate?",
       ],
-      spelregels: [
-        "Explain the rules of 8-ball",
-        "How do you play 9-ball?",
-        "How does 501 darts work?",
-        "What are the rules of billiards?",
-      ],
       locatie: [
         "Where is Mokum located?",
         "How do I get there by public transport?",
         "Is there parking available?",
         "How far is it from Amstel Station?",
+      ],
+    },
+    spelregelsDisciplines: [
+      { id: "american-pool", emoji: "🎱", label: "American Pool" },
+      { id: "english-pool",  emoji: "🎱", label: "English Pool" },
+      { id: "darts",         emoji: "🎯", label: "Darts" },
+      { id: "biljart",       emoji: "🔵", label: "Billiards" },
+      { id: "shuffleboard",  emoji: "🛝", label: "Shuffleboard" },
+    ],
+    spelregelsQuestions: {
+      "american-pool": [
+        "What are the rules of 8-ball?",
+        "How do you play 9-ball?",
+        "What are the rules of 10-ball?",
+        "How does Straight Pool work?",
+        "What are the rules of One Pocket?",
+      ],
+      "english-pool": [
+        "What are the rules of English Pool?",
+        "What is the difference between American and English pool?",
+        "Which balls are used in English Pool?",
+      ],
+      "darts": [
+        "How does 501 darts work?",
+        "What are the rules of Cricket darts?",
+        "How does 301 darts work?",
+        "What is a checkout in darts?",
+      ],
+      "biljart": [
+        "What are the rules of libre billiards?",
+        "How does cushion billiards work?",
+        "What are the rules of three-cushion billiards?",
+      ],
+      "shuffleboard": [
+        "How do you play shuffleboard?",
+        "How many players can play shuffleboard?",
+        "How does the scoring work in shuffleboard?",
       ],
     },
     hoverInfo: [
