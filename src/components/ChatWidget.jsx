@@ -379,7 +379,7 @@ export default function ChatWidget() {
                   lineHeight: 1.4,
                 }}
               >
-                {FLAGS[lang === "nl" ? "en" : "nl"]}
+                {FLAGS[lang]}
               </button>
 
               {/* Expand knop */}
