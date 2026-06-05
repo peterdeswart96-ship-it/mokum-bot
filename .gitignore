@@ -12,3 +12,5 @@ api.zip
 deploy.zip
 deploy.ps1
 src/components/ChatWidget.jsx.old
+node_modules
+kennisbronnen-upload/
