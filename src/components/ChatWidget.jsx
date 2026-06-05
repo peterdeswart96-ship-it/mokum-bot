@@ -109,11 +109,9 @@ function EightBallIcon({ size = 64, animate = false }) {
   )
 }
 
-
 function SpeechBubble({ hovered, text, lang }) {
   const t = translations[lang]
 
-  // SVG pijltje: volledig zwart, punt rechtsonder
   const ArrowSVG = () => (
     <svg
       style={{ position: "absolute", bottom: "-16px", right: "32px" }}
@@ -243,6 +241,7 @@ export default function ChatWidget() {
   const [hovered, setHovered] = useState(false)
   const [stage, setStage] = useState("topics")
   const [selectedTopic, setSelectedTopic] = useState(null)
+  const [selectedDiscipline, setSelectedDiscipline] = useState(null)
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
@@ -276,6 +275,7 @@ export default function ChatWidget() {
     setMessages([{ role: "assistant", content: translations[newLang].welcome }])
     setStage("topics")
     setSelectedTopic(null)
+    setSelectedDiscipline(null)
   }
 
   async function sendMessage(text) {
@@ -310,6 +310,10 @@ export default function ChatWidget() {
   function selectTopic(topic) {
     if (topic.id === "anders") {
       setStage("chat")
+    } else if (topic.id === "spelregels") {
+      setSelectedTopic(topic)
+      setMessages(prev => [...prev, { role: "assistant", content: t.spelregelsIntro }])
+      setStage("spelregels")
     } else {
       setSelectedTopic(topic)
       setStage("questions")
@@ -319,6 +323,7 @@ export default function ChatWidget() {
   function resetChat() {
     setStage("topics")
     setSelectedTopic(null)
+    setSelectedDiscipline(null)
     setMessages([{ role: "assistant", content: t.welcome }])
     setInput("")
   }
@@ -359,7 +364,7 @@ export default function ChatWidget() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
 
-              {/* Taalwisselaar met vlaggetje */}
+              {/* Taalwisselaar */}
               <button
                 onClick={switchLanguage}
                 title={lang === "nl" ? "Switch to English" : "Naar Nederlands"}
@@ -451,6 +456,52 @@ export default function ChatWidget() {
               </div>
             )}
 
+            {/* Spelregels: discipline keuze */}
+            {stage === "spelregels" && !loading && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                {t.spelregelsDisciplines.map((disc) => (
+                  <ChipButton key={disc.id} onClick={() => {
+                    setSelectedDiscipline(disc)
+                    setStage("spelregels-questions")
+                  }}>
+                    {disc.emoji} {disc.label}
+                  </ChipButton>
+                ))}
+                <ChipButton onClick={() => setStage("chat")} accent>
+                  {t.askOther}
+                </ChipButton>
+                <button
+                  onClick={() => setStage("topics")}
+                  style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
+                >
+                  {t.backButton}
+                </button>
+              </div>
+            )}
+
+            {/* Spelregels: vragen per discipline */}
+            {stage === "spelregels-questions" && selectedDiscipline && !loading && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
+                  {selectedDiscipline.emoji} {selectedDiscipline.label}
+                </div>
+                {(t.spelregelsQuestions[selectedDiscipline.id] || []).map((q) => (
+                  <ChipButton key={q} onClick={() => sendMessage(q)}>
+                    {q}
+                  </ChipButton>
+                ))}
+                <ChipButton onClick={() => setStage("chat")} accent>
+                  {t.askOther}
+                </ChipButton>
+                <button
+                  onClick={() => setStage("spelregels")}
+                  style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
+                >
+                  {t.spelregelsBack}
+                </button>
+              </div>
+            )}
+
             {/* Stap 2: Voorgestelde vragen */}
             {stage === "questions" && selectedTopic && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
@@ -487,8 +538,8 @@ export default function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
-          {(stage === "chat" || stage === "questions") && (
+          {/* Input — ook zichtbaar in spelregels stages */}
+          {(stage === "chat" || stage === "questions" || stage === "spelregels" || stage === "spelregels-questions") && (
             <div style={{
               borderTop: `1px solid ${C.border}`,
               backgroundColor: C.blackCard,
