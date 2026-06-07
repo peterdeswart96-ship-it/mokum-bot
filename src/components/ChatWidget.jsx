@@ -17,6 +17,7 @@ const C = {
 }
 
 const FLAGS = { nl: "🇳🇱", en: "🇬🇧" }
+const INTERN_HASH = "3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f"
 
 function detectLanguage() {
   const browserLang = navigator.language?.toLowerCase() || "en"
@@ -41,37 +42,23 @@ function EightBallIcon({ size = 64, animate = false }) {
           50% { transform: translateY(-5px); }
         }
       `}</style>
-      <svg
-        width={size}
-        height={Math.round(size * 1.1)}
-        viewBox="0 0 200 220"
-        xmlns="http://www.w3.org/2000/svg"
-        style={animStyle}
-      >
+      <svg width={size} height={Math.round(size * 1.1)} viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" style={animStyle}>
         <title>Mokum Magic 8 Ball</title>
         <defs>
           <radialGradient id="ballGrad" cx="38%" cy="32%" r="62%">
-            <stop offset="0%" stopColor="#3a3a3a"/>
-            <stop offset="40%" stopColor="#111111"/>
-            <stop offset="100%" stopColor="#0a0a0a"/>
+            <stop offset="0%" stopColor="#3a3a3a"/><stop offset="40%" stopColor="#111111"/><stop offset="100%" stopColor="#0a0a0a"/>
           </radialGradient>
           <radialGradient id="circleGrad" cx="42%" cy="38%" r="58%">
-            <stop offset="0%" stopColor="#ffffff"/>
-            <stop offset="70%" stopColor="#f0f0f0"/>
-            <stop offset="100%" stopColor="#cccccc"/>
+            <stop offset="0%" stopColor="#ffffff"/><stop offset="70%" stopColor="#f0f0f0"/><stop offset="100%" stopColor="#cccccc"/>
           </radialGradient>
           <radialGradient id="hatBodyGrad" cx="38%" cy="20%" r="70%">
-            <stop offset="0%" stopColor="#2e2e2e"/>
-            <stop offset="50%" stopColor="#141414"/>
-            <stop offset="100%" stopColor="#0a0a0a"/>
+            <stop offset="0%" stopColor="#2e2e2e"/><stop offset="50%" stopColor="#141414"/><stop offset="100%" stopColor="#0a0a0a"/>
           </radialGradient>
           <radialGradient id="brimGrad" cx="50%" cy="35%" r="65%">
-            <stop offset="0%" stopColor="#222222"/>
-            <stop offset="100%" stopColor="#0a0a0a"/>
+            <stop offset="0%" stopColor="#222222"/><stop offset="100%" stopColor="#0a0a0a"/>
           </radialGradient>
           <radialGradient id="shineGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.16"/>
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.16"/><stop offset="100%" stopColor="#ffffff" stopOpacity="0"/>
           </radialGradient>
         </defs>
         <circle cx="100" cy="140" r="68" fill="url(#ballGrad)"/>
@@ -111,14 +98,8 @@ function EightBallIcon({ size = 64, animate = false }) {
 
 function SpeechBubble({ hovered, text, lang }) {
   const t = translations[lang]
-
   const ArrowSVG = () => (
-    <svg
-      style={{ position: "absolute", bottom: "-16px", right: "32px" }}
-      width="4" height="16"
-      viewBox="0 0 4 16"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg style={{ position: "absolute", bottom: "-16px", right: "32px" }} width="4" height="16" viewBox="0 0 4 16" xmlns="http://www.w3.org/2000/svg">
       <line x1="2" y1="0" x2="2" y2="16" stroke="#111" strokeWidth="3.5" strokeLinecap="round" />
     </svg>
   )
@@ -126,23 +107,8 @@ function SpeechBubble({ hovered, text, lang }) {
   if (!hovered) {
     return (
       <div style={{ position: "relative", display: "inline-block", marginBottom: "18px" }}>
-        <div style={{
-          backgroundColor: "white",
-          border: "3.5px solid #111",
-          borderRadius: "12px",
-          padding: "10px 16px",
-          boxSizing: "border-box",
-          position: "relative",
-        }}>
-          <span style={{
-            fontFamily: "Arial Black, Arial, sans-serif",
-            fontSize: "12px",
-            fontWeight: "900",
-            color: "#cc0000",
-            display: "block",
-            whiteSpace: "nowrap",
-            textAlign: "center",
-          }}>{text}</span>
+        <div style={{ backgroundColor: "white", border: "3.5px solid #111", borderRadius: "12px", padding: "10px 16px", boxSizing: "border-box", position: "relative" }}>
+          <span style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "12px", fontWeight: "900", color: "#cc0000", display: "block", whiteSpace: "nowrap", textAlign: "center" }}>{text}</span>
         </div>
         <ArrowSVG />
       </div>
@@ -151,17 +117,8 @@ function SpeechBubble({ hovered, text, lang }) {
 
   return (
     <div style={{ position: "relative", display: "inline-block", marginBottom: "20px", width: "180px" }}>
-      <div style={{
-        backgroundColor: "white",
-        border: "3.5px solid #111",
-        borderRadius: "12px",
-        padding: "12px 16px",
-        boxSizing: "border-box",
-        position: "relative",
-      }}>
-        <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>
-          {t.hoverTitle}
-        </div>
+      <div style={{ backgroundColor: "white", border: "3.5px solid #111", borderRadius: "12px", padding: "12px 16px", boxSizing: "border-box", position: "relative" }}>
+        <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>{t.hoverTitle}</div>
         <div style={{ height: "1px", backgroundColor: "#eee", marginBottom: "8px" }} />
         {t.hoverInfo.map((item) => (
           <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom: "5px" }}>{item}</div>
@@ -183,28 +140,15 @@ const markdownStyles = {
 
 function BotMessage({ content }) {
   return (
-    <div style={{
-      maxWidth: "85%",
-      padding: "10px 14px",
-      borderRadius: "12px 12px 12px 2px",
-      fontSize: "14px",
-      lineHeight: "1.55",
-      backgroundColor: C.blackCard,
-      color: C.white,
-      border: `1px solid ${C.border}`,
-    }}>
-      <ReactMarkdown
-        components={{
-          p: ({ children }) => <p style={markdownStyles.p}>{children}</p>,
-          strong: ({ children }) => <strong style={markdownStyles.strong}>{children}</strong>,
-          ul: ({ children }) => <ul style={markdownStyles.ul}>{children}</ul>,
-          ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
-          li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
-          a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+    <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.blackCard, color: C.white, border: `1px solid ${C.border}` }}>
+      <ReactMarkdown components={{
+        p: ({ children }) => <p style={markdownStyles.p}>{children}</p>,
+        strong: ({ children }) => <strong style={markdownStyles.strong}>{children}</strong>,
+        ul: ({ children }) => <ul style={markdownStyles.ul}>{children}</ul>,
+        ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
+        li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
+        a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
+      }}>{content}</ReactMarkdown>
     </div>
   )
 }
@@ -212,25 +156,12 @@ function BotMessage({ content }) {
 function ChipButton({ onClick, children, accent = false }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        fontSize: "13px",
-        padding: "8px 14px",
-        borderRadius: "20px",
-        backgroundColor: accent
-          ? (hovered ? C.redDark : C.red)
-          : (hovered ? "#2a2a2a" : "transparent"),
-        color: C.white,
-        border: accent ? "none" : `1px solid ${hovered ? "#444" : C.border}`,
-        cursor: "pointer",
-        transition: "all 0.15s ease",
-        textAlign: "left",
-        lineHeight: "1.4",
-      }}
-    >
+    <button onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
+      fontSize: "13px", padding: "8px 14px", borderRadius: "20px",
+      backgroundColor: accent ? (hovered ? C.redDark : C.red) : (hovered ? "#2a2a2a" : "transparent"),
+      color: C.white, border: accent ? "none" : `1px solid ${hovered ? "#444" : C.border}`,
+      cursor: "pointer", transition: "all 0.15s ease", textAlign: "left", lineHeight: "1.4",
+    }}>
       {children}
     </button>
   )
@@ -242,6 +173,9 @@ export default function ChatWidget() {
   const [stage, setStage] = useState("topics")
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedDiscipline, setSelectedDiscipline] = useState(null)
+  const [internUnlocked, setInternUnlocked] = useState(false)
+  const [internPwd, setInternPwd] = useState("")
+  const [internPwdError, setInternPwdError] = useState(false)
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
@@ -276,32 +210,29 @@ export default function ChatWidget() {
     setStage("topics")
     setSelectedTopic(null)
     setSelectedDiscipline(null)
+    setInternUnlocked(false)
+    setInternPwd("")
+    setInternPwdError(false)
   }
 
   async function sendMessage(text) {
     const userMessage = text || input
     if (!userMessage.trim()) return
-
     const newMessages = [...messages, { role: "user", content: userMessage }]
     setMessages(newMessages)
     setInput("")
     setLoading(true)
     setStage("chat")
-
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
       })
-
       const data = await response.json()
       setMessages([...newMessages, { role: "assistant", content: data.reply }])
     } catch (err) {
-      setMessages([
-        ...newMessages,
-        { role: "assistant", content: t.error },
-      ])
+      setMessages([...newMessages, { role: "assistant", content: t.error }])
     } finally {
       setLoading(false)
     }
@@ -314,9 +245,26 @@ export default function ChatWidget() {
       setSelectedTopic(topic)
       setMessages(prev => [...prev, { role: "assistant", content: t.spelregelsIntro }])
       setStage("spelregels")
+    } else if (topic.id === "intern" && !internUnlocked) {
+      setSelectedTopic(topic)
+      setStage("intern-login")
     } else {
       setSelectedTopic(topic)
       setStage("questions")
+    }
+  }
+
+  async function checkInternPwd() {
+    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(internPwd))
+    const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("")
+    if (hashHex === INTERN_HASH) {
+      setInternUnlocked(true)
+      setInternPwdError(false)
+      setInternPwd("")
+      setSelectedTopic({ id: "intern", emoji: "🔒", label: lang === "nl" ? "Intern" : "Internal" })
+      setStage("questions")
+    } else {
+      setInternPwdError(true)
     }
   }
 
@@ -324,6 +272,9 @@ export default function ChatWidget() {
     setStage("topics")
     setSelectedTopic(null)
     setSelectedDiscipline(null)
+    setInternUnlocked(false)
+    setInternPwd("")
+    setInternPwdError(false)
     setMessages([{ role: "assistant", content: t.welcome }])
     setInput("")
   }
@@ -336,25 +287,15 @@ export default function ChatWidget() {
           marginBottom: "16px",
           width: expanded ? "min(80vw, 900px)" : "380px",
           height: expanded ? "80vh" : "580px",
-          borderRadius: "16px",
-          overflow: "hidden",
+          borderRadius: "16px", overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
-          display: "flex",
-          flexDirection: "column",
+          display: "flex", flexDirection: "column",
           backgroundColor: C.black,
           transition: "width 0.3s ease, height 0.3s ease",
         }}>
 
           {/* Header */}
-          <div style={{
-            backgroundColor: C.blackCard,
-            borderBottom: `1px solid ${C.border}`,
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0,
-          }}>
+          <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <EightBallIcon size={36} />
               <div>
@@ -363,47 +304,13 @@ export default function ChatWidget() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-
-              {/* Taalwisselaar */}
-              <button
-                onClick={switchLanguage}
-                title={lang === "nl" ? "Switch to English" : "Naar Nederlands"}
-                style={{
-                  background: "none",
-                  border: `1px solid ${C.border}`,
-                  borderRadius: "6px",
-                  color: C.white,
-                  cursor: "pointer",
-                  fontSize: "16px",
-                  padding: "3px 8px",
-                  lineHeight: 1.4,
-                }}
-              >
-                {FLAGS[lang]}
+              <button onClick={switchLanguage} title={lang === "nl" ? "Switch to English" : "Naar Nederlands"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, cursor: "pointer", fontSize: "16px", padding: "3px 8px", lineHeight: 1.4 }}>
+                {FLAGS[lang === "nl" ? "en" : "nl"]}
               </button>
-
-              {/* Expand knop */}
-              <button
-                onClick={() => setExpanded(!expanded)}
-                title={expanded ? "Verkleinen" : "Maximaliseren"}
-                style={{
-                  background: "none",
-                  border: `1px solid ${C.border}`,
-                  borderRadius: "6px",
-                  color: C.gray,
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  padding: "4px 8px",
-                }}
-              >
+              <button onClick={() => setExpanded(!expanded)} title={expanded ? "Verkleinen" : "Maximaliseren"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "12px", padding: "4px 8px" }}>
                 {expanded ? "⊡" : "⊞"}
               </button>
-
-              <button onClick={() => setOpen(false)} style={{
-                background: "none", border: "none", color: C.gray,
-                cursor: "pointer", fontSize: "18px", fontWeight: "bold",
-                padding: "4px", lineHeight: 1,
-              }}>✕</button>
+              <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: "4px", lineHeight: 1 }}>✕</button>
             </div>
           </div>
 
@@ -413,17 +320,7 @@ export default function ChatWidget() {
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 {msg.role === "user" ? (
-                  <div style={{
-                    maxWidth: "85%",
-                    padding: "10px 14px",
-                    borderRadius: "12px 12px 2px 12px",
-                    fontSize: "14px",
-                    lineHeight: "1.55",
-                    backgroundColor: C.red,
-                    color: C.white,
-                  }}>
-                    {msg.content}
-                  </div>
+                  <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 2px 12px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.red, color: C.white }}>{msg.content}</div>
                 ) : (
                   <BotMessage content={msg.content} />
                 )}
@@ -432,20 +329,11 @@ export default function ChatWidget() {
 
             {loading && (
               <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                <div style={{
-                  padding: "10px 14px",
-                  borderRadius: "12px 12px 12px 2px",
-                  fontSize: "14px",
-                  backgroundColor: C.blackCard,
-                  color: C.gray,
-                  border: `1px solid ${C.border}`,
-                }}>
-                  {t.typing}
-                </div>
+                <div style={{ padding: "10px 14px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", backgroundColor: C.blackCard, color: C.gray, border: `1px solid ${C.border}` }}>{t.typing}</div>
               </div>
             )}
 
-            {/* Stap 1: Onderwerpknoppen */}
+            {/* Topics */}
             {stage === "topics" && !loading && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
                 {t.topics.map((topic) => (
@@ -456,126 +344,83 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Spelregels: discipline keuze */}
+            {/* Intern login */}
+            {stage === "intern-login" && !loading && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                <div style={{ fontSize: "13px", color: C.white, marginBottom: "4px" }}>🔒 {t.internPwdPrompt}</div>
+                <input
+                  type="password"
+                  value={internPwd}
+                  onChange={(e) => setInternPwd(e.target.value)}
+                  onKeyDown={async (e) => { if (e.key === "Enter") await checkInternPwd() }}
+                  placeholder={lang === "nl" ? "Wachtwoord..." : "Password..."}
+                  autoFocus
+                  style={{ padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${internPwdError ? C.red : C.border}`, outline: "none" }}
+                />
+                {internPwdError && <div style={{ fontSize: "12px", color: C.red }}>{t.internPwdError}</div>}
+                <ChipButton onClick={checkInternPwd} accent>{t.internPwdBtn}</ChipButton>
+                <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
+              </div>
+            )}
+
+            {/* Spelregels disciplines */}
             {stage === "spelregels" && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 {t.spelregelsDisciplines.map((disc) => (
-                  <ChipButton key={disc.id} onClick={() => {
-                    setSelectedDiscipline(disc)
-                    setStage("spelregels-questions")
-                  }}>
+                  <ChipButton key={disc.id} onClick={() => { setSelectedDiscipline(disc); setStage("spelregels-questions") }}>
                     {disc.emoji} {disc.label}
                   </ChipButton>
                 ))}
-                <ChipButton onClick={() => setStage("chat")} accent>
-                  {t.askOther}
-                </ChipButton>
-                <button
-                  onClick={() => setStage("topics")}
-                  style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
-                >
-                  {t.backButton}
-                </button>
+                <ChipButton onClick={() => setStage("chat")} accent>{t.askOther}</ChipButton>
+                <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
               </div>
             )}
 
-            {/* Spelregels: vragen per discipline */}
+            {/* Spelregels vragen */}
             {stage === "spelregels-questions" && selectedDiscipline && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
-                  {selectedDiscipline.emoji} {selectedDiscipline.label}
-                </div>
+                <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>{selectedDiscipline.emoji} {selectedDiscipline.label}</div>
                 {(t.spelregelsQuestions[selectedDiscipline.id] || []).map((q) => (
-                  <ChipButton key={q} onClick={() => sendMessage(q)}>
-                    {q}
-                  </ChipButton>
+                  <ChipButton key={q} onClick={() => sendMessage(q)}>{q}</ChipButton>
                 ))}
-                <ChipButton onClick={() => setStage("chat")} accent>
-                  {t.askOther}
-                </ChipButton>
-                <button
-                  onClick={() => setStage("spelregels")}
-                  style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
-                >
-                  {t.spelregelsBack}
-                </button>
+                <ChipButton onClick={() => setStage("chat")} accent>{t.askOther}</ChipButton>
+                <button onClick={() => setStage("spelregels")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.spelregelsBack}</button>
               </div>
             )}
 
-            {/* Stap 2: Voorgestelde vragen */}
+            {/* Voorgestelde vragen */}
             {stage === "questions" && selectedTopic && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
                   {selectedTopic.emoji} {t.topics.find(tp => tp.id === selectedTopic.id)?.label}
                 </div>
                 {(t.questions[selectedTopic.id] || []).map((q) => (
-                  <ChipButton key={q} onClick={() => sendMessage(q)}>
-                    {q}
-                  </ChipButton>
+                  <ChipButton key={q} onClick={() => sendMessage(q)}>{q}</ChipButton>
                 ))}
-                <ChipButton onClick={() => setStage("chat")} accent>
-                  {t.askOther}
-                </ChipButton>
-                <button
-                  onClick={() => setStage("topics")}
-                  style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}
-                >
-                  {t.backButton}
-                </button>
+                <ChipButton onClick={() => setStage("chat")} accent>{t.askOther}</ChipButton>
+                <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
               </div>
             )}
 
             {/* Terug knop in chat */}
             {stage === "chat" && messages.length <= 3 && !loading && (
-              <button
-                onClick={resetChat}
-                style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}
-              >
-                {t.backToTopics}
-              </button>
+              <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
             )}
 
             <div ref={bottomRef} />
           </div>
 
-          {/* Input — ook zichtbaar in spelregels stages */}
+          {/* Input */}
           {(stage === "chat" || stage === "questions" || stage === "spelregels" || stage === "spelregels-questions") && (
-            <div style={{
-              borderTop: `1px solid ${C.border}`,
-              backgroundColor: C.blackCard,
-              padding: "12px 16px",
-              display: "flex",
-              gap: "8px",
-              flexShrink: 0,
-            }}>
+            <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "12px 16px", display: "flex", gap: "8px", flexShrink: 0 }}>
               <input
-                type="text"
-                value={input}
+                type="text" value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 placeholder={t.placeholder}
-                style={{
-                  flex: 1,
-                  padding: "10px 14px",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  color: C.white,
-                  backgroundColor: C.blackInput,
-                  border: `1px solid ${C.border}`,
-                  outline: "none",
-                }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
               />
-              <button onClick={() => sendMessage()} disabled={loading} style={{
-                padding: "10px 18px",
-                borderRadius: "8px",
-                fontSize: "16px",
-                fontWeight: "bold",
-                color: C.white,
-                backgroundColor: C.red,
-                border: "none",
-                cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.5 : 1,
-              }}>→</button>
+              <button onClick={() => sendMessage()} disabled={loading} style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}>→</button>
             </div>
           )}
         </div>
@@ -583,23 +428,9 @@ export default function ChatWidget() {
 
       {/* Floating knop */}
       {!open && (
-        <div
-          style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
           <SpeechBubble hovered={hovered} text={BUBBLE_TEXTS[bubbleTextIndex]} lang={lang} />
-          <button
-            onClick={() => setOpen(true)}
-            style={{
-              backgroundColor: "transparent",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.6))",
-              transform: hovered ? "scale(1.1)" : "scale(1)",
-              transition: "transform 0.2s",
-            }}>
+          <button onClick={() => setOpen(true)} style={{ backgroundColor: "transparent", border: "none", padding: 0, cursor: "pointer", filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.6))", transform: hovered ? "scale(1.1)" : "scale(1)", transition: "transform 0.2s" }}>
             <EightBallIcon size={64} animate={true} />
           </button>
         </div>
@@ -607,23 +438,7 @@ export default function ChatWidget() {
 
       {/* Sluit knop */}
       {open && (
-        <button
-          onClick={() => setOpen(false)}
-          style={{
-            marginTop: "8px",
-            width: "64px",
-            height: "64px",
-            borderRadius: "50%",
-            backgroundColor: C.black,
-            border: `2px solid ${C.border}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: C.gray,
-            fontSize: "20px",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
+        <button onClick={() => setOpen(false)} style={{ marginTop: "8px", width: "64px", height: "64px", borderRadius: "50%", backgroundColor: C.black, border: `2px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.gray, fontSize: "20px", fontWeight: "bold", cursor: "pointer" }}
           onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
           onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
           ✕

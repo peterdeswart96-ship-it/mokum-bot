@@ -97,6 +97,18 @@ const TOPIC_MAP = [
     folders: ["algemeen"],
     keywords: ["mokum", "oprichter", "nick", "mark", "over ons", "about", "faciliteit", "bedrijfsuitje", "clinic", "les"],
   },
+  {
+    folders: ["eten-drinken"],
+    keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "burger", "friet", "koffie", "cocktail", "wijn", "food", "drink", "beer", "coffee", "wine", "hungry", "thirsty", "honger", "dorst", "bestellen", "order", "hapje", "drankje"],
+  },
+  {
+  {
+    folders: ["intern"],
+    keywords: ["intern", "internal", "werkrooster", "keuken", "kassa", "medewerker", "personeel", "instructie", "schedule", "kitchen", "cash register"],
+  },
+    folders: ["toernooi-historie"],
+    keywords: ["resultaat", "uitslag", "winnaar", "gewonnen", "verloren", "history", "historie", "result", "winner", "wie won", "who won", "laatste toernooi", "vorige toernooi", "ranking stand", "eindstand"],
+  },
 ]
 
 function httpsRequest(options, body) {
@@ -422,6 +434,81 @@ app.http("chat", {
       }
     } catch (error) {
       context.log("Error:", error)
+      return {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Internal server error" }),
+      }
+    }
+  },
+})
+
+app.http("gesprekken", {
+  methods: ["GET", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+
+    if (request.method === "OPTIONS") {
+      return { status: 204, headers: corsHeaders }
+    }
+
+    try {
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) {
+        return {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Geen SAS token geconfigureerd" }),
+        }
+      }
+
+      const action = new URL(request.url).searchParams.get("action") || "list"
+      const blobName = new URL(request.url).searchParams.get("blob")
+
+      if (action === "list") {
+        const options = {
+          hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+          path: `/gesprekken?restype=container&comp=list&maxresults=500&${sasToken}`,
+          method: "GET",
+          headers: { "x-ms-version": "2020-04-08" },
+        }
+        const result = await httpsRequest(options)
+        const matches = [...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)]
+        const namen = matches.map(m => m[1])
+        return {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ namen }),
+        }
+      }
+
+      if (action === "get" && blobName) {
+        const options = {
+          hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+          path: `/gesprekken/${encodeURIComponent(blobName)}?${sasToken}`,
+          method: "GET",
+          headers: { "x-ms-version": "2020-04-08" },
+        }
+        const result = await httpsRequest(options)
+        return {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: result.body,
+        }
+      }
+
+      return {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Ongeldige actie" }),
+      }
+    } catch (error) {
+      context.log("Gesprekken error:", error)
       return {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
