@@ -3,10 +3,11 @@
 // De bubble wisselt elke 15 seconden van tekst zolang de chat gesloten is.
 
 const BUBBLE_TEXTS = [
-  "ASK ME ANYTHING!",
-  "HELLOOO!",
-  "I HAVEN'T GOT ALL DAY!",
-  "I'M BORED, ASK ME SOMETHING",
+  "Ask me anything!",
+  "Have you got any questions?",
+  "I am happy to help you!",
+  "Chalking my cue tip...",
+  "Need some info on arrangements?",
 ]
 
 export default BUBBLE_TEXTS
