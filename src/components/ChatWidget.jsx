@@ -304,6 +304,23 @@ export default function ChatWidget() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* Home knop */}
+              <button
+                onClick={resetChat}
+                title={lang === "nl" ? "Terug naar home" : "Back to home"}
+                style={{
+                  background: "none",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "6px",
+                  color: C.gray,
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  padding: "4px 8px",
+                  lineHeight: 1.4,
+                }}
+              >
+                🏠
+              </button>
               <button onClick={switchLanguage} title={lang === "nl" ? "Switch to English" : "Naar Nederlands"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, cursor: "pointer", fontSize: "16px", padding: "3px 8px", lineHeight: 1.4 }}>
                 {FLAGS[lang === "nl" ? "en" : "nl"]}
               </button>
@@ -403,8 +420,7 @@ export default function ChatWidget() {
             )}
 
             {/* Terug knop in chat */}
-            {stage === "chat" && messages.length <= 3 && !loading && (
-              <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
+            {stage === "chat" && !loading && (              <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
             )}
 
             <div ref={bottomRef} />
