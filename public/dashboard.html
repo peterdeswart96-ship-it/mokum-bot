@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mokum Bot — Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { background: #0a0a0a; color: #fff; min-height: 100vh; }
+  
+  #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 2rem; width: 100%; max-width: 380px; text-align: center; }
+  .login-card h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .login-card p { color: #888; font-size: 13px; margin-bottom: 1.5rem; }
+  .login-card input { width: 100%; padding: 10px 14px; border-radius: 8px; background: #1f1f1f; border: 1px solid #2a2a2a; color: #fff; font-size: 14px; margin-bottom: 12px; }
+  .login-card input:focus { outline: none; border-color: #cc0000; }
+  .btn-red { background: #cc0000; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; }
+  .btn-red:hover { background: #990000; }
+  #login-error { color: #ff6b6b; font-size: 13px; margin-top: 8px; display: none; }
+
+  #dashboard { display: none; }
+  header { background: #161616; border-bottom: 1px solid #2a2a2a; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.06em; }
+  header span { color: #cc0000; font-size: 11px; }
+  .logout-btn { background: none; border: 1px solid #2a2a2a; color: #888; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .logout-btn:hover { color: #fff; }
+
+  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .metric { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem; text-align: center; }
+  .metric-val { font-size: 24px; font-weight: 500; }
+  .metric-label { font-size: 12px; color: #888; margin-top: 4px; }
+
+  .card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  input[type=date], input[type=text], select { background: #1f1f1f; border: 1px solid #2a2a2a; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; width: 100%; }
+  input:focus, select:focus { outline: none; border-color: #cc0000; }
+  .btn { background: none; border: 1px solid #2a2a2a; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .btn:hover { background: #2a2a2a; }
+  .btn-sm-red { background: #cc0000; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .btn-sm-red:hover { background: #990000; }
+  .btn-sm-red:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .convo-item { border-bottom: 1px solid #1f1f1f; padding: 12px 0; cursor: pointer; }
+  .convo-item:last-child { border-bottom: none; }
+  .convo-item:hover { background: #1a1a1a; margin: 0 -1.25rem; padding: 12px 1.25rem; border-radius: 8px; }
+  .convo-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .convo-meta { font-size: 12px; color: #888; }
+  .convo-detail { background: #111; border-radius: 8px; padding: 12px; margin-top: 8px; display: none; }
+  .msg-user { background: #cc0000; color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.4; }
+  .msg-bot { background: #1f1f1f; border: 1px solid #2a2a2a; padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.4; }
+
+  .analyse-item { background: #1f1f1f; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+  .progress-bar { background: #2a2a2a; border-radius: 2px; height: 4px; margin-top: 6px; }
+  .progress-fill { background: #cc0000; height: 4px; border-radius: 2px; }
+  .empty { text-align: center; padding: 3rem; color: #888; }
+  .status { font-size: 12px; color: #888; margin-top: 8px; }
+  .status.ok { color: #4caf50; }
+  .status.err { color: #ff6b6b; }
+
+  @media (max-width: 600px) { .metrics { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size: 48px; margin-bottom: 12px;">🎱</div>
+    <h1>MOKUM MAGIC 8 BALL</h1>
+    <p>Dashboard — alleen voor beheerders</p>
+    <input type="password" id="pwd-input" placeholder="Wachtwoord" onkeydown="if(event.key==='Enter')login()" />
+    <button class="btn-red" onclick="login()">Inloggen</button>
+    <div id="login-error">Verkeerd wachtwoord</div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <header>
+    <div>
+      <h1>MOKUM MAGIC 8 BALL</h1>
+      <span>Gesprekken Dashboard</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Uitloggen</button>
+  </header>
+  <main>
+
+    <div class="metrics" id="metrics">
+      <div class="metric"><div class="metric-val" id="m-totaal">—</div><div class="metric-label">Totaal gesprekken</div></div>
+      <div class="metric"><div class="metric-val" id="m-gefilterd">—</div><div class="metric-label">Gefilterd</div></div>
+      <div class="metric"><div class="metric-val" id="m-vandaag">—</div><div class="metric-label">Vandaag</div></div>
+      <div class="metric"><div class="metric-val" id="m-dagen">—</div><div class="metric-label">Actieve dagen</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Filter op periode</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <div style="flex:1;"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Van</label><input type="date" id="datum-van" /></div>
+          <div style="flex:1;"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Tot</label><input type="date" id="datum-tot" /></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm-red" onclick="filterGesprekken()" style="flex:1;">Toepassen</button>
+          <button class="btn" onclick="resetFilter()" style="flex:1;">Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Zoeken</div>
+        <input type="text" id="zoek-input" placeholder="Zoek in vragen en antwoorden..." oninput="zoekGesprekken()" style="margin-bottom:8px;" />
+        <div class="status" id="zoek-status"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">Gesprekken</div>
+        <span style="font-size:12px;color:#888;" id="lijst-count"></span>
+      </div>
+      <div id="gesprekken-lijst"><div class="empty">Laden...</div></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">AI-analyse</div>
+        <button class="btn-sm-red" id="analyse-btn" onclick="analyseGesprekken()">Analyseer gesprekken</button>
+      </div>
+      <div id="analyse-resultaat"><div style="font-size:13px;color:#888;">Klik op "Analyseer gesprekken" om een analyse te starten op basis van de huidige selectie.</div></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net/api"
+const HASH = "f45b739465b28b6a4ba2e5aae7463a19e4c8e4f94059a5f4e4b03d0534516b9e"
+
+let alleGesprekken = []
+let gefilterd = []
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("")
+}
+
+async function login() {
+  const pwd = document.getElementById("pwd-input").value
+  const hash = await sha256(pwd)
+  if (hash === HASH) {
+    sessionStorage.setItem("mkm-auth", "1")
+    document.getElementById("login-screen").style.display = "none"
+    document.getElementById("dashboard").style.display = "block"
+    laadGesprekken()
+  } else {
+    document.getElementById("login-error").style.display = "block"
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem("mkm-auth")
+  location.reload()
+}
+
+if (sessionStorage.getItem("mkm-auth") === "1") {
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("dashboard").style.display = "block"
+}
+
+async function laadGesprekken() {
+  document.getElementById("gesprekken-lijst").innerHTML = '<div class="empty">Gesprekken laden...</div>'
+  try {
+    const resp = await fetch(`${API}/gesprekken?action=list`)
+    const data = await resp.json()
+    const namen = data.namen || []
+
+    const gesprekken = []
+    const batch = namen.slice(0, 100)
+    for (const naam of batch) {
+      try {
+        const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`)
+        const g = await r.json()
+        gesprekken.push({ naam, ...g })
+      } catch {}
+    }
+
+    alleGesprekken = gesprekken.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    gefilterd = [...alleGesprekken]
+    updateMetrics()
+    renderGesprekken()
+
+    const vandaag = new Date()
+    const maandGeleden = new Date(vandaag)
+    maandGeleden.setMonth(maandGeleden.getMonth() - 1)
+    document.getElementById("datum-van").value = maandGeleden.toISOString().split("T")[0]
+    document.getElementById("datum-tot").value = vandaag.toISOString().split("T")[0]
+  } catch(e) {
+    document.getElementById("gesprekken-lijst").innerHTML = `<div class="empty">Fout bij laden: ${e.message}</div>`
+  }
+}
+
+function updateMetrics() {
+  const vandaag = new Date().toDateString()
+  document.getElementById("m-totaal").textContent = alleGesprekken.length
+  document.getElementById("m-gefilterd").textContent = gefilterd.length
+  document.getElementById("m-vandaag").textContent = gefilterd.filter(g => new Date(g.timestamp).toDateString() === vandaag).length
+  document.getElementById("m-dagen").textContent = new Set(gefilterd.map(g => new Date(g.timestamp).toDateString())).size
+}
+
+function renderGesprekken() {
+  const lijst = document.getElementById("gesprekken-lijst")
+  document.getElementById("lijst-count").textContent = `${gefilterd.length} gesprekken`
+  if (gefilterd.length === 0) { lijst.innerHTML = '<div class="empty">Geen gesprekken gevonden</div>'; return }
+
+  lijst.innerHTML = gefilterd.slice(0, 50).map((g, i) => {
+    const datum = new Date(g.timestamp)
+    const datumStr = datum.toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    const eersteVraag = g.messages?.find(m => m.role === "user")?.content || "Geen vraag"
+    const kort = eersteVraag.length > 90 ? eersteVraag.substring(0, 90) + "..." : eersteVraag
+    const aantalBerichten = g.messages?.length || 0
+
+    return `<div class="convo-item" onclick="toggleDetail(${i})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="convo-title">${kort}</div>
+          <div class="convo-meta">${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten</div>
+        </div>
+        <span style="color:#888;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
+      </div>
+      <div class="convo-detail" id="detail-${i}">
+        ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 400)}${(m.content?.length || 0) > 400 ? "..." : ""}</div>`).join("")}
+      </div>
+    </div>`
+  }).join("")
+}
+
+function toggleDetail(i) {
+  const d = document.getElementById(`detail-${i}`)
+  const c = document.getElementById(`chevron-${i}`)
+  if (d) { const open = d.style.display === "block"; d.style.display = open ? "none" : "block"; c.textContent = open ? "›" : "⌄" }
+}
+
+function filterGesprekken() {
+  const van = document.getElementById("datum-van").value
+  const tot = document.getElementById("datum-tot").value
+  gefilterd = alleGesprekken.filter(g => {
+    const d = new Date(g.timestamp)
+    if (van && d < new Date(van)) return false
+    if (tot && d > new Date(tot + "T23:59:59")) return false
+    return true
+  })
+  updateMetrics()
+  renderGesprekken()
+}
+
+function resetFilter() {
+  document.getElementById("datum-van").value = ""
+  document.getElementById("datum-tot").value = ""
+  document.getElementById("zoek-input").value = ""
+  document.getElementById("zoek-status").textContent = ""
+  gefilterd = [...alleGesprekken]
+  updateMetrics()
+  renderGesprekken()
+}
+
+function zoekGesprekken() {
+  const zoek = document.getElementById("zoek-input").value.toLowerCase().trim()
+  if (!zoek) { gefilterd = [...alleGesprekken]; document.getElementById("zoek-status").textContent = ""; updateMetrics(); renderGesprekken(); return }
+  gefilterd = alleGesprekken.filter(g => g.messages?.some(m => m.content?.toLowerCase().includes(zoek)))
+  document.getElementById("zoek-status").textContent = `${gefilterd.length} resultaten`
+  updateMetrics()
+  renderGesprekken()
+}
+
+async function analyseGesprekken() {
+  const btn = document.getElementById("analyse-btn")
+  const resultaat = document.getElementById("analyse-resultaat")
+  btn.disabled = true
+  btn.textContent = "Analyseren..."
+  resultaat.innerHTML = '<div style="font-size:13px;color:#888;">Bezig met analyseren...</div>'
+
+  const sample = gefilterd.slice(0, 30)
+  const vragenTekst = sample.map((g, i) => {
+    const vragen = g.messages?.filter(m => m.role === "user").map(m => m.content).join(" | ") || ""
+    return `${i + 1}. ${vragen}`
+  }).join("\n")
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: `Je bent een analist voor Mokum Pool & Darts chatbot data. Analyseer de gesprekken en geef advies in het Nederlands. Antwoord ALLEEN in JSON zonder markdown backticks:
+{"veelgesteld":["vraag1","vraag2","vraag3","vraag4","vraag5"],"onderwerpen":[{"naam":"naam","percentage":25}],"advies_prompts":["suggestie1","suggestie2","suggestie3"],"nieuwe_rubrieken":["rubriek1","rubriek2"],"inzicht":"Korte samenvatting in 2 zinnen"}`,
+        messages: [{ role: "user", content: `Analyseer deze ${sample.length} gesprekken:\n${vragenTekst}` }]
+      })
+    })
+    const data = await response.json()
+    const text = data.content?.[0]?.text || "{}"
+    const analyse = JSON.parse(text.replace(/```json|```/g, "").trim())
+
+    resultaat.innerHTML = `
+      <div class="analyse-item" style="margin-bottom:16px;background:#1a1a1a;border-left:3px solid #cc0000;padding:12px 16px;">💡 ${analyse.inzicht || ""}</div>
+      <div class="grid-2">
+        <div>
+          <div class="card-title">Meest gestelde vragen</div>
+          ${(analyse.veelgesteld || []).map((v, i) => `<div class="analyse-item"><span style="color:#888;font-size:12px;margin-right:8px;">${i+1}.</span>${v}</div>`).join("")}
+        </div>
+        <div>
+          <div class="card-title">Onderwerpen verdeling</div>
+          ${(analyse.onderwerpen || []).map(o => `<div class="analyse-item">${o.naam}<div style="display:flex;align-items:center;gap:8px;margin-top:4px;"><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${Math.min(100,Math.round(o.percentage))}%;"></div></div><span style="font-size:12px;color:#888;">${Math.round(o.percentage)}%</span></div></div>`).join("")}
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:16px;">
+        <div>
+          <div class="card-title">Aanbevolen standaard prompts</div>
+          ${(analyse.advies_prompts || []).map(p => `<div class="analyse-item">+ ${p}</div>`).join("")}
+        </div>
+        <div>
+          <div class="card-title">Mogelijke nieuwe rubrieken</div>
+          ${(analyse.nieuwe_rubrieken || []).map(r => `<div class="analyse-item">📌 ${r}</div>`).join("")}
+        </div>
+      </div>
+    `
+  } catch(e) {
+    resultaat.innerHTML = `<div style="color:#ff6b6b;font-size:13px;">Analyse mislukt: ${e.message}</div>`
+  }
+
+  btn.disabled = false
+  btn.textContent = "Opnieuw analyseren"
+}
+
+if (sessionStorage.getItem("mkm-auth") === "1") { laadGesprekken() }
+</script>
+</body>
+</html>
