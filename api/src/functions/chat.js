@@ -46,12 +46,74 @@ REGELS:
 - Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket), darts (301, 501, cricket) en biljart (libre, band) volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.
 
 KENNISBRON INSTRUCTIE:
-Als er een KENNISBRON sectie aanwezig is in deze prompt, gebruik die dan als primaire bron. De kennisbron is altijd leidend boven de informatie hierboven. Als de kennisbron informatie bevat die afwijkt van bovenstaande instructies, volg dan de kennisbron.`
+Als er een KENNISBRON sectie aanwezig is in deze prompt, gebruik die dan als primaire bron. De kennisbron is altijd leidend boven de informatie hierboven. Als de kennisbron informatie bevat die afwijkt van bovenstaande instructies, volg dan de kennisbron.
+
+TOERNOOIEN:
+Mokum organiseert meerdere wekelijkse toernooien. Aanmelden en actuele datums via [Cuescore](https://cuescore.com/mokumpooldarts/tournaments).
+
+Mokum 8 & 10ball Ranking — elke zaterdag
+- Om de week 8-ball, om de week 10-ball. Eerstvolgende (13 juni 2026) is 8-ball.
+- Start: 12:30, zaal open vanaf 12:00. Inloop tot 12:45 mits gemeld in Cuescore comments vóór 12:30.
+- Inschrijfgeld: €10,00 (€2,50 naar eindpot)
+- Max 32 spelers. Geen handicap.
+- Opzet: poules van 8, daarna laatste 16 enkel knock-out, race naar de 3
+- Prijzengeld: eerste 8 bij 25+ deelnemers, eerste 4 bij 24 of minder
+- Top 32 van de ranking plaatst zich voor eindtoernooi op 5 september 2026
+- Voor alle niveaus
+
+Mokum MEGA Summer Ranking — elke maandag én woensdag (9-ball)
+- Start: 19:15 (loting en direct starten). Inloop tot 19:30 mits gemeld in Cuescore comments vóór 19:15 — wordt streng gecontroleerd, anders uitsluiting.
+- Inschrijfgeld: €15,00 (€5,00 naar eindtoernooi-prijzengeld, €1,00 naar Jackpot)
+- Max 32–40 spelers per avond. Geen handicap. Winnaar breakt, 9 op de spot.
+- Opzet: poules, daarna knock-out
+- Prijzengeld vanaf 24 deelnemers: eerste 8 plekken (1e 30%, 2e 20%, 3/4e 12%, 5/8e 6,5%)
+- Prijzengeld onder 24 deelnemers: eerste 4 plekken (1e 40%, 2e 30%, 3/4e 15%)
+- Ranking punten: 1e=100, 2e=82, 3e=70, 5e=55, 9e=40, 17e=30, 25e=22, 33e=15
+- Sommige toernooien leveren dubbele punten op. Opgave tijdens poulefase = -50 punten.
+- JACKPOT: elke avond worden 3 spelers getrokken voor een 9-ball break-and-run met huiskeu — lukt het, dan win je 50% van de jackpot
+- Eindtoernooi: 30 augustus 2026, alleen top 48 (minimaal 8 deelnames vereist), gegarandeerd €4.000 prijzengeld, 1e plaats €1.000
+- Mix van beginners en gevorderde spelers
+
+Fluke Ranking — elke dinsdag (9-ball, seizoen 3)
+- Voor beginners en recreatieve spelers — spelers uit de 1e klasse/divisie mogen NIET meedoen. 2e klasse spelers met rating 1175 of hoger ook niet.
+- Start: 19:30 (wees op tijd). Inschrijfgeld: €7,50 (€2,50 naar eindtoernooi).
+- Max 32–40 spelers (afhankelijk van teamcompetitie die avond). Geen handicap.
+- Format: 9-ball, alternate break, 9 op de spot, Double KO tot de laatste 8, race naar de 2
+- Prijzengeld: top 8 bij 24+ deelnemers, anders top 4
+- Top 32 van de ranking plaatst zich voor eindtoernooi op zondag 6 september 2026
+- Geen minimale deelname vereist voor kwalificatie
+- Erg populair en gezellig — ideaal als je net begint of voor de combo chasers en lucky flukers
+
+Mokum Handicap Madness — zondag (9-ball, met handicap)
+- Voor beginners én gevorderde spelers — het speelveld wordt gelijkgetrokken via een race-based handicapsysteem
+- Start: 19:00. Inschrijfgeld: €5,00. Geen ranking. Volledige pot wordt uitbetaald.
+- Max 32 spelers. Winnaar breakt. Standaard race naar de 6, maar je handicap past je racelengte aan.
+- Handicapniveaus (H4 t/m H-2): H4 = beginnende spelers, H0 = top 1e klasse, H-2 = Eredivisie/nationale top
+- Praktisch voorbeeld: H3 vs H3 = race naar 3, H0 vs H0 = race naar 6, H-2 vs H-2 = race naar 8
+- Handicaps worden bepaald door de organisatie, zijn altijd actief en kunnen tussen toernooien worden bijgesteld
+- Format afhankelijk van deelnemers: minder dan 12 of 12–23 spelers = Double KO naar halve finales, 24+ = nader bepaald
+- Prijzengeld: top 2 bij minder dan 12 spelers, top 4 bij 12–24, top 8 bij 24+
+- Contact: Michelle Konynenberg-Harrison — 06 25 52 04 06
+- Toernooireglement: [poolen-amsterdam.nl](https://poolen-amsterdam.nl/toernooireglement-organisatie-gedrag/)
+
+'GO Customs' Amsterdam Open @ Mokum — eenmalig groot toernooi (9-ball)
+- Bijzonder evenement met €5.000 added prijzengeld. 1e plaats: €3.000. Top 32 krijgt prijzengeld.
+- Max 48 spelers per qualifier. 16 spelers kwalificeren zich voor de Final Day.
+- Final Day: zaterdag 12 juli 2026, start 10:30
+- Format: Double Elimination tot de laatste 16, race naar de 7, 9 op de spot, alternate break. Geen handicap.
+- Inschrijfgeld: €40,00 (jeugd onder 18: €25,00). Betaling via Cuescore. Uitschrijven kost €8,00.
+- Wie zich niet kwalificeert kan een rebuy doen voor een volgende qualifier.
+- Qualifier 1 — zaterdag 4 juli 2026 (open voor iedereen) → [Inschrijven](https://cuescore.com/tournament/Qualifer+1+%27GO+Customs%27+Amsterdam+Open+%40Mokum+%28priority+for+members+of+Mokum%29/77888677)
+- Qualifier 2 — vrijdag 10 juli 2026 → [Inschrijven](https://cuescore.com/tournament/Qualifer+2+GO+Customs+Amsterdam+Open+%40Mokum/77722138)
+- Qualifier 3 — zaterdag 11 juli 2026 → [Inschrijven](https://cuescore.com/tournament/Qualifer+3+GO+Customs+Amsterdam+Open+%40Mokum/77888701)
+- Qualifier 4 — zaterdag 11 juli 2026 → [Inschrijven](https://cuescore.com/tournament/Qualifer+4+GO+Customs+Amsterdam+Open+%40Mokum/77888743)
+- Toernooireglement: [poolen-amsterdam.nl](https://poolen-amsterdam.nl/toernooireglement-organisatie-gedrag/)
+
+Bij twijfel of een toernooi bij je niveau past: mail naar info@pooleninmokum.com`
 
 const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "kennisbronnen"
 
-// Mapping van vraagonderwerpen naar kennisbron mappen
 const TOPIC_MAP = [
   {
     folders: ["spelregels/pool"],
@@ -102,10 +164,10 @@ const TOPIC_MAP = [
     keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "burger", "friet", "koffie", "cocktail", "wijn", "food", "drink", "beer", "coffee", "wine", "hungry", "thirsty", "honger", "dorst", "bestellen", "order", "hapje", "drankje"],
   },
   {
-  {
     folders: ["intern"],
     keywords: ["intern", "internal", "werkrooster", "keuken", "kassa", "medewerker", "personeel", "instructie", "schedule", "kitchen", "cash register"],
   },
+  {
     folders: ["toernooi-historie"],
     keywords: ["resultaat", "uitslag", "winnaar", "gewonnen", "verloren", "history", "historie", "result", "winner", "wie won", "who won", "laatste toernooi", "vorige toernooi", "ranking stand", "eindstand"],
   },
@@ -128,14 +190,11 @@ async function saveConversation(messages, reply) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
     if (!sasToken) return
-
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
     const random = Math.random().toString(36).substring(2, 8)
     const blobName = `${timestamp}-${random}.json`
-
     const content = JSON.stringify({ timestamp: new Date().toISOString(), messages, reply }, null, 2)
     const contentLength = Buffer.byteLength(content)
-
     const options = {
       hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
       path: `/gesprekken/${blobName}?${sasToken}`,
@@ -147,7 +206,6 @@ async function saveConversation(messages, reply) {
         "x-ms-version": "2020-04-08",
       },
     }
-
     await httpsRequest(options, content)
   } catch (err) {
     console.log("Gesprek opslaan mislukt:", err.message)
@@ -158,7 +216,6 @@ async function saveTournaments(tournaments) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
     if (!sasToken) return
-
     for (const t of tournaments) {
       const partitionKey = t.dateObj.toISOString().split("T")[0]
       const rowKey = t.id
@@ -169,7 +226,6 @@ async function saveTournaments(tournaments) {
         date: t.date,
         scraped_at: new Date().toISOString(),
       })
-
       const options = {
         hostname: `${STORAGE_ACCOUNT}.table.core.windows.net`,
         path: `/toernooistatistieken(PartitionKey='${partitionKey}',RowKey='${rowKey}')?${sasToken}`,
@@ -215,7 +271,6 @@ async function listBlobsInFolder(folder, sasToken) {
     }
     const result = await httpsRequest(options)
     if (result.status !== 200) return []
-
     const matches = [...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)]
     return matches.map(m => m[1])
   } catch (err) {
@@ -229,25 +284,18 @@ async function getKennisbronContext(message, sasToken) {
     console.log("Geen SAS token — kennisbron overgeslagen")
     return null
   }
-
   const msgLower = message.toLowerCase()
-
-  // Bepaal welke mappen relevant zijn
   const relevanteFolders = new Set()
   for (const topic of TOPIC_MAP) {
     if (topic.keywords.some(kw => msgLower.includes(kw))) {
       topic.folders.forEach(f => relevanteFolders.add(f))
     }
   }
-
   if (relevanteFolders.size === 0) {
     console.log("Geen relevante kennisbron mappen gevonden voor:", message)
     return null
   }
-
   console.log("Relevante kennisbron mappen:", [...relevanteFolders])
-
-  // Haal alle relevante bestanden op
   const sections = []
   for (const folder of relevanteFolders) {
     const blobs = await listBlobsInFolder(folder, sasToken)
@@ -259,9 +307,7 @@ async function getKennisbronContext(message, sasToken) {
       }
     }
   }
-
   if (sections.length === 0) return null
-
   return `---\nKENNISBRON (deze informatie is leidend boven de instructies hierboven — als er een conflict is, volg dan de kennisbron en log dit):\n\n${sections.join("\n\n---\n\n")}\n---`
 }
 
@@ -281,18 +327,15 @@ function fetchUrl(url) {
 function parseTournaments(html, today) {
   const upcoming = []
   const dateBlocks = html.split(/class="daterow"/)
-
   for (let i = 1; i < dateBlocks.length; i++) {
     const block = dateBlocks[i]
     const dateMatch = block.match(/((?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+\w+ \d{1,2},\s+\d{4})/)
     if (!dateMatch) continue
-
     const dateStr = dateMatch[1]
     const dateStrClean = dateStr.replace(/^[A-Za-z]+,\s*/, "")
     const dateObj = new Date(dateStrClean)
     if (isNaN(dateObj)) continue
     if (dateObj < today) continue
-
     const tournamentRegex = /href="\/\/cuescore\.com\/tournament\/[^"]+\/(\d+)"[^>]*>([^<]+)</g
     let match
     while ((match = tournamentRegex.exec(block)) !== null) {
@@ -303,7 +346,6 @@ function parseTournaments(html, today) {
       }
     }
   }
-
   return upcoming
 }
 
@@ -311,24 +353,19 @@ async function getTournamentContext() {
   try {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-
     const html = await fetchUrl("https://cuescore.com/mokumpooldarts/tournaments?q=&d=0&season=0&s=0")
     const upcoming = parseTournaments(html, today)
     upcoming.sort((a, b) => a.dateObj - b.dateObj)
-
     if (upcoming.length > 0) saveTournaments(upcoming)
-
     if (upcoming.length === 0) {
       return "Er zijn momenteel geen aankomende toernooien gepland. Kijk op [Cuescore](https://cuescore.com/mokumpooldarts/tournaments) voor de meest actuele planning."
     }
-
     const limited = upcoming.slice(0, 10)
     const byDate = {}
     for (const t of limited) {
       if (!byDate[t.date]) byDate[t.date] = []
       byDate[t.date].push(t)
     }
-
     let context = "ACTUELE TOERNOOI-INFO (aankomende toernooien van Cuescore):\n"
     for (const [date, tournaments] of Object.entries(byDate)) {
       context += `\n**${date}**\n`
@@ -336,7 +373,6 @@ async function getTournamentContext() {
         context += `- ${t.name} → [Inschrijven](https://cuescore.com/mokumpooldarts/tournaments)\n`
       }
     }
-
     return context
   } catch (err) {
     console.log("Cuescore fout:", err.message)
@@ -355,15 +391,12 @@ app.http("chat", {
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     }
-
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
-
     try {
       const body = await request.json()
       const { messages } = body
-
       if (!messages || !Array.isArray(messages)) {
         return {
           status: 400,
@@ -371,10 +404,8 @@ app.http("chat", {
           body: JSON.stringify({ error: "messages array required" }),
         }
       }
-
       const lastMessage = messages[messages.length - 1]?.content || ""
       const lastMessageLower = lastMessage.toLowerCase()
-
       const isTournamentQuery =
         lastMessageLower.includes("toernooi") ||
         lastMessageLower.includes("tournament") ||
@@ -383,10 +414,7 @@ app.http("chat", {
         lastMessageLower.includes("ranking") ||
         lastMessageLower.includes("wedstrijd") ||
         lastMessageLower.includes("speeldag")
-
       const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
-
-      // Kennisbron ophalen
       let kennisbronContext = null
       try {
         kennisbronContext = await getKennisbronContext(lastMessage, sasToken)
@@ -396,37 +424,23 @@ app.http("chat", {
       } catch (err) {
         console.log("Kennisbron ophalen mislukt:", err.message)
       }
-
-      // Toernooi live data ophalen
       let tournamentContext = null
       if (isTournamentQuery) {
         tournamentContext = await getTournamentContext()
         console.log("Toernooi context toegevoegd")
       }
-
-      // System prompt samenstellen
       let systemPrompt = SYSTEM_PROMPT
       if (kennisbronContext) systemPrompt += `\n\n${kennisbronContext}`
       if (tournamentContext) systemPrompt += `\n\n${tournamentContext}`
-
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
-
       const response = await client.messages.create({
         model: "claude-sonnet-4-6",
         max_tokens: 1024,
         system: systemPrompt,
         messages: messages,
       })
-
       const reply = response.content[0].text
-
-      // Log conflicten tussen kennisbron en system prompt
-      if (kennisbronContext && reply.toLowerCase().includes("conflict")) {
-        console.warn("⚠️ KENNISBRON CONFLICT gedetecteerd in antwoord:", reply.substring(0, 200))
-      }
-
       saveConversation(messages, reply)
-
       return {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -452,11 +466,9 @@ app.http("gesprekken", {
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     }
-
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
-
     try {
       const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
       if (!sasToken) {
@@ -466,10 +478,8 @@ app.http("gesprekken", {
           body: JSON.stringify({ error: "Geen SAS token geconfigureerd" }),
         }
       }
-
       const action = new URL(request.url).searchParams.get("action") || "list"
       const blobName = new URL(request.url).searchParams.get("blob")
-
       if (action === "list") {
         const options = {
           hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -486,7 +496,6 @@ app.http("gesprekken", {
           body: JSON.stringify({ namen }),
         }
       }
-
       if (action === "get" && blobName) {
         const options = {
           hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -501,7 +510,6 @@ app.http("gesprekken", {
           body: result.body,
         }
       }
-
       return {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
