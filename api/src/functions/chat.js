@@ -1,12 +1,11 @@
 const Anthropic = require("@anthropic-ai/sdk")
 const https = require("https")
-const crypto = require("crypto")
 
 const SYSTEM_PROMPT = `Je bent Mokum Bot, de digitale gast van Mokum Pool & Darts in Amsterdam Oost. Je helpt bezoekers snel aan de juiste informatie — zonder gedoe.
 
 Je bent niet een stijve klantenservice-robot. Je bent meer die ene vaste gast die al jaren bij Mokum over de vloer komt, alles weet, en altijd even tijd heeft voor een goed antwoord. Behulpzaam en enthousiast, maar zonder het er dik bovenop te leggen.
 
-Taal: pas je aan aan de taal van de gebruiker.
+Taal: antwoord ALTIJD in de taal waarin de gebruiker schrijft, ongeacht de ingestelde taal van de interface. Schrijft iemand in het Engels? Antwoord in het Engels. In het Nederlands? Nederlands. In het Spaans? Spaans.
 Toon: informeel, relaxed, direct. Geen "Geachte bezoeker". Gewoon normaal doen.
 
 OVER MOKUM POOL & DARTS:
@@ -43,9 +42,62 @@ REGELS:
 - Sluit antwoorden af met een natuurlijke vervolgvraag in volledige zinnen. Geen informele afkortingen.
 - Zet links altijd als klikbare markdown: [tekst](url). Nooit als platte URL.
 - Voor toernooi-info: geef altijd de aanmeldlink als [Inschrijven via Cuescore](https://cuescore.com/mokumpooldarts/tournaments)
-- Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket), darts (301, 501, cricket) en biljart (libre, band) volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.`
+- Na elk antwoord over toernooien: vraag of de gebruiker uitgebreidere info wil over een specifiek toernooi. Vraag dan welk toernooi en geef daarna alle beschikbare details (format, kosten, handicap, prijzengeld, tijden, contact etc.)
+- Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket), darts (301, 501, cricket) en biljart (libre, band) volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.
+
+KENNISBRON INSTRUCTIE:
+Als er een KENNISBRON sectie aanwezig is in deze prompt, gebruik die dan als primaire bron. De kennisbron is altijd leidend boven de informatie hierboven. Als de kennisbron informatie bevat die afwijkt van bovenstaande instructies, volg dan de kennisbron.`
 
 const STORAGE_ACCOUNT = "mokumbotrg904a"
+const CONTAINER = "kennisbronnen"
+
+// Mapping van vraagonderwerpen naar kennisbron mappen
+const TOPIC_MAP = [
+  {
+    folders: ["spelregels/pool"],
+    keywords: ["8-ball", "8ball", "9-ball", "9ball", "10-ball", "10ball", "straight pool", "one pocket", "pool regel", "pool rules"],
+  },
+  {
+    folders: ["spelregels/english-pool"],
+    keywords: ["english pool", "blackball", "engels pool"],
+  },
+  {
+    folders: ["spelregels/darts"],
+    keywords: ["501", "301", "cricket", "darts regel", "darts rules", "checkout", "finish"],
+  },
+  {
+    folders: ["spelregels/biljart"],
+    keywords: ["libre", "bandstoten", "driebanden", "biljart regel", "billiard rule", "carom"],
+  },
+  {
+    folders: ["spelregels/shuffleboard"],
+    keywords: ["shuffleboard regel", "shuffleboard rule", "shuffleboard spel"],
+  },
+  {
+    folders: ["toernooien"],
+    keywords: ["toernooi", "tournament", "ranking", "inschrijv", "fluke", "mega", "handicap madness", "amsterdam open", "go customs", "wedstrijd", "speeldag"],
+  },
+  {
+    folders: ["openingstijden"],
+    keywords: ["open", "gesloten", "tijden", "hours", "feestdag", "holiday", "wanneer", "hoe laat"],
+  },
+  {
+    folders: ["tarieven"],
+    keywords: ["prijs", "tarief", "kost", "euro", "betaal", "price", "rate", "cost", "goedkoop", "duur"],
+  },
+  {
+    folders: ["locatie"],
+    keywords: ["adres", "address", "route", "parkeer", "parking", "ov", "trein", "tram", "bus", "amstel", "fiets", "rijden", "komen"],
+  },
+  {
+    folders: ["pool-biljart"],
+    keywords: ["tafel", "keu", "reserveer", "reserve", "pool tafel", "biljart tafel", "beschikbaar"],
+  },
+  {
+    folders: ["algemeen"],
+    keywords: ["mokum", "oprichter", "nick", "mark", "over ons", "about", "faciliteit", "bedrijfsuitje", "clinic", "les"],
+  },
+]
 
 function httpsRequest(options, body) {
   return new Promise((resolve, reject) => {
@@ -63,10 +115,7 @@ function httpsRequest(options, body) {
 async function saveConversation(messages, reply) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
-    if (!sasToken) {
-      console.log("Geen SAS token gevonden")
-      return
-    }
+    if (!sasToken) return
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
     const random = Math.random().toString(36).substring(2, 8)
@@ -87,25 +136,20 @@ async function saveConversation(messages, reply) {
       },
     }
 
-    const result = await httpsRequest(options, content)
-    console.log("Gesprek opgeslagen:", blobName, "status:", result.status)
+    await httpsRequest(options, content)
   } catch (err) {
-    console.log("Gesprek opslaan mislukt:", err.message, err.stack)
+    console.log("Gesprek opslaan mislukt:", err.message)
   }
 }
 
 async function saveTournaments(tournaments) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
-    if (!sasToken) {
-      console.log("Geen SAS token gevonden voor table storage")
-      return
-    }
+    if (!sasToken) return
 
     for (const t of tournaments) {
       const partitionKey = t.dateObj.toISOString().split("T")[0]
       const rowKey = t.id
-
       const entity = JSON.stringify({
         PartitionKey: partitionKey,
         RowKey: rowKey,
@@ -114,26 +158,99 @@ async function saveTournaments(tournaments) {
         scraped_at: new Date().toISOString(),
       })
 
-      const contentLength = Buffer.byteLength(entity)
-
       const options = {
         hostname: `${STORAGE_ACCOUNT}.table.core.windows.net`,
         path: `/toernooistatistieken(PartitionKey='${partitionKey}',RowKey='${rowKey}')?${sasToken}`,
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Content-Length": contentLength,
+          "Content-Length": Buffer.byteLength(entity),
           "Accept": "application/json;odata=nometadata",
           "x-ms-version": "2020-04-08",
         },
       }
-
-      const result = await httpsRequest(options, entity)
-      console.log("Toernooi opgeslagen:", t.name, "status:", result.status, "body:", result.body)
+      await httpsRequest(options, entity)
     }
   } catch (err) {
-    console.log("Toernooien opslaan mislukt:", err.message, err.stack)
+    console.log("Toernooien opslaan mislukt:", err.message)
   }
+}
+
+async function fetchBlobContent(blobPath, sasToken) {
+  try {
+    const options = {
+      hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+      path: `/${CONTAINER}/${blobPath}?${sasToken}`,
+      method: "GET",
+      headers: { "x-ms-version": "2020-04-08" },
+    }
+    const result = await httpsRequest(options)
+    if (result.status === 200) return result.body
+    return null
+  } catch (err) {
+    console.log(`Blob ophalen mislukt (${blobPath}):`, err.message)
+    return null
+  }
+}
+
+async function listBlobsInFolder(folder, sasToken) {
+  try {
+    const options = {
+      hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+      path: `/${CONTAINER}?restype=container&comp=list&prefix=${encodeURIComponent(folder + "/")}&${sasToken}`,
+      method: "GET",
+      headers: { "x-ms-version": "2020-04-08" },
+    }
+    const result = await httpsRequest(options)
+    if (result.status !== 200) return []
+
+    const matches = [...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)]
+    return matches.map(m => m[1])
+  } catch (err) {
+    console.log(`Blobs listen mislukt (${folder}):`, err.message)
+    return []
+  }
+}
+
+async function getKennisbronContext(message, sasToken) {
+  if (!sasToken) {
+    console.log("Geen SAS token — kennisbron overgeslagen")
+    return null
+  }
+
+  const msgLower = message.toLowerCase()
+
+  // Bepaal welke mappen relevant zijn
+  const relevanteFolders = new Set()
+  for (const topic of TOPIC_MAP) {
+    if (topic.keywords.some(kw => msgLower.includes(kw))) {
+      topic.folders.forEach(f => relevanteFolders.add(f))
+    }
+  }
+
+  if (relevanteFolders.size === 0) {
+    console.log("Geen relevante kennisbron mappen gevonden voor:", message)
+    return null
+  }
+
+  console.log("Relevante kennisbron mappen:", [...relevanteFolders])
+
+  // Haal alle relevante bestanden op
+  const sections = []
+  for (const folder of relevanteFolders) {
+    const blobs = await listBlobsInFolder(folder, sasToken)
+    for (const blobPath of blobs) {
+      const content = await fetchBlobContent(blobPath, sasToken)
+      if (content) {
+        sections.push(`### Kennisbron: ${blobPath}\n\n${content}`)
+        console.log(`Kennisbron geladen: ${blobPath}`)
+      }
+    }
+  }
+
+  if (sections.length === 0) return null
+
+  return `---\nKENNISBRON (deze informatie is leidend boven de instructies hierboven — als er een conflict is, volg dan de kennisbron en log dit):\n\n${sections.join("\n\n---\n\n")}\n---`
 }
 
 function fetchUrl(url) {
@@ -184,16 +301,10 @@ async function getTournamentContext() {
     today.setHours(0, 0, 0, 0)
 
     const html = await fetchUrl("https://cuescore.com/mokumpooldarts/tournaments?q=&d=0&season=0&s=0")
-    console.log("Cuescore HTML lengte:", html.length)
-
     const upcoming = parseTournaments(html, today)
     upcoming.sort((a, b) => a.dateObj - b.dateObj)
 
-    console.log("Toernooien gevonden:", upcoming.length)
-
-    if (upcoming.length > 0) {
-      saveTournaments(upcoming)
-    }
+    if (upcoming.length > 0) saveTournaments(upcoming)
 
     if (upcoming.length === 0) {
       return "Er zijn momenteel geen aankomende toernooien gepland. Kijk op [Cuescore](https://cuescore.com/mokumpooldarts/tournaments) voor de meest actuele planning."
@@ -206,7 +317,7 @@ async function getTournamentContext() {
       byDate[t.date].push(t)
     }
 
-    let context = "ACTUELE TOERNOOI-INFO (aankomende toernooien):\n"
+    let context = "ACTUELE TOERNOOI-INFO (aankomende toernooien van Cuescore):\n"
     for (const [date, tournaments] of Object.entries(byDate)) {
       context += `\n**${date}**\n`
       for (const t of tournaments) {
@@ -249,22 +360,42 @@ app.http("chat", {
         }
       }
 
-      const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || ""
-      const isTournamentQuery =
-        lastMessage.includes("toernooi") ||
-        lastMessage.includes("tournament") ||
-        lastMessage.includes("wanneer") ||
-        lastMessage.includes("inschrijv") ||
-        lastMessage.includes("ranking") ||
-        lastMessage.includes("wedstrijd") ||
-        lastMessage.includes("speeldag")
+      const lastMessage = messages[messages.length - 1]?.content || ""
+      const lastMessageLower = lastMessage.toLowerCase()
 
-      let systemPrompt = SYSTEM_PROMPT
-      if (isTournamentQuery) {
-        const tournamentContext = await getTournamentContext()
-        systemPrompt += `\n\n${tournamentContext}`
-        console.log("Tournament context toegevoegd")
+      const isTournamentQuery =
+        lastMessageLower.includes("toernooi") ||
+        lastMessageLower.includes("tournament") ||
+        lastMessageLower.includes("wanneer") ||
+        lastMessageLower.includes("inschrijv") ||
+        lastMessageLower.includes("ranking") ||
+        lastMessageLower.includes("wedstrijd") ||
+        lastMessageLower.includes("speeldag")
+
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+
+      // Kennisbron ophalen
+      let kennisbronContext = null
+      try {
+        kennisbronContext = await getKennisbronContext(lastMessage, sasToken)
+        if (kennisbronContext) {
+          console.log("Kennisbron context toegevoegd aan prompt")
+        }
+      } catch (err) {
+        console.log("Kennisbron ophalen mislukt:", err.message)
       }
+
+      // Toernooi live data ophalen
+      let tournamentContext = null
+      if (isTournamentQuery) {
+        tournamentContext = await getTournamentContext()
+        console.log("Toernooi context toegevoegd")
+      }
+
+      // System prompt samenstellen
+      let systemPrompt = SYSTEM_PROMPT
+      if (kennisbronContext) systemPrompt += `\n\n${kennisbronContext}`
+      if (tournamentContext) systemPrompt += `\n\n${tournamentContext}`
 
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
 
@@ -276,6 +407,11 @@ app.http("chat", {
       })
 
       const reply = response.content[0].text
+
+      // Log conflicten tussen kennisbron en system prompt
+      if (kennisbronContext && reply.toLowerCase().includes("conflict")) {
+        console.warn("⚠️ KENNISBRON CONFLICT gedetecteerd in antwoord:", reply.substring(0, 200))
+      }
 
       saveConversation(messages, reply)
 

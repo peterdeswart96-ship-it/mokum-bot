@@ -20,6 +20,7 @@ const translations = {
       { id: "tarieven",       emoji: "💶", label: "Tarieven" },
       { id: "toernooien",     emoji: "🏆", label: "Toernooien" },
       { id: "spelregels",     emoji: "📖", label: "Spelregels" },
+      { id: "eten-drinken",   emoji: "🍺", label: "Eten & Drinken" },
       { id: "locatie",        emoji: "📍", label: "Locatie & Parkeren" },
       { id: "anders",         emoji: "❓", label: "Anders" },
     ],
@@ -53,6 +54,12 @@ const translations = {
         "Welke toernooien zijn er aankomende week?",
         "Zijn er ook toernooien voor beginnende spelers?",
         "Wat kost deelname?",
+      ],
+      "eten-drinken": [
+        "Wat staat er op het menu?",
+        "Hebben jullie vegetarische opties?",
+        "Wat kosten de bieren?",
+        "Kunnen jullie pizza's bestellen?",
       ],
       locatie: [
         "Waar is Mokum gevestigd?",
@@ -126,6 +133,7 @@ const translations = {
       { id: "tarieven",       emoji: "💶", label: "Rates" },
       { id: "toernooien",     emoji: "🏆", label: "Tournaments" },
       { id: "spelregels",     emoji: "📖", label: "Game Rules" },
+      { id: "eten-drinken",   emoji: "🍺", label: "Food & Drinks" },
       { id: "locatie",        emoji: "📍", label: "Location & Parking" },
       { id: "anders",         emoji: "❓", label: "Other" },
     ],
@@ -159,6 +167,12 @@ const translations = {
         "Which tournaments are coming up next week?",
         "Are there tournaments for beginners?",
         "How much does it cost to participate?",
+      ],
+      "eten-drinken": [
+        "What's on the menu?",
+        "Do you have vegetarian options?",
+        "How much are the beers?",
+        "Can we order pizzas?",
       ],
       locatie: [
         "Where is Mokum located?",
