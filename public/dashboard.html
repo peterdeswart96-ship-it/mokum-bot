@@ -227,7 +227,7 @@ function renderGesprekken() {
         <span style="color:#888;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
       </div>
       <div class="convo-detail" id="detail-${i}">
-        ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 400)}${(m.content?.length || 0) > 400 ? "..." : ""}</div>`).join("")}
+        ${[...(g.messages || []), ...(g.reply ? [{role:"assistant", content: g.reply}] : [])].map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 400)}${(m.content?.length || 0) > 400 ? "..." : ""}</div>`).join("")}
       </div>
     </div>`
   }).join("")
