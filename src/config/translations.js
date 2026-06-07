@@ -13,6 +13,9 @@ const translations = {
     askOther: "✏️ Ik wil een andere vraag stellen",
     spelregelsIntro: "Je hebt dus een vraag over spelregels... Over welke spelsoort wil je een vraag stellen?",
     spelregelsBack: "← Terug naar spelregels",
+    internPwdPrompt: "Dit is een beveiligde rubriek. Voer het wachtwoord in:",
+    internPwdError: "Verkeerd wachtwoord",
+    internPwdBtn: "Toegang",
     topics: [
       { id: "pool",           emoji: "🎱", label: "Pool & Biljart" },
       { id: "darts",          emoji: "🎯", label: "Darts" },
@@ -22,6 +25,7 @@ const translations = {
       { id: "spelregels",     emoji: "📖", label: "Spelregels" },
       { id: "eten-drinken",   emoji: "🍺", label: "Eten & Drinken" },
       { id: "locatie",        emoji: "📍", label: "Locatie & Parkeren" },
+      { id: "intern",         emoji: "🔒", label: "Intern" },
       { id: "anders",         emoji: "❓", label: "Anders" },
     ],
     questions: {
@@ -66,6 +70,11 @@ const translations = {
         "Hoe kom ik er met het OV?",
         "Is er parkeergelegenheid?",
         "Hoe ver is het van Amstel Station?",
+      ],
+      intern: [
+        "Kun je de werkroosters laten zien?",
+        "Kun je de keukeninstructies laten zien?",
+        "Kun je de kassa-instructies laten zien?",
       ],
     },
     spelregelsDisciplines: [
@@ -126,6 +135,9 @@ const translations = {
     askOther: "✏️ I want to ask a different question",
     spelregelsIntro: "So you have a question about game rules... Which discipline would you like to ask about?",
     spelregelsBack: "← Back to game rules",
+    internPwdPrompt: "This is a secured section. Please enter the password:",
+    internPwdError: "Incorrect password",
+    internPwdBtn: "Access",
     topics: [
       { id: "pool",           emoji: "🎱", label: "Pool & Billiards" },
       { id: "darts",          emoji: "🎯", label: "Darts" },
@@ -135,6 +147,7 @@ const translations = {
       { id: "spelregels",     emoji: "📖", label: "Game Rules" },
       { id: "eten-drinken",   emoji: "🍺", label: "Food & Drinks" },
       { id: "locatie",        emoji: "📍", label: "Location & Parking" },
+      { id: "intern",         emoji: "🔒", label: "Internal" },
       { id: "anders",         emoji: "❓", label: "Other" },
     ],
     questions: {
@@ -179,6 +192,11 @@ const translations = {
         "How do I get there by public transport?",
         "Is there parking available?",
         "How far is it from Amstel Station?",
+      ],
+      intern: [
+        "Can you show me the work schedules?",
+        "Can you show me instructions for the kitchen?",
+        "Can you show me instructions for the cash register?",
       ],
     },
     spelregelsDisciplines: [
