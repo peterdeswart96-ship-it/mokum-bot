@@ -242,11 +242,19 @@
 
 <!-- VOOR MARK -->
 <div id="tab-mark" class="tab-content">
-  <div class="section-title">Azure Storage Explorer installeren</div>
+  <div class="section-title">Stap 1 — SAS token aanmaken (Peter doet dit)</div>
   <div class="card">
-    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Download Storage Explorer</div><div class="step-desc"><a href="https://azure.microsoft.com/nl-nl/products/storage/storage-explorer" style="color:#cc4444;" target="_blank">azure.microsoft.com → Storage Explorer</a> → Download Windows → installeren</div></div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Klik op Connect (stopcontact-icoon)</div><div class="step-desc">Kies "Blob container" → kies "Shared access signature URL (SAS)"</div></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Plak de SAS URL van Peter</div><div class="step-desc">Next → Connect → klaar. Je ziet nu de kennisbronnen map.</div></div></div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Ga naar Azure Portal</div><div class="step-desc"><a href="https://portal.azure.com" style="color:#cc4444;" target="_blank">portal.azure.com</a> → Storage accounts → mokumbotrg904a → Containers → kennisbronnen</div></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Klik op Generate SAS</div><div class="step-desc">Bovenaan de container pagina — niet via de storage account zelf, maar direct op de container</div></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Stel de rechten in</div><div class="step-desc">Permissions: Read, Write, List, Delete — Expiry: 12 juni 2027 → klik Generate SAS token and URL</div></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Kopieer de Blob SAS URL</div><div class="step-desc">De onderste URL (begint met https://mokumbotrg904a.blob.core.windows.net/kennisbronnen?sv=...) — die geef je aan Mark</div></div></div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Stap 2 — Storage Explorer installeren (Mark doet dit)</div>
+  <div class="card">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Download Storage Explorer</div><div class="step-desc"><a href="https://azure.microsoft.com/nl-nl/products/storage/storage-explorer" style="color:#cc4444;" target="_blank">azure.microsoft.com → Storage Explorer</a> → Download Windows → installeren & openen</div></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Klik op Connect (stopcontact-icoon linksboven)</div><div class="step-desc">Kies "Blob container" → klik Next → kies "Shared access signature URL (SAS)"</div></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Plak de SAS URL van Peter</div><div class="step-desc">Plak de volledige URL in het veld "Blob container SAS URL" → Next → Connect</div></div></div>
     <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Bestanden beheren</div><div class="step-desc">Sleep bestanden naar binnen, verwijder of bekijk — werkt als Windows Verkenner. Direct actief na uploaden.</div></div></div>
   </div>
 
