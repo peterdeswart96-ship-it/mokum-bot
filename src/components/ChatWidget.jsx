@@ -64,17 +64,17 @@ function LanguageSwitcher({ lang, onSwitch }) {
             title={title}
             style={{
               background: "none",
-              border: isActive ? `2px solid ${C.red}` : "2px solid transparent",
-              borderRadius: "4px",
+              border: isActive ? `2px solid ${C.red}` : `1px solid ${C.border}`,
+              borderRadius: "6px",
               cursor: isActive ? "default" : "pointer",
-              padding: "2px",
+              padding: "4px 6px",
               lineHeight: 0,
               display: "flex",
               alignItems: "center",
               transition: "border-color 0.15s ease",
             }}
           >
-            <Flag size={26} />
+            <Flag size={18} />
           </button>
         )
       })}
