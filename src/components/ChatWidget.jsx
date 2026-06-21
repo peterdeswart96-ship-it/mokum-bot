@@ -372,7 +372,10 @@ export default function ChatWidget() {
 
   const isMobile = windowWidth < 480
   const chatWidth = expanded ? "min(80vw, 900px)" : (isMobile ? `${windowWidth - 16}px` : WIDGET_CONFIG.width)
-  const chatHeight = expanded ? "80vh" : (isMobile ? "75vh" : "580px")
+  // Hoogte altijd begrensd: nooit hoger dan het scherm minus de bottom offset, sluitknop en marge
+  // 90px = bottom, 80px = sluitknop + marge, 16px = adembreedte aan bovenkant
+  const maxSafeHeight = "calc(100vh - 90px - 80px - 16px)"
+  const chatHeight = expanded ? "80vh" : (isMobile ? maxSafeHeight : `min(580px, ${maxSafeHeight})`)
   const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
 
   return (
