@@ -17,20 +17,19 @@ const C = {
 }
 
 // Widget positie — pas hier aan als de bot overlapt met andere floating elementen
-// Standaard bottom was "24px" — verhoogd naar "90px" om overlap met WhatsApp icoon te voorkomen
-// Als het WhatsApp icoon op de Mokum site op een andere hoogte staat, pas bottom hier aan
 const WIDGET_CONFIG = {
   bottom: "90px",
   right:  "24px",
+  width:  "440px",   // was 380px — breder zodat header op één regel past
 }
 
+// Vlaggen: sleutel = de DOELTAAL (waar je naartoe switcht)
 const FLAGS = { nl: "🇳🇱", en: "🇬🇧" }
+
 const INTERN_HASH = "3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f"
 
-function detectLanguage() {
-  const browserLang = navigator.language?.toLowerCase() || "en"
-  return browserLang.startsWith("nl") ? "nl" : "en"
-}
+// Standaard altijd Nederlands — niet afhankelijk van browsertaal
+const DEFAULT_LANG = "nl"
 
 function EightBallIcon({ size = 64, animate = false }) {
   const animStyle = animate ? {
@@ -116,7 +115,7 @@ function SpeechBubble({ hovered, text, lang }) {
     return (
       <div style={{ position: "relative", display: "inline-block", marginBottom: "18px" }}>
         <div style={{ backgroundColor: "white", border: "3.5px solid #111", borderRadius: "12px", padding: "10px 16px", boxSizing: "border-box", position: "relative" }}>
-          <span style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "12px", fontWeight: "900", color:"#cc0000", display: "block", whiteSpace: "nowrap", textAlign: "center" }}>{text}</span>
+          <span style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "12px", fontWeight: "900", color: "#cc0000", display: "block", whiteSpace: "nowrap", textAlign: "center" }}>{text}</span>
         </div>
         <ArrowSVG />
       </div>
@@ -129,7 +128,7 @@ function SpeechBubble({ hovered, text, lang }) {
         <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>{t.hoverTitle}</div>
         <div style={{ height: "1px", backgroundColor: "#eee", marginBottom: "8px" }} />
         {t.hoverInfo.map((item) => (
-          <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom:"5px" }}>{item}</div>
+          <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom: "5px" }}>{item}</div>
         ))}
       </div>
       <ArrowSVG />
@@ -162,12 +161,12 @@ function BotMessage({ content }) {
 }
 
 function ChipButton({ onClick, children, accent = false }) {
-  const [hovered, setHovered] = useState(false)
+  const [hov, setHov] = useState(false)
   return (
-    <button onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
+    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
       fontSize: "13px", padding: "8px 14px", borderRadius: "20px",
-      backgroundColor: accent ? (hovered ? C.redDark : C.red) : (hovered ? "#2a2a2a" : "transparent"),
-      color: C.white, border: accent ? "none" : `1px solid ${hovered ? "#444" : C.border}`,
+      backgroundColor: accent ? (hov ? C.redDark : C.red) : (hov ? "#2a2a2a" : "transparent"),
+      color: C.white, border: accent ? "none" : `1px solid ${hov ? "#444" : C.border}`,
       cursor: "pointer", transition: "all 0.15s ease", textAlign: "left", lineHeight: "1.4",
     }}>
       {children}
@@ -178,25 +177,27 @@ function ChipButton({ onClick, children, accent = false }) {
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [activeTab, setActiveTab] = useState("topics")   // "topics" | "direct"
   const [stage, setStage] = useState("topics")
   const [selectedTopic, setSelectedTopic] = useState(null)
   const [selectedDiscipline, setSelectedDiscipline] = useState(null)
   const [internUnlocked, setInternUnlocked] = useState(false)
   const [internPwd, setInternPwd] = useState("")
   const [internPwdError, setInternPwdError] = useState(false)
-  const [showLangMenu, setShowLangMenu] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
-  const [lang, setLang] = useState(detectLanguage)
+  // Standaard altijd Nederlands — niet afhankelijk van browsertaal
+  const [lang, setLang] = useState(DEFAULT_LANG)
 
   const t = translations[lang]
 
   const [messages, setMessages] = useState(() => [
-    { role: "assistant", content: translations[detectLanguage()].welcome },
+    { role: "assistant", content: translations[DEFAULT_LANG].welcome },
   ])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef(null)
+  const inputRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -210,12 +211,19 @@ export default function ChatWidget() {
     return () => clearInterval(interval)
   }, [open])
 
+  // Focus input als gebruiker naar "direct" tab gaat
+  useEffect(() => {
+    if (activeTab === "direct" && open) {
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
+  }, [activeTab, open])
+
   function switchLanguage() {
     const newLang = lang === "nl" ? "en" : "nl"
     setLang(newLang)
-    setShowLangMenu(false)
     setMessages([{ role: "assistant", content: translations[newLang].welcome }])
     setStage("topics")
+    setActiveTab("topics")
     setSelectedTopic(null)
     setSelectedDiscipline(null)
     setInternUnlocked(false)
@@ -231,6 +239,7 @@ export default function ChatWidget() {
     setInput("")
     setLoading(true)
     setStage("chat")
+    setActiveTab("direct")
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
@@ -249,6 +258,7 @@ export default function ChatWidget() {
   function selectTopic(topic) {
     if (topic.id === "anders") {
       setStage("chat")
+      setActiveTab("direct")
     } else if (topic.id === "spelregels") {
       setSelectedTopic(topic)
       setMessages(prev => [...prev, { role: "assistant", content: t.spelregelsIntro }])
@@ -278,6 +288,7 @@ export default function ChatWidget() {
 
   function resetChat() {
     setStage("topics")
+    setActiveTab("topics")
     setSelectedTopic(null)
     setSelectedDiscipline(null)
     setInternUnlocked(false)
@@ -287,168 +298,222 @@ export default function ChatWidget() {
     setInput("")
   }
 
+  const chatWidth = expanded ? "min(80vw, 900px)" : WIDGET_CONFIG.width
+
+  // Tab labels
+  const tabTopics = lang === "nl" ? "Kies een onderwerp" : "Choose a topic"
+  const tabDirect = lang === "nl" ? "✏️ Stel direct een vraag" : "✏️ Ask directly"
+
   return (
-    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: WIDGET_CONFIG.right, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: "380px" }}>
+    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: WIDGET_CONFIG.right, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
 
       {open && (
-        <div style={{
-          marginBottom: "16px",
-          width: expanded ? "min(80vw, 900px)" : "380px",
-          height: expanded ? "80vh" : "580px",
-          borderRadius: "16px", overflow: "hidden",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
-          display: "flex", flexDirection: "column",
-          backgroundColor: C.black,
-          transition: "width 0.3s ease, height 0.3s ease",
-        }}>
-
-          {/* Header */}
-          <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <EightBallIcon size={36} />
-              <div>
-                <div style={{ fontWeight: "800", color: C.white, fontSize: "14px", letterSpacing: "0.06em" }}>MOKUM MAGIC 8 BALL</div>
-                <div style={{ color: C.red, fontSize: "11px", marginTop: "1px" }}>Pool & Darts Amsterdam</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {/* Home knop */}
-              <button
-                onClick={resetChat}
-                title={lang === "nl" ? "Terug naar home" : "Back to home"}
-                style={{
-                  background: "none",
-                  border: `1px solid ${C.border}`,
-                  borderRadius: "6px",
-                  color: C.gray,
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  padding: "4px 8px",
-                  lineHeight: 1.4,
-                }}
-              >
-                🏠
-              </button>
-              <button onClick={switchLanguage} title={lang === "nl" ? "Switch to English" : "Naar Nederlands"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, cursor: "pointer", fontSize: "16px", padding: "3px 8px", lineHeight: 1.4 }}>
-                {FLAGS[lang === "nl" ? "en" : "nl"]}
-              </button>
-              <button onClick={() => setExpanded(!expanded)} title={expanded ? "Verkleinen" : "Maximaliseren"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize:"12px", padding: "4px 8px" }}>
-                {expanded ? "⊡" : "⊞"}
-              </button>
-              <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: "4px", lineHeight: 1 }}>✕</button>
-            </div>
+        <>
+          {/* Tab balk boven het venster */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "6px", alignSelf: "flex-start", paddingLeft: "4px" }}>
+            <button
+              onClick={() => { setActiveTab("topics"); if (stage === "chat") resetChat() }}
+              style={{
+                fontSize: "12px", padding: "5px 12px", borderRadius: "10px 10px 0 0",
+                backgroundColor: activeTab === "topics" ? C.blackCard : "#0d0d0d",
+                color: activeTab === "topics" ? C.white : C.gray,
+                border: `1px solid ${C.border}`,
+                borderBottom: activeTab === "topics" ? `1px solid ${C.blackCard}` : `1px solid ${C.border}`,
+                cursor: "pointer", fontWeight: activeTab === "topics" ? "700" : "400",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {tabTopics}
+            </button>
+            <button
+              onClick={() => { setActiveTab("direct"); setStage("chat") }}
+              style={{
+                fontSize: "12px", padding: "5px 12px", borderRadius: "10px 10px 0 0",
+                backgroundColor: activeTab === "direct" ? C.blackCard : "#0d0d0d",
+                color: activeTab === "direct" ? C.red : C.gray,
+                border: `1px solid ${C.border}`,
+                borderBottom: activeTab === "direct" ? `1px solid ${C.blackCard}` : `1px solid ${C.border}`,
+                cursor: "pointer", fontWeight: activeTab === "direct" ? "700" : "400",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {tabDirect}
+            </button>
           </div>
 
-          {/* Chat gebied */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Chatvenster */}
+          <div style={{
+            marginBottom: "16px",
+            width: chatWidth,
+            height: expanded ? "80vh" : "580px",
+            borderRadius: "16px", overflow: "hidden",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
+            display: "flex", flexDirection: "column",
+            backgroundColor: C.black,
+            transition: "width 0.3s ease, height 0.3s ease",
+          }}>
 
-            {messages.map((msg, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                {msg.role === "user" ? (
-                  <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 2px 12px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.red, color: C.white }}>{msg.content}</div>
-                ) : (
-                  <BotMessage content={msg.content} />
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                <div style={{ padding: "10px 14px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", backgroundColor: C.blackCard, color: C.gray, border: `1px solid ${C.border}` }}>{t.typing}</div>
-              </div>
-            )}
-
-            {/* Topics */}
-            {stage === "topics" && !loading && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
-                {t.topics.map((topic) => (
-                  <ChipButton key={topic.id} onClick={() => selectTopic(topic)}>
-                    {topic.emoji} {topic.label}
-                  </ChipButton>
-                ))}
-              </div>
-            )}
-
-            {/* Intern login */}
-            {stage === "intern-login" && !loading && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                <div style={{ fontSize: "13px", color: C.white, marginBottom: "4px" }}>🔒 {t.internPwdPrompt}</div>
-                <input
-                  type="password"
-                  value={internPwd}
-                  onChange={(e) => setInternPwd(e.target.value)}
-                  onKeyDown={async (e) => { if (e.key === "Enter") await checkInternPwd() }}
-                  placeholder={lang === "nl" ? "Wachtwoord..." : "Password..."}
-                  autoFocus
-                  style={{ padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${internPwdError ? C.red : C.border}`, outline: "none" }}
-                />
-                {internPwdError && <div style={{ fontSize: "12px", color: C.red }}>{t.internPwdError}</div>}
-                <ChipButton onClick={checkInternPwd} accent>{t.internPwdBtn}</ChipButton>
-                <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
-              </div>
-            )}
-
-            {/* Spelregels disciplines */}
-            {stage === "spelregels" && !loading && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                {t.spelregelsDisciplines.map((disc) => (
-                  <ChipButton key={disc.id} onClick={() => { setSelectedDiscipline(disc); setStage("spelregels-questions") }}>
-                    {disc.emoji} {disc.label}
-                  </ChipButton>
-                ))}
-                <ChipButton onClick={() => setStage("chat")} accent>{t.askOther}</ChipButton>
-                <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
-              </div>
-            )}
-
-            {/* Spelregels vragen */}
-            {stage === "spelregels-questions" && selectedDiscipline && !loading && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>{selectedDiscipline.emoji} {selectedDiscipline.label}</div>
-                {(t.spelregelsQuestions[selectedDiscipline.id] || []).map((q) => (
-                  <ChipButton key={q} onClick={() => sendMessage(q)}>{q}</ChipButton>
-                ))}
-                <ChipButton onClick={() => setStage("chat")} accent>{t.askOther}</ChipButton>
-                <button onClick={() => setStage("spelregels")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.spelregelsBack}</button>
-              </div>
-            )}
-
-            {/* Voorgestelde vragen */}
-            {stage === "questions" && selectedTopic && !loading && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
-                <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
-                  {selectedTopic.emoji} {t.topics.find(tp => tp.id === selectedTopic.id)?.label}
+            {/* Header */}
+            <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <EightBallIcon size={34} />
+                <div>
+                  <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>MOKUM MAGIC 8 BALL</div>
+                  <div style={{ color: C.red, fontSize: "11px", marginTop: "1px" }}>Pool & Darts Amsterdam</div>
                 </div>
-                {(t.questions[selectedTopic.id] || []).map((q) => (
-                  <ChipButton key={q} onClick={() => sendMessage(q)}>{q}</ChipButton>
-                ))}
-                <ChipButton onClick={() => setStage("chat")} accent>{t.askOther}</ChipButton>
-                <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
               </div>
-            )}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {/* Home knop */}
+                <button
+                  onClick={resetChat}
+                  title={lang === "nl" ? "Terug naar home" : "Back to home"}
+                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "14px", padding: "4px 8px", lineHeight: 1.4 }}
+                >
+                  🏠
+                </button>
 
-            {/* Terug knop in chat */}
-            {stage === "chat" && !loading && (
-              <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
-            )}
+                {/* Taalwisselaar — toont vlag van de DOELTAAL */}
+                <button
+                  onClick={switchLanguage}
+                  title={lang === "nl" ? "Switch to English" : "Naar Nederlands"}
+                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, cursor: "pointer", fontSize: "18px", padding: "2px 6px", lineHeight: 1.4 }}
+                >
+                  {FLAGS[lang === "nl" ? "en" : "nl"]}
+                </button>
 
-            <div ref={bottomRef} />
-          </div>
+                {/* Expand knop */}
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  title={expanded ? "Verkleinen" : "Maximaliseren"}
+                  style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "12px", padding: "4px 8px" }}
+                >
+                  {expanded ? "⊡" : "⊞"}
+                </button>
 
-          {/* Input */}
-          {(stage === "chat" || stage === "questions" || stage === "spelregels" || stage === "spelregels-questions") && (
+                {/* Sluit knop */}
+                <button
+                  onClick={() => setOpen(false)}
+                  style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: "4px", lineHeight: 1 }}
+                >✕</button>
+              </div>
+            </div>
+
+            {/* Chat gebied */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+
+              {messages.map((msg, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                  {msg.role === "user" ? (
+                    <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 2px 12px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.red, color: C.white }}>{msg.content}</div>
+                  ) : (
+                    <BotMessage content={msg.content} />
+                  )}
+                </div>
+              ))}
+
+              {loading && (
+                <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                  <div style={{ padding: "10px 14px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", backgroundColor: C.blackCard, color: C.gray, border: `1px solid ${C.border}` }}>{t.typing}</div>
+                </div>
+              )}
+
+              {/* Topics — alleen zichtbaar als activeTab === "topics" */}
+              {activeTab === "topics" && stage === "topics" && !loading && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
+                  {t.topics.map((topic) => (
+                    <ChipButton key={topic.id} onClick={() => selectTopic(topic)}>
+                      {topic.emoji} {topic.label}
+                    </ChipButton>
+                  ))}
+                </div>
+              )}
+
+              {/* Intern login */}
+              {stage === "intern-login" && !loading && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                  <div style={{ fontSize: "13px", color: C.white, marginBottom: "4px" }}>🔒 {t.internPwdPrompt}</div>
+                  <input
+                    type="password"
+                    value={internPwd}
+                    onChange={(e) => setInternPwd(e.target.value)}
+                    onKeyDown={async (e) => { if (e.key === "Enter") await checkInternPwd() }}
+                    placeholder={lang === "nl" ? "Wachtwoord..." : "Password..."}
+                    autoFocus
+                    style={{ padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${internPwdError ? C.red : C.border}`, outline: "none" }}
+                  />
+                  {internPwdError && <div style={{ fontSize: "12px", color: C.red }}>{t.internPwdError}</div>}
+                  <ChipButton onClick={checkInternPwd} accent>{t.internPwdBtn}</ChipButton>
+                  <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
+                </div>
+              )}
+
+              {/* Spelregels disciplines */}
+              {stage === "spelregels" && !loading && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                  {t.spelregelsDisciplines.map((disc) => (
+                    <ChipButton key={disc.id} onClick={() => { setSelectedDiscipline(disc); setStage("spelregels-questions") }}>
+                      {disc.emoji} {disc.label}
+                    </ChipButton>
+                  ))}
+                  <ChipButton onClick={() => { setStage("chat"); setActiveTab("direct") }} accent>{t.askOther}</ChipButton>
+                  <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
+                </div>
+              )}
+
+              {/* Spelregels vragen */}
+              {stage === "spelregels-questions" && selectedDiscipline && !loading && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                  <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>{selectedDiscipline.emoji} {selectedDiscipline.label}</div>
+                  {(t.spelregelsQuestions[selectedDiscipline.id] || []).map((q) => (
+                    <ChipButton key={q} onClick={() => sendMessage(q)}>{q}</ChipButton>
+                  ))}
+                  <ChipButton onClick={() => { setStage("chat"); setActiveTab("direct") }} accent>{t.askOther}</ChipButton>
+                  <button onClick={() => setStage("spelregels")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.spelregelsBack}</button>
+                </div>
+              )}
+
+              {/* Voorgestelde vragen */}
+              {stage === "questions" && selectedTopic && !loading && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+                  <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
+                    {selectedTopic.emoji} {t.topics.find(tp => tp.id === selectedTopic.id)?.label}
+                  </div>
+                  {(t.questions[selectedTopic.id] || []).map((q) => (
+                    <ChipButton key={q} onClick={() => sendMessage(q)}>{q}</ChipButton>
+                  ))}
+                  <ChipButton onClick={() => { setStage("chat"); setActiveTab("direct") }} accent>{t.askOther}</ChipButton>
+                  <button onClick={() => setStage("topics")} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", textAlign: "left", padding: "4px 0" }}>{t.backButton}</button>
+                </div>
+              )}
+
+              {/* Terug knop in chat */}
+              {stage === "chat" && !loading && (
+                <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
+              )}
+
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input — altijd zichtbaar, ook op topics scherm */}
             <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "12px 16px", display: "flex", gap: "8px", flexShrink: 0 }}>
               <input
-                type="text" value={input}
+                ref={inputRef}
+                type="text"
+                value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                onKeyDown={(e) => { if (e.key === "Enter") sendMessage() }}
+                onFocus={() => setActiveTab("direct")}
                 placeholder={t.placeholder}
                 style={{ flex: 1, padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
               />
-              <button onClick={() => sendMessage()} disabled={loading} style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}>→</button>
+              <button
+                onClick={() => sendMessage()}
+                disabled={loading}
+                style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
+              >→</button>
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Floating knop */}
@@ -461,11 +526,14 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Sluit knop */}
+      {/* Sluit knop onder het venster */}
       {open && (
-        <button onClick={() => setOpen(false)} style={{ marginTop: "8px", width: "64px", height: "64px", borderRadius: "50%", backgroundColor: C.black, border: `2px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.gray, fontSize: "20px", fontWeight: "bold", cursor: "pointer" }}
+        <button
+          onClick={() => setOpen(false)}
+          style={{ marginTop: "8px", width: "64px", height: "64px", borderRadius: "50%", backgroundColor: C.black, border: `2px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.gray, fontSize: "20px", fontWeight: "bold", cursor: "pointer" }}
           onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+        >
           ✕
         </button>
       )}
