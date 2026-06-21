@@ -23,9 +23,64 @@ const WIDGET_CONFIG = {
 }
 
 const INTERN_HASH = "3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f"
-
-// Standaard altijd Nederlands
 const DEFAULT_LANG = "nl"
+
+// SVG vlaggen — werken altijd, ook zonder emoji-ondersteuning
+function FlagNL({ size = 24 }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width={size} height={Math.round(size * 6/9)}>
+      <rect width="9" height="2" y="0" fill="#AE1C28"/>
+      <rect width="9" height="2" y="2" fill="#FFFFFF"/>
+      <rect width="9" height="2" y="4" fill="#21468B"/>
+    </svg>
+  )
+}
+
+function FlagGB({ size = 24 }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width={size} height={Math.round(size * 30/60)}>
+      <rect width="60" height="30" fill="#012169"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/>
+      <path d="M30,0 V30 M0,15 H60" stroke="#fff" strokeWidth="10"/>
+      <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" strokeWidth="6"/>
+    </svg>
+  )
+}
+
+// Twee vlaggen naast elkaar — actieve taal heeft rode omlijning
+function LanguageSwitcher({ lang, onSwitch }) {
+  return (
+    <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+      {[
+        { code: "nl", Flag: FlagNL, title: "Nederlands" },
+        { code: "en", Flag: FlagGB, title: "English" },
+      ].map(({ code, Flag, title }) => {
+        const isActive = lang === code
+        return (
+          <button
+            key={code}
+            onClick={() => !isActive && onSwitch(code)}
+            title={title}
+            style={{
+              background: "none",
+              border: isActive ? `2px solid ${C.red}` : "2px solid transparent",
+              borderRadius: "4px",
+              cursor: isActive ? "default" : "pointer",
+              padding: "2px",
+              lineHeight: 0,
+              display: "flex",
+              alignItems: "center",
+              transition: "border-color 0.15s ease",
+            }}
+          >
+            <Flag size={26} />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 function EightBallIcon({ size = 64, animate = false }) {
   const animStyle = animate ? {
@@ -170,36 +225,6 @@ function ChipButton({ onClick, children, accent = false }) {
   )
 }
 
-// Twee vlaggen naast elkaar — huidige taal heeft rode omlijning
-function LanguageSwitcher({ lang, onSwitch }) {
-  return (
-    <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-      {["nl", "en"].map((l) => {
-        const isActive = lang === l
-        return (
-          <button
-            key={l}
-            onClick={() => !isActive && onSwitch(l)}
-            title={l === "nl" ? "Nederlands" : "English"}
-            style={{
-              background: "none",
-              border: isActive ? `2px solid ${C.red}` : `2px solid transparent`,
-              borderRadius: "6px",
-              cursor: isActive ? "default" : "pointer",
-              fontSize: "20px",
-              padding: "1px 3px",
-              lineHeight: 1,
-              transition: "border-color 0.15s ease",
-            }}
-          >
-            {l === "nl" ? "🇳🇱" : "🇬🇧"}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -336,24 +361,20 @@ export default function ChatWidget() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              {/* Home knop */}
               <button
                 onClick={resetChat}
                 title={lang === "nl" ? "Terug naar home" : "Back to home"}
                 style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "14px", padding: "4px 8px", lineHeight: 1.4 }}
               >🏠</button>
 
-              {/* Taalwisselaar — beide vlaggen, huidige taal rood omlijnd */}
               <LanguageSwitcher lang={lang} onSwitch={switchLanguage} />
 
-              {/* Expand knop */}
               <button
                 onClick={() => setExpanded(!expanded)}
                 title={expanded ? "Verkleinen" : "Maximaliseren"}
                 style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "12px", padding: "4px 8px" }}
               >{expanded ? "⊡" : "⊞"}</button>
 
-              {/* Sluit knop */}
               <button
                 onClick={() => setOpen(false)}
                 style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: "4px", lineHeight: 1 }}
@@ -380,7 +401,6 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Topics */}
             {stage === "topics" && !loading && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
                 {t.topics.map((topic) => (
@@ -391,7 +411,6 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Intern login */}
             {stage === "intern-login" && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 <div style={{ fontSize: "13px", color: C.white, marginBottom: "4px" }}>🔒 {t.internPwdPrompt}</div>
@@ -410,7 +429,6 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Spelregels disciplines */}
             {stage === "spelregels" && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 {t.spelregelsDisciplines.map((disc) => (
@@ -423,7 +441,6 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Spelregels vragen */}
             {stage === "spelregels-questions" && selectedDiscipline && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>{selectedDiscipline.emoji} {selectedDiscipline.label}</div>
@@ -435,7 +452,6 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Voorgestelde vragen */}
             {stage === "questions" && selectedTopic && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
                 <div style={{ fontSize: "12px", color: C.gray, marginBottom: "2px" }}>
@@ -449,7 +465,6 @@ export default function ChatWidget() {
               </div>
             )}
 
-            {/* Terug knop in chat */}
             {stage === "chat" && !loading && (
               <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
             )}
@@ -486,7 +501,7 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Sluit knop onder het venster */}
+      {/* Sluit knop */}
       {open && (
         <button
           onClick={() => setOpen(false)}
