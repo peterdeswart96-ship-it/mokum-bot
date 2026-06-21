@@ -43,6 +43,8 @@ REGELS:
 - Zet links altijd als klikbare markdown: [tekst](url). Nooit als platte URL.
 - Voor toernooi-info: geef altijd de aanmeldlink als [Inschrijven via Cuescore](https://cuescore.com/mokumpooldarts/tournaments)
 - Na elk antwoord over toernooien: vraag of de gebruiker uitgebreidere info wil over een specifiek toernooi. Vraag dan welk toernooi en geef daarna alle beschikbare details (format, kosten, handicap, prijzengeld, tijden, contact etc.)
+- Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
+- Bij vragen over eten, drinken, het menu, vegetarische opties, allergenen of specifieke gerechten: geef altijd de link naar de menukaart mee via [Bekijk de menukaart (PDF)](https://poolen-amsterdam.nl/wp-content/uploads/Mokum-menu-3.pdf) en beantwoord de vraag op basis van de beschikbare menu-informatie.
 - Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket), darts (301, 501, cricket) en biljart (libre, band) volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.
 
 KENNISBRON INSTRUCTIE:
@@ -161,7 +163,7 @@ const TOPIC_MAP = [
   },
   {
     folders: ["eten-drinken"],
-    keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "burger", "friet", "koffie", "cocktail", "wijn", "food", "drink", "beer", "coffee", "wine", "hungry", "thirsty", "honger", "dorst", "bestellen", "order", "hapje", "drankje"],
+    keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "burger", "friet", "koffie", "cocktail", "wijn", "food", "drink", "beer", "coffee", "wine", "hungry", "thirsty", "honger", "dorst", "bestellen", "order", "hapje", "drankje", "vegetarian", "vegetarisch", "vegan", "allergie", "allergy", "eten bestellen", "wat eten"],
   },
   {
     folders: ["intern"],
@@ -525,3 +527,6 @@ app.http("gesprekken", {
     }
   },
 })
+
+
+
