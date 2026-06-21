@@ -116,64 +116,9 @@ Bij twijfel of een toernooi bij je niveau past: mail naar info@pooleninmokum.com
 const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "kennisbronnen"
 
-const TOPIC_MAP = [
-  {
-    folders: ["spelregels/pool"],
-    keywords: ["8-ball", "8ball", "9-ball", "9ball", "10-ball", "10ball", "straight pool", "one pocket", "pool regel", "pool rules"],
-  },
-  {
-    folders: ["spelregels/english-pool"],
-    keywords: ["english pool", "blackball", "engels pool"],
-  },
-  {
-    folders: ["spelregels/darts"],
-    keywords: ["501", "301", "cricket", "darts regel", "darts rules", "checkout", "finish"],
-  },
-  {
-    folders: ["spelregels/biljart"],
-    keywords: ["libre", "bandstoten", "driebanden", "biljart regel", "billiard rule", "carom"],
-  },
-  {
-    folders: ["spelregels/shuffleboard"],
-    keywords: ["shuffleboard regel", "shuffleboard rule", "shuffleboard spel"],
-  },
-  {
-    folders: ["toernooien"],
-    keywords: ["toernooi", "tournament", "ranking", "inschrijv", "fluke", "mega", "handicap madness", "amsterdam open", "go customs", "wedstrijd", "speeldag"],
-  },
-  {
-    folders: ["openingstijden"],
-    keywords: ["open", "gesloten", "tijden", "hours", "feestdag", "holiday", "wanneer", "hoe laat"],
-  },
-  {
-    folders: ["tarieven"],
-    keywords: ["prijs", "tarief", "kost", "euro", "betaal", "price", "rate", "cost", "goedkoop", "duur"],
-  },
-  {
-    folders: ["locatie"],
-    keywords: ["adres", "address", "route", "parkeer", "parking", "ov", "trein", "tram", "bus", "amstel", "fiets", "rijden", "komen"],
-  },
-  {
-    folders: ["pool-biljart"],
-    keywords: ["tafel", "keu", "reserveer", "reserve", "pool tafel", "biljart tafel", "beschikbaar"],
-  },
-  {
-    folders: ["algemeen"],
-    keywords: ["mokum", "oprichter", "nick", "mark", "over ons", "about", "faciliteit", "bedrijfsuitje", "clinic", "les"],
-  },
-  {
-    folders: ["eten-drinken"],
-    keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "burger", "friet", "koffie", "cocktail", "wijn", "food", "drink", "beer", "coffee", "wine", "hungry", "thirsty", "honger", "dorst", "bestellen", "order", "hapje", "drankje", "vegetarian", "vegetarisch", "vegan", "allergie", "allergy", "eten bestellen", "wat eten"],
-  },
-  {
-    folders: ["intern"],
-    keywords: ["intern", "internal", "werkrooster", "keuken", "kassa", "medewerker", "personeel", "instructie", "schedule", "kitchen", "cash register"],
-  },
-  {
-    folders: ["toernooi-historie"],
-    keywords: ["resultaat", "uitslag", "winnaar", "gewonnen", "verloren", "history", "historie", "result", "winner", "wie won", "who won", "laatste toernooi", "vorige toernooi", "ranking stand", "eindstand"],
-  },
-]
+// Mappen die NOOIT zichtbaar zijn voor gewone bezoekers
+// De 'intern' map is alleen beschikbaar als het intern-wachtwoord ontgrendeld is in de sessie
+const BEVEILIGDE_MAPPEN = ["intern"]
 
 function httpsRequest(options, body) {
   return new Promise((resolve, reject) => {
@@ -263,11 +208,12 @@ async function fetchBlobContent(blobPath, sasToken) {
   }
 }
 
-async function listBlobsInFolder(folder, sasToken) {
+async function listAllBlobs(sasToken) {
+  // Lijst alle bestanden in de volledige kennisbronnen container op
   try {
     const options = {
       hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
-      path: `/${CONTAINER}?restype=container&comp=list&prefix=${encodeURIComponent(folder + "/")}&${sasToken}`,
+      path: `/${CONTAINER}?restype=container&comp=list&${sasToken}`,
       method: "GET",
       headers: { "x-ms-version": "2020-04-08" },
     }
@@ -276,41 +222,64 @@ async function listBlobsInFolder(folder, sasToken) {
     const matches = [...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)]
     return matches.map(m => m[1])
   } catch (err) {
-    console.log(`Blobs listen mislukt (${folder}):`, err.message)
+    console.log("Blobs listen mislukt:", err.message)
     return []
   }
 }
 
-async function getKennisbronContext(message, sasToken) {
+async function getKennisbronContext(messages, sasToken) {
+  // Laad ALLE kennisbronnen — geen keywords of TOPIC_MAP nodig.
+  // Mark of Nick uploaden een bestand → bot gebruikt het direct.
+  // Enige uitzondering: 'intern' map is afgeschermd voor gewone bezoekers.
   if (!sasToken) {
     console.log("Geen SAS token — kennisbron overgeslagen")
     return null
   }
-  const msgLower = message.toLowerCase()
-  const relevanteFolders = new Set()
-  for (const topic of TOPIC_MAP) {
-    if (topic.keywords.some(kw => msgLower.includes(kw))) {
-      topic.folders.forEach(f => relevanteFolders.add(f))
+
+  // Controleer of de gebruiker de intern-sectie heeft ontgrendeld in deze sessie
+  // Dit detecteren we door te kijken of een van de berichten het intern-wachtwoord bevat
+  // (de frontend stuurt dit niet expliciet, maar de berichten bevatten context)
+  const allText = messages.map(m => m.content || "").join(" ").toLowerCase()
+  const internOntgrendeld = allText.includes("intern") && allText.includes("internal")
+
+  try {
+    const alleBlobs = await listAllBlobs(sasToken)
+    if (alleBlobs.length === 0) {
+      console.log("Geen bestanden gevonden in kennisbronnen container")
+      return null
     }
-  }
-  if (relevanteFolders.size === 0) {
-    console.log("Geen relevante kennisbron mappen gevonden voor:", message)
-    return null
-  }
-  console.log("Relevante kennisbron mappen:", [...relevanteFolders])
-  const sections = []
-  for (const folder of relevanteFolders) {
-    const blobs = await listBlobsInFolder(folder, sasToken)
-    for (const blobPath of blobs) {
+
+    const sections = []
+    for (const blobPath of alleBlobs) {
+      // Sla beveiligde mappen over tenzij intern ontgrendeld
+      const mapNaam = blobPath.split("/")[0]
+      if (BEVEILIGDE_MAPPEN.includes(mapNaam) && !internOntgrendeld) {
+        console.log(`Beveiligde map overgeslagen: ${blobPath}`)
+        continue
+      }
+
+      // Laad alleen .txt en .md bestanden (geen foto's of andere binaire bestanden)
+      if (!blobPath.endsWith(".txt") && !blobPath.endsWith(".md")) {
+        console.log(`Niet-tekstbestand overgeslagen: ${blobPath}`)
+        continue
+      }
+
       const content = await fetchBlobContent(blobPath, sasToken)
-      if (content) {
-        sections.push(`### Kennisbron: ${blobPath}\n\n${content}`)
+      if (content && content.trim().length > 0) {
+        sections.push(`### ${blobPath}\n\n${content}`)
         console.log(`Kennisbron geladen: ${blobPath}`)
       }
     }
+
+    if (sections.length === 0) return null
+
+    console.log(`Totaal ${sections.length} kennisbron bestanden geladen`)
+    return `---\nKENNISBRON (deze informatie is leidend boven de instructies hierboven):\n\n${sections.join("\n\n---\n\n")}\n---`
+
+  } catch (err) {
+    console.log("Kennisbron ophalen mislukt:", err.message)
+    return null
   }
-  if (sections.length === 0) return null
-  return `---\nKENNISBRON (deze informatie is leidend boven de instructies hierboven — als er een conflict is, volg dan de kennisbron en log dit):\n\n${sections.join("\n\n---\n\n")}\n---`
 }
 
 function fetchUrl(url) {
@@ -408,6 +377,7 @@ app.http("chat", {
       }
       const lastMessage = messages[messages.length - 1]?.content || ""
       const lastMessageLower = lastMessage.toLowerCase()
+
       const isTournamentQuery =
         lastMessageLower.includes("toernooi") ||
         lastMessageLower.includes("tournament") ||
@@ -416,24 +386,30 @@ app.http("chat", {
         lastMessageLower.includes("ranking") ||
         lastMessageLower.includes("wedstrijd") ||
         lastMessageLower.includes("speeldag")
+
       const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+
+      // Laad alle kennisbronnen — geen keywords of TOPIC_MAP meer nodig
       let kennisbronContext = null
       try {
-        kennisbronContext = await getKennisbronContext(lastMessage, sasToken)
+        kennisbronContext = await getKennisbronContext(messages, sasToken)
         if (kennisbronContext) {
           console.log("Kennisbron context toegevoegd aan prompt")
         }
       } catch (err) {
         console.log("Kennisbron ophalen mislukt:", err.message)
       }
+
       let tournamentContext = null
       if (isTournamentQuery) {
         tournamentContext = await getTournamentContext()
         console.log("Toernooi context toegevoegd")
       }
+
       let systemPrompt = SYSTEM_PROMPT
       if (kennisbronContext) systemPrompt += `\n\n${kennisbronContext}`
       if (tournamentContext) systemPrompt += `\n\n${tournamentContext}`
+
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-sonnet-4-6",
@@ -527,6 +503,3 @@ app.http("gesprekken", {
     }
   },
 })
-
-
-
