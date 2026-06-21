@@ -19,7 +19,33 @@ const C = {
 const WIDGET_CONFIG = {
   bottom: "90px",
   right:  "24px",
-  width:  "440px",
+  width:  "440px",   // desktop breedte
+}
+
+// Responsive breedte: op mobiel (< 480px) bijna volledige schermbreedte
+function getWidgetWidth(expanded) {
+  if (expanded) return "min(80vw, 900px)"
+  if (typeof window !== "undefined" && window.innerWidth < 480) {
+    return `${window.innerWidth - 16}px`  // 8px marge links en rechts
+  }
+  return WIDGET_CONFIG.width
+}
+
+// Responsive hoogte: op mobiel minder hoog zodat toetsenbord niet alles bedekt
+function getWidgetHeight(expanded) {
+  if (expanded) return "80vh"
+  if (typeof window !== "undefined" && window.innerWidth < 480) {
+    return "75vh"
+  }
+  return "580px"
+}
+
+// Responsive right offset: op mobiel gecentreerd
+function getWidgetRight() {
+  if (typeof window !== "undefined" && window.innerWidth < 480) {
+    return "8px"
+  }
+  return WIDGET_CONFIG.right
 }
 
 const INTERN_HASH = "3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f"
@@ -237,6 +263,16 @@ export default function ChatWidget() {
   const [expanded, setExpanded] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
   const [lang, setLang] = useState(DEFAULT_LANG)
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 800
+  )
+
+  // Luister naar schermgrootte wijzigingen (bijv. draaien telefoon)
+  useEffect(() => {
+    function handleResize() { setWindowWidth(window.innerWidth) }
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   const t = translations[lang]
 
@@ -334,16 +370,19 @@ export default function ChatWidget() {
     setInput("")
   }
 
-  const chatWidth = expanded ? "min(80vw, 900px)" : WIDGET_CONFIG.width
+  const isMobile = windowWidth < 480
+  const chatWidth = expanded ? "min(80vw, 900px)" : (isMobile ? `${windowWidth - 16}px` : WIDGET_CONFIG.width)
+  const chatHeight = expanded ? "80vh" : (isMobile ? "75vh" : "580px")
+  const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
 
   return (
-    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: WIDGET_CONFIG.right, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
+    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: chatRight, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
 
       {open && (
         <div style={{
           marginBottom: "16px",
           width: chatWidth,
-          height: expanded ? "80vh" : "580px",
+          height: chatHeight,
           borderRadius: "16px", overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
           display: "flex", flexDirection: "column",
