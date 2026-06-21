@@ -16,6 +16,14 @@ const C = {
   gray:       "#888888",
 }
 
+// Widget positie — pas hier aan als de bot overlapt met andere floating elementen
+// Standaard bottom was "24px" — verhoogd naar "90px" om overlap met WhatsApp icoon te voorkomen
+// Als het WhatsApp icoon op de Mokum site op een andere hoogte staat, pas bottom hier aan
+const WIDGET_CONFIG = {
+  bottom: "90px",
+  right:  "24px",
+}
+
 const FLAGS = { nl: "🇳🇱", en: "🇬🇧" }
 const INTERN_HASH = "3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f"
 
@@ -108,7 +116,7 @@ function SpeechBubble({ hovered, text, lang }) {
     return (
       <div style={{ position: "relative", display: "inline-block", marginBottom: "18px" }}>
         <div style={{ backgroundColor: "white", border: "3.5px solid #111", borderRadius: "12px", padding: "10px 16px", boxSizing: "border-box", position: "relative" }}>
-          <span style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "12px", fontWeight: "900", color: "#cc0000", display: "block", whiteSpace: "nowrap", textAlign: "center" }}>{text}</span>
+          <span style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "12px", fontWeight: "900", color:"#cc0000", display: "block", whiteSpace: "nowrap", textAlign: "center" }}>{text}</span>
         </div>
         <ArrowSVG />
       </div>
@@ -121,7 +129,7 @@ function SpeechBubble({ hovered, text, lang }) {
         <div style={{ fontFamily: "Arial Black, Arial, sans-serif", fontSize: "10px", fontWeight: "900", color: "#cc0000", marginBottom: "8px" }}>{t.hoverTitle}</div>
         <div style={{ height: "1px", backgroundColor: "#eee", marginBottom: "8px" }} />
         {t.hoverInfo.map((item) => (
-          <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom: "5px" }}>{item}</div>
+          <div key={item} style={{ fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#111", marginBottom:"5px" }}>{item}</div>
         ))}
       </div>
       <ArrowSVG />
@@ -280,7 +288,7 @@ export default function ChatWidget() {
   }
 
   return (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: "380px" }}>
+    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: WIDGET_CONFIG.right, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: "380px" }}>
 
       {open && (
         <div style={{
@@ -324,7 +332,7 @@ export default function ChatWidget() {
               <button onClick={switchLanguage} title={lang === "nl" ? "Switch to English" : "Naar Nederlands"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, cursor: "pointer", fontSize: "16px", padding: "3px 8px", lineHeight: 1.4 }}>
                 {FLAGS[lang === "nl" ? "en" : "nl"]}
               </button>
-              <button onClick={() => setExpanded(!expanded)} title={expanded ? "Verkleinen" : "Maximaliseren"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "12px", padding: "4px 8px" }}>
+              <button onClick={() => setExpanded(!expanded)} title={expanded ? "Verkleinen" : "Maximaliseren"} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize:"12px", padding: "4px 8px" }}>
                 {expanded ? "⊡" : "⊞"}
               </button>
               <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "18px", fontWeight: "bold", padding: "4px", lineHeight: 1 }}>✕</button>
@@ -420,7 +428,8 @@ export default function ChatWidget() {
             )}
 
             {/* Terug knop in chat */}
-            {stage === "chat" && !loading && (              <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
+            {stage === "chat" && !loading && (
+              <button onClick={resetChat} style={{ background: "none", border: "none", color: C.gray, fontSize: "12px", cursor: "pointer", padding: "4px 0", textAlign: "left" }}>{t.backToTopics}</button>
             )}
 
             <div ref={bottomRef} />
