@@ -116,8 +116,6 @@ Bij twijfel of een toernooi bij je niveau past: mail naar info@pooleninmokum.com
 const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "kennisbronnen"
 
-// Mappen die NOOIT zichtbaar zijn voor gewone bezoekers
-// De 'intern' map is alleen beschikbaar als het intern-wachtwoord ontgrendeld is in de sessie
 const BEVEILIGDE_MAPPEN = ["intern"]
 
 function httpsRequest(options, body) {
@@ -209,7 +207,6 @@ async function fetchBlobContent(blobPath, sasToken) {
 }
 
 async function listAllBlobs(sasToken) {
-  // Lijst alle bestanden in de volledige kennisbronnen container op
   try {
     const options = {
       hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -228,54 +225,38 @@ async function listAllBlobs(sasToken) {
 }
 
 async function getKennisbronContext(messages, sasToken) {
-  // Laad ALLE kennisbronnen — geen keywords of TOPIC_MAP nodig.
-  // Mark of Nick uploaden een bestand → bot gebruikt het direct.
-  // Enige uitzondering: 'intern' map is afgeschermd voor gewone bezoekers.
   if (!sasToken) {
     console.log("Geen SAS token — kennisbron overgeslagen")
     return null
   }
-
-  // Controleer of de gebruiker de intern-sectie heeft ontgrendeld in deze sessie
-  // Dit detecteren we door te kijken of een van de berichten het intern-wachtwoord bevat
-  // (de frontend stuurt dit niet expliciet, maar de berichten bevatten context)
   const allText = messages.map(m => m.content || "").join(" ").toLowerCase()
   const internOntgrendeld = allText.includes("intern") && allText.includes("internal")
-
   try {
     const alleBlobs = await listAllBlobs(sasToken)
     if (alleBlobs.length === 0) {
       console.log("Geen bestanden gevonden in kennisbronnen container")
       return null
     }
-
     const sections = []
     for (const blobPath of alleBlobs) {
-      // Sla beveiligde mappen over tenzij intern ontgrendeld
       const mapNaam = blobPath.split("/")[0]
       if (BEVEILIGDE_MAPPEN.includes(mapNaam) && !internOntgrendeld) {
         console.log(`Beveiligde map overgeslagen: ${blobPath}`)
         continue
       }
-
-      // Laad alleen .txt en .md bestanden (geen foto's of andere binaire bestanden)
       if (!blobPath.endsWith(".txt") && !blobPath.endsWith(".md")) {
         console.log(`Niet-tekstbestand overgeslagen: ${blobPath}`)
         continue
       }
-
       const content = await fetchBlobContent(blobPath, sasToken)
       if (content && content.trim().length > 0) {
         sections.push(`### ${blobPath}\n\n${content}`)
         console.log(`Kennisbron geladen: ${blobPath}`)
       }
     }
-
     if (sections.length === 0) return null
-
     console.log(`Totaal ${sections.length} kennisbron bestanden geladen`)
     return `---\nKENNISBRON (deze informatie is leidend boven de instructies hierboven):\n\n${sections.join("\n\n---\n\n")}\n---`
-
   } catch (err) {
     console.log("Kennisbron ophalen mislukt:", err.message)
     return null
@@ -377,7 +358,6 @@ app.http("chat", {
       }
       const lastMessage = messages[messages.length - 1]?.content || ""
       const lastMessageLower = lastMessage.toLowerCase()
-
       const isTournamentQuery =
         lastMessageLower.includes("toernooi") ||
         lastMessageLower.includes("tournament") ||
@@ -386,30 +366,22 @@ app.http("chat", {
         lastMessageLower.includes("ranking") ||
         lastMessageLower.includes("wedstrijd") ||
         lastMessageLower.includes("speeldag")
-
       const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
-
-      // Laad alle kennisbronnen — geen keywords of TOPIC_MAP meer nodig
       let kennisbronContext = null
       try {
         kennisbronContext = await getKennisbronContext(messages, sasToken)
-        if (kennisbronContext) {
-          console.log("Kennisbron context toegevoegd aan prompt")
-        }
+        if (kennisbronContext) console.log("Kennisbron context toegevoegd aan prompt")
       } catch (err) {
         console.log("Kennisbron ophalen mislukt:", err.message)
       }
-
       let tournamentContext = null
       if (isTournamentQuery) {
         tournamentContext = await getTournamentContext()
         console.log("Toernooi context toegevoegd")
       }
-
       let systemPrompt = SYSTEM_PROMPT
       if (kennisbronContext) systemPrompt += `\n\n${kennisbronContext}`
       if (tournamentContext) systemPrompt += `\n\n${tournamentContext}`
-
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-sonnet-4-6",
@@ -499,6 +471,71 @@ app.http("gesprekken", {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ error: "Internal server error" }),
+      }
+    }
+  },
+})
+
+// Analyse endpoint — voor het dashboard
+// Ontvangt gesprekken van de frontend en roept Claude aan via de server (geen CORS problemen)
+app.http("analyse", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") {
+      return { status: 204, headers: corsHeaders }
+    }
+    try {
+      const body = await request.json()
+      const { gesprekken, type } = body
+      if (!gesprekken || !Array.isArray(gesprekken)) {
+        return {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "gesprekken array required" }),
+        }
+      }
+
+      // Bouw gespreksdata op voor de AI
+      const vragenTekst = gesprekken.slice(0, 50).map((g, i) => {
+        const vragen = (g.messages || []).filter(m => m.role === "user").map(m => m.content).join(" | ")
+        const antwoord = (g.reply || "").substring(0, 200)
+        return `${i + 1}. VRAAG: ${vragen} | ANTWOORD: ${antwoord}`
+      }).join("\n")
+
+      const systemMark = `Je bent een data-analist voor Mokum Pool & Darts chatbot. Analyseer de gesprekken en geef PRAKTISCH advies om de bot te verbeteren. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
+{"inzicht":"Korte samenvatting in 2-3 zinnen over wat opvalt in de gesprekken","veelgesteld":[{"vraag":"Exacte of samengevatte vraag","count":3,"onderwerp":"Toernooien"}],"fouten_of_verbeteringen":[{"probleem":"Beschrijving van probleem of onduidelijkheid in bot antwoord","suggestie":"Concrete verbetering"}],"nieuwe_rubrieken":["Rubriek die ontbreekt maar veel gevraagd wordt"],"kennisbron_tips":["Specifieke tip: voeg dit toe aan kennisbron X"],"prioriteit":"hoog/middel/laag"}`
+
+      const systemSander = `Je bent een UX-analist voor de website poolen-amsterdam.nl. Analyseer chatbot gesprekken om te bepalen welke informatie ontbreekt of onduidelijk is op de website. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
+{"inzicht":"Korte samenvatting wat bezoekers zoeken maar niet vinden op de website","ontbrekende_info":[{"onderwerp":"Onderwerp","beschrijving":"Welke info mist op de site","prioriteit":"hoog/middel/laag"}],"pagina_verbeteringen":[{"pagina":"Welke pagina of sectie","verbetering":"Concrete suggestie voor verbetering"}],"veel_gestelde_vragen":[{"vraag":"Vraag die bezoekers stellen","antwoord_aanwezig_op_site":true}],"samenvatting":"Drie concrete actiepunten voor Sander om de website te verbeteren"}`
+
+      const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
+      const response = await client.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system: type === "sander" ? systemSander : systemMark,
+        messages: [{ role: "user", content: `Analyseer deze ${Math.min(gesprekken.length, 50)} gesprekken van de Mokum Bot:\n\n${vragenTekst}` }],
+      })
+
+      const text = response.content[0].text
+      const analyse = JSON.parse(text.replace(/```json|```/g, "").trim())
+
+      return {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ analyse }),
+      }
+    } catch (error) {
+      context.log("Analyse error:", error)
+      return {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: error.message }),
       }
     }
   },
