@@ -260,6 +260,60 @@
   <div class="warning-box">⚠️ <strong>Let op:</strong> gebruik alleen <code>.txt</code> of <code>.md</code> bestanden. Word documenten (.docx) en PDF's worden niet ondersteund — kopieer de tekst naar Kladblok en sla op als .txt.</div>
 
   <div class="divider"></div>
+  <div class="section-title">Praktijkvoorbeeld — betalingsinformatie aanpassen</div>
+
+  <div class="highlight-box">💡 <strong>Situatie:</strong> De bot zei dat Mokum alleen PIN accepteert, maar jullie accepteren ook contant. Zo pas je dit zelf aan zonder hulp van Peter.</div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div>
+      <div class="step-title">Open Kladblok en maak een nieuw bestand aan</div>
+      <div class="step-desc">Zoek op "Kladblok" in het startmenu en open het.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title">Typ de correcte informatie</div>
+      <div class="step-desc">Typ precies de tekst die de bot moet gebruiken:</div>
+    </div>
+  </div>
+  <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-family:monospace;font-size:13px;color:#ccc;line-height:1.8;">
+    Betaling bij Mokum Pool & Darts<br>
+    Bijgewerkt: juni 2026<br>
+    <br>
+    Zowel PIN als contant geld worden geaccepteerd.<br>
+    Pinnen kan altijd. Contant betalen is ook welkom.
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title">Sla op als betaling.txt</div>
+      <div class="step-desc">Klik op <strong>Bestand → Opslaan als</strong> → geef de naam <code>betaling.txt</code> → sla op op je bureaublad.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div>
+      <div class="step-title">Upload naar Storage Explorer</div>
+      <div class="step-desc">Open Azure Storage Explorer → klik op de map <code>algemeen</code> → klik op <strong>Upload → Upload Files</strong> → kies <code>betaling.txt</code> → klik Upload.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div>
+      <div class="step-title">Test de bot</div>
+      <div class="step-desc">Ga naar <a href="https://mokum-bot.pdscloud.nl" style="color:#cc4444;" target="_blank">mokum-bot.pdscloud.nl</a> en stel de vraag: <em>"Kan ik contant betalen?"</em> — de bot antwoordt nu met de nieuwe informatie.</div>
+    </div>
+  </div>
+
+  <div class="highlight-box">✅ <strong>Klaar!</strong> De bot gebruikt het nieuwe bestand direct na het uploaden. Wil je de tekst later aanpassen? Pas het bestand aan en upload het opnieuw met dezelfde naam <code>betaling.txt</code> — het oude wordt automatisch overschreven.</div>
+
+  <div class="divider"></div>
   <div class="section-title">Tips voor goede kennisbronnen</div>
   <div class="card">
     <div class="step" style="margin-bottom:12px;">
