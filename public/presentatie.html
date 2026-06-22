@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mokum Magic 8 Ball — Presentatie</title>
+<title>Mokum Magic 8 Ball — Handleiding</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0a0a0a; color: #ffffff; min-height: 100vh; }
@@ -27,35 +27,38 @@
   .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
   .badge-green { background: #0d2e1a; color: #4caf7d; }
   .badge-blue { background: #0d1f35; color: #4d9de0; }
+  .badge-red { background: #1a0a0a; color: #cc4444; }
   .badge-gray { background: #222; color: #888; }
-  .arch-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #222; }
-  .arch-row:last-child { border-bottom: none; }
-  .arch-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: #222; flex-shrink: 0; }
-  .arch-title { font-size: 14px; font-weight: 500; }
-  .arch-desc { font-size: 12px; color: #666; margin-top: 2px; }
-  .model-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 12px; }
-  .model-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1rem; }
-  .model-card.recommended { border: 2px solid #cc0000; }
+  .step { display: flex; gap: 12px; margin-bottom: 16px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: #cc0000; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .step-desc { font-size: 13px; color: #888; line-height: 1.6; }
+  .step-desc code { background: #222; padding: 1px 5px; border-radius: 4px; font-size: 12px; color: #ccc; }
+  .highlight-box { background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #4caf7d; line-height: 1.6; }
+  .warning-box { background: #1a1000; border: 1px solid #3a2a00; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #cc9900; line-height: 1.6; }
+  .info-box { background: #0d1a2e; border: 1px solid #1a3a5a; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #4d9de0; line-height: 1.6; }
+  .screenshot-placeholder { background: #1a1a1a; border: 2px dashed #333; border-radius: 8px; padding: 32px; text-align: center; margin: 12px 0; color: #444; font-size: 13px; }
+  .screenshot-placeholder span { display: block; font-size: 24px; margin-bottom: 8px; }
+  .rubriek-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  .rubriek-item { background: #161616; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; }
+  .rubriek-emoji { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .rubriek-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .rubriek-file { font-size: 11px; color: #555; font-family: monospace; }
+  .rubriek-status { font-size: 11px; margin-top: 4px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .model-btn-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1rem; }
+  .model-btn { font-size: 12px; padding: 10px 8px; border-radius: 8px; background: #161616; border: 1px solid #2a2a2a; color: #ccc; cursor: pointer; text-align: center; }
+  .model-btn:hover { border-color: #444; }
+  .model-btn.active { border: 2px solid #cc0000; color: #fff; }
   .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
   .slider-row label { font-size: 13px; color: #888; min-width: 140px; }
   .slider-row input[type=range] { flex: 1; accent-color: #cc0000; }
   .slider-row span { font-size: 13px; font-weight: 500; min-width: 60px; text-align: right; }
   .total-box { background: #1a1a1a; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .grand-total { background: #1a0a0a; border: 1px solid #cc0000; border-radius: 12px; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-  .highlight-box { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; font-size: 13px; color: #8899cc; line-height: 1.6; }
-  .step { display: flex; gap: 12px; margin-bottom: 16px; }
-  .step-num { width: 28px; height: 28px; border-radius: 50%; background: #1a1a3a; color: #6688cc; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .step-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-  .step-desc { font-size: 13px; color: #888; line-height: 1.5; }
-  .snippet-box { background: #1a1a1a; border-radius: 8px; padding: 14px 16px; font-family: monospace; font-size: 13px; color: #ccc; position: relative; border: 1px solid #2a2a2a; }
-  .copy-btn { position: absolute; top: 8px; right: 8px; background: #222; border: 1px solid #333; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: #888; }
-  .copy-btn:hover { background: #2a2a2a; color: #ccc; }
-  .model-btn-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1rem; }
-  .model-btn { font-size: 12px; padding: 10px 8px; border-radius: 8px; background: #161616; border: 1px solid #2a2a2a; color: #ccc; cursor: pointer; text-align: center; }
-  .model-btn:hover { border-color: #444; }
-  .model-btn.active { border: 2px solid #cc0000; color: #fff; }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 600px) { .model-grid { grid-template-columns: 1fr; } .two-col { grid-template-columns: 1fr; } }
+  .contact-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+  .contact-avatar { width: 48px; height: 48px; background: #cc0000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .divider { height: 1px; background: #222; margin: 20px 0; }
+  @media (max-width: 600px) { .rubriek-grid { grid-template-columns: 1fr; } .two-col { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -64,123 +67,134 @@
   <div class="ball">8</div>
   <div>
     <div class="header-title">MOKUM MAGIC 8 BALL</div>
-    <div class="header-sub">Presentatie — Pool & Darts Amsterdam</div>
+    <div class="header-sub">Handleiding — Pool & Darts Amsterdam</div>
   </div>
 </div>
 
 <div class="container">
 
 <div class="tab-bar">
-  <button class="tab active" onclick="showTab('overzicht', this)">Overzicht</button>
-  <button class="tab" onclick="showTab('voorstel', this)">Kostenvoorstel</button>
-  <button class="tab" onclick="showTab('modellen', this)">API kosten</button>
-  <button class="tab" onclick="showTab('sander', this)">Voor Sander</button>
-  <button class="tab" onclick="showTab('mark', this)">Voor Mark</button>
+  <button class="tab active" onclick="showTab('overzicht', this)">🏠 Overzicht</button>
+  <button class="tab" onclick="showTab('kennisbronnen', this)">📁 Kennisbronnen</button>
+  <button class="tab" onclick="showTab('kosten', this)">💶 API kosten</button>
+  <button class="tab" onclick="showTab('rubrieken', this)">📋 Rubrieken</button>
+  <button class="tab" onclick="showTab('problemen', this)">🔧 Problemen</button>
 </div>
 
 <!-- OVERZICHT -->
 <div id="tab-overzicht" class="tab-content active">
-  <div class="section-title">Hoe werkt de Mokum Magic 8 Ball?</div>
+
+  <div class="highlight-box">✅ De Mokum Magic 8 Ball is live op <strong>poolen-amsterdam.nl</strong>. Bezoekers zien de bot rechtsonder op elke pagina.</div>
+
+  <div class="section-title">Hoe werkt het?</div>
   <div class="card">
-    <div class="arch-row"><div class="arch-icon">🌐</div><div><div class="arch-title">WordPress (poolen-amsterdam.nl)</div><div class="arch-desc">Bezoeker opent de website — bot laadt automatisch via één script tag</div></div><span class="badge badge-green" style="margin-left:auto;">Live</span></div>
-    <div class="arch-row"><div class="arch-icon">⚡</div><div><div class="arch-title">Frontend (GitHub Pages)</div><div class="arch-desc">Chat UI, taaldetectie NL/EN, submenus, spelregels, toernooien</div></div><span class="badge badge-green" style="margin-left:auto;">Live</span></div>
-    <div class="arch-row"><div class="arch-icon">🔧</div><div><div class="arch-title">Backend (Azure Functions)</div><div class="arch-desc">API — haalt kennisbronnen op, communiceert met Claude, slaat gesprekken op</div></div><span class="badge badge-green" style="margin-left:auto;">Live</span></div>
-    <div class="arch-row"><div class="arch-icon">🤖</div><div><div class="arch-title">Claude AI (Anthropic)</div><div class="arch-desc">Beantwoordt vragen op basis van kennisbronnen + instructies over Mokum</div></div><span class="badge badge-green" style="margin-left:auto;">Live</span></div>
-    <div class="arch-row"><div class="arch-icon">🗄️</div><div><div class="arch-title">Azure Blob Storage</div><div class="arch-desc">Kennisbronnen, gespreksgeschiedenis, toernooi-uitslagen (automatisch)</div></div><span class="badge badge-green" style="margin-left:auto;">Live</span></div>
+    <div class="row"><span class="row-label">🌐 WordPress site</span><span class="row-val" style="font-size:13px;">Bot laadt automatisch via één script tag</span></div>
+    <div class="row"><span class="row-label">🤖 Claude AI</span><span class="row-val" style="font-size:13px;">Beantwoordt vragen op basis van jullie informatie</span></div>
+    <div class="row"><span class="row-label">📁 Kennisbronnen</span><span class="row-val" style="font-size:13px;">Bestanden die jullie zelf uploaden via Storage Explorer</span></div>
+    <div class="row"><span class="row-label">🔄 Updates</span><span class="row-val"><span class="badge badge-green">Automatisch</span></span></div>
   </div>
 
   <div class="section-title" style="margin-top:1.5rem;">Wat kan de bot?</div>
   <div class="two-col">
     <div class="card" style="padding:.875rem 1rem;">
-      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Bezoekers</div>
-      <div style="font-size:12px;color:#666;line-height:1.8;">Openingstijden & tarieven<br>Toernooien & inschrijven<br>Spelregels (8-ball, 9-ball, darts...)<br>Locatie & parkeren<br>Eten & drinken (menukaart PDF)<br>Coaching → nickvandenberg.com</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Voor bezoekers</div>
+      <div style="font-size:12px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren</div>
     </div>
     <div class="card" style="padding:.875rem 1rem;">
-      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Intern (wachtwoord)</div>
-      <div style="font-size:12px;color:#666;line-height:1.8;">Werkroosters<br>Keukeninstructies<br>Kassa-instructies<br>Overige interne info<br>Wachtwoord: <code style="background:#222;padding:1px 4px;border-radius:4px;">internal</code></div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Intern (met wachtwoord)</div>
+      <div style="font-size:12px;color:#666;line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info<br><br></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #222;">
+        <div style="font-size:12px;color:#666;margin-bottom:4px;">Intern wachtwoord:</div>
+        <code style="background:#222;padding:4px 10px;border-radius:6px;font-size:14px;color:#fff;">internal</code>
+      </div>
+
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #222;">
+        <div style="font-size:12px;color:#666;margin-bottom:4px;">Dashboard (gesprekken bekijken):</div>
+        <div style="font-size:11px;font-family:monospace;color:#888;margin-bottom:6px;">mokum-bot.pdscloud.nl/dashboard.html</div>
+        <code style="background:#222;padding:4px 10px;border-radius:6px;font-size:14px;color:#fff;">mkm!</code>
+      </div>
     </div>
   </div>
 
-  <div class="section-title" style="margin-top:1.5rem;">Dashboard voor Mark & Nick</div>
+  <div class="section-title" style="margin-top:1.5rem;">Talen</div>
   <div class="card">
-    <div class="row"><span class="row-label">URL</span><span class="row-val" style="font-size:12px;font-family:monospace;">mokum-bot.pdscloud.nl/dashboard.html</span></div>
-    <div class="row"><span class="row-label">Wachtwoord</span><span class="row-val"><code style="background:#222;padding:1px 6px;border-radius:4px;">mkm!</code></span></div>
-    <div class="row"><span class="row-label">Functies</span><span class="row-val" style="font-size:13px;">Gesprekken, filters, zoeken, AI-analyse</span></div>
+    <div class="row"><span class="row-label">🇳🇱 Nederlands</span><span class="row-val"><span class="badge badge-green">Standaard</span></span></div>
+    <div class="row"><span class="row-label">🇬🇧 Engels</span><span class="row-val" style="font-size:13px;">Schakelbaar via vlag in de header</span></div>
+    <div class="row"><span class="row-label">Andere talen</span><span class="row-val" style="font-size:13px;">Bot antwoordt automatisch in de taal van de bezoeker</span></div>
   </div>
+
 </div>
 
-<!-- KOSTENVOORSTEL -->
-<div id="tab-voorstel" class="tab-content">
-  <div class="highlight-box">Overzicht van alle gemaakte kosten. Peter vraagt 40% van de Claude AI abonnementskosten door. NTFY en Claude API worden 100% doorberekend. Toekomstige kosten worden apart besproken.</div>
+<!-- KENNISBRONNEN -->
+<div id="tab-kennisbronnen" class="tab-content">
 
-  <div class="section-title">Claude AI abonnement (mrt – mei 2026) — 40%</div>
+  <div class="highlight-box">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand → de bot gebruikt het direct. Geen technische kennis nodig.</div>
+
+  <div class="section-title">Hoe werkt het uploaden?</div>
   <div class="card">
-    <div class="row"><span class="row-label">15 maart 2026</span><span class="row-val">€21,78</span></div>
-    <div class="row"><span class="row-label">15 april 2026</span><span class="row-val">€21,78</span></div>
-    <div class="row"><span class="row-label">30 april 2026</span><span class="row-val">€21,78</span></div>
-    <div class="row"><span class="row-label">13 mei 2026 (upgrade hogere tier)</span><span class="row-val">€107,27</span></div>
-    <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;font-size:13px;border-top:1px solid #2a2a2a;">
-      <span style="color:#666;">Subtotaal €172,61 × 40%</span>
-      <span style="font-weight:500;color:#fff;">= <strong>€69,04</strong></span>
-    </div>
+    <div class="row"><span class="row-label">Programma</span><span class="row-val" style="font-size:13px;">Azure Storage Explorer (gratis)</span></div>
+    <div class="row"><span class="row-label">Bestandsformaat</span><span class="row-val"><code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.txt</code> of <code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.md</code></span></div>
+    <div class="row"><span class="row-label">Effect na uploaden</span><span class="row-val"><span class="badge badge-green">Direct actief</span></span></div>
+    <div class="row"><span class="row-label">Bestand bijwerken</span><span class="row-val" style="font-size:13px;">Gewoon overschrijven met nieuw bestand</span></div>
+    <div class="row"><span class="row-label">Bestand verwijderen</span><span class="row-val" style="font-size:13px;">Selecteer → Delete in Storage Explorer</span></div>
   </div>
 
-  <div class="section-title" style="margin-top:1.5rem;">NTFY Pro — Mokum toernooi project (100%)</div>
-  <div class="card">
-    <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.6;padding:8px;background:#1a1a1a;border-radius:6px;">Push notificatie systeem voor toernooien — spelers ontvangen een melding op hun telefoon als hun wedstrijd begint. Dit is een apart project, puur voor Mokum.</div>
-    <div class="row"><span class="row-label">16 april 2026 — ntfy Supporter</span><span class="row-val">€52,92</span></div>
-    <div class="row"><span class="row-label">18 april 2026 — ntfy Pro</span><span class="row-val">€52,75</span></div>
-    <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;font-size:13px;border-top:1px solid #2a2a2a;">
-      <span style="color:#666;">Subtotaal 100%</span>
-      <span style="font-weight:500;color:#fff;"><strong>€105,67</strong></span>
-    </div>
-  </div>
+  <div class="divider"></div>
+  <div class="section-title">Bestand uploaden</div>
 
-  <div class="section-title" style="margin-top:1.5rem;">Claude API — mokum-bot-prod (100%)</div>
-  <div class="card">
-    <div class="row"><span class="row-label">30 mei – 12 jun 2026</span><span class="row-val">$0,68 ≈ €0,62</span></div>
-    <div class="row"><span class="row-label">Azure, GitHub Pages, hosting</span><span class="row-val"><span class="badge badge-green">€0 — gratis</span></span></div>
-    <div class="row"><span class="row-label">Ontwikkeluren</span><span class="row-val"><span class="badge badge-gray">Pro bono</span></span></div>
-  </div>
-
-  <div class="grand-total">
+  <div class="step">
+    <div class="step-num">1</div>
     <div>
-      <div style="font-size:15px;font-weight:500;color:#ff4444;">Totaal voorstel</div>
-      <div style="font-size:11px;color:#aa4444;margin-top:4px;">Claude AI 40% + NTFY 100% + API 100%</div>
-      <div style="font-size:11px;color:#aa4444;margin-top:2px;">Toekomstige kosten worden apart besproken</div>
+      <div class="step-title">Maak een tekstbestand aan op je computer</div>
+      <div class="step-desc">Open Kladblok (Notepad) → schrijf de informatie → sla op als <code>.txt</code> bestand. Gebruik een duidelijke naam, bijv. <code>sport-evenementen.txt</code></div>
     </div>
-    <div style="font-size:36px;font-weight:700;color:#ff4444;">€175,33</div>
   </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title">Navigeer naar de juiste map in Storage Explorer</div>
+      <div class="step-desc">Open de map die bij het onderwerp past. Bijv. voor sport evenementen: klik op de map <code>sport-evenementen</code>.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title">Klik op Upload → Upload Files</div>
+      <div class="step-desc">Zoek je bestand op → klik Upload. Klaar! De bot gebruikt de nieuwe informatie direct.</div>
+    </div>
+  </div>
+
+  <div class="warning-box">⚠️ <strong>Let op:</strong> gebruik alleen <code>.txt</code> of <code>.md</code> bestanden. Word documenten (.docx) en PDF's worden niet ondersteund — kopieer de tekst naar Kladblok en sla op als .txt.</div>
+
+  <div class="divider"></div>
+  <div class="section-title">Tips voor goede kennisbronnen</div>
+  <div class="card">
+    <div class="step" style="margin-bottom:12px;">
+      <div class="step-num" style="background:#222;color:#888;">✓</div>
+      <div><div class="step-title">Gebruik duidelijke kopjes</div><div class="step-desc">Bijv: "Openingstijden maandag t/m donderdag: 14:00 - 01:00"</div></div>
+    </div>
+    <div class="step" style="margin-bottom:12px;">
+      <div class="step-num" style="background:#222;color:#888;">✓</div>
+      <div><div class="step-title">Schrijf in volledige zinnen</div><div class="step-desc">De bot leest de tekst letterlijk — hoe duidelijker, hoe beter het antwoord.</div></div>
+    </div>
+    <div class="step" style="margin-bottom:12px;">
+      <div class="step-num" style="background:#222;color:#888;">✓</div>
+      <div><div class="step-title">Zet de datum erbij</div><div class="step-desc">Bijv: "Bijgewerkt: juni 2026" — dan weet je altijd wanneer de info voor het laatste is bijgewerkt.</div></div>
+    </div>
+    <div class="step" style="margin-bottom:0;">
+      <div class="step-num" style="background:#222;color:#888;">✓</div>
+      <div><div class="step-title">Overschrijf het oude bestand bij updates</div><div class="step-desc">Upload gewoon een nieuw bestand met dezelfde naam — het oude wordt automatisch vervangen.</div></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- API KOSTEN -->
-<div id="tab-modellen" class="tab-content">
-  <div class="section-title">Claude API — kosten per gesprek</div>
-  <div class="highlight-box">Tot nu toe is Haiku 4.5 gebruikt — $0,68 totaal over ~2 weken. Hieronder de verwachte kosten als de bot in gebruik wordt genomen op de website.</div>
+<div id="tab-kosten" class="tab-content">
 
-  <div class="model-grid">
-    <div class="model-card">
-      <div style="font-size:11px;color:#666;margin-bottom:6px;">Goedkoopst</div>
-      <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Haiku 4.5</div>
-      <div style="font-size:18px;font-weight:500;">$1 / $5</div>
-      <div style="font-size:11px;color:#666;margin-bottom:12px;">per 1M tokens</div>
-      <div style="font-size:12px;color:#666;line-height:1.8;border-top:1px solid #222;padding-top:8px;">Per gesprek: ~$0,003<br>100 gesprekken: ~$0,28<br>500 gesprekken: ~$1,40<br>1.000 gesprekken: ~$2,80</div>
-    </div>
-    <div class="model-card recommended">
-      <div style="font-size:11px;background:#1a0a0a;color:#cc4444;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:6px;">Aanbevolen</div>
-      <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Sonnet 4.6</div>
-      <div style="font-size:18px;font-weight:500;">$3 / $15</div>
-      <div style="font-size:11px;color:#666;margin-bottom:12px;">per 1M tokens</div>
-      <div style="font-size:12px;color:#666;line-height:1.8;border-top:1px solid #222;padding-top:8px;">Per gesprek: ~$0,008<br>100 gesprekken: ~$0,84<br>500 gesprekken: ~$4,20<br>1.000 gesprekken: ~$8,40</div>
-    </div>
-    <div class="model-card">
-      <div style="font-size:11px;color:#666;margin-bottom:6px;">Meest capabel</div>
-      <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Opus 4.7</div>
-      <div style="font-size:18px;font-weight:500;">$5 / $25</div>
-      <div style="font-size:11px;color:#666;margin-bottom:12px;">per 1M tokens</div>
-      <div style="font-size:12px;color:#666;line-height:1.8;border-top:1px solid #222;padding-top:8px;">Per gesprek: ~$0,014<br>100 gesprekken: ~$1,40<br>500 gesprekken: ~$7,00<br>1.000 gesprekken: ~$14,00</div>
-    </div>
-  </div>
+  <div class="info-box">💡 De bot gebruikt Claude AI van Anthropic. Je betaalt per bericht (token). Hieronder kun je berekenen wat het kost bij jouw verwachte gebruik.</div>
 
   <div class="section-title">Interactieve calculator</div>
   <div class="card">
@@ -190,9 +204,9 @@
       <span id="val-convos">300</span>
     </div>
     <div class="model-btn-row">
-      <button onclick="setModel('haiku', this)" id="btn-haiku" class="model-btn">Haiku 4.5<br><span style="font-size:11px;color:#666;">$1/$5 per MTok</span></button>
-      <button onclick="setModel('sonnet', this)" id="btn-sonnet" class="model-btn active">Sonnet 4.6<br><span style="font-size:11px;color:#666;">$3/$15 per MTok</span></button>
-      <button onclick="setModel('opus', this)" id="btn-opus" class="model-btn">Opus 4.7<br><span style="font-size:11px;color:#666;">$5/$25 per MTok</span></button>
+      <button onclick="setModel('haiku', this)" id="btn-haiku" class="model-btn">Haiku 4.5<br><span style="font-size:11px;color:#666;">Goedkoopst</span></button>
+      <button onclick="setModel('sonnet', this)" id="btn-sonnet" class="model-btn active">Sonnet 4.6<br><span style="font-size:11px;color:#666;">⭐ Aanbevolen</span></button>
+      <button onclick="setModel('opus', this)" id="btn-opus" class="model-btn">Opus 4.7<br><span style="font-size:11px;color:#666;">Meest capabel</span></button>
     </div>
     <div class="total-box">
       <div>
@@ -201,76 +215,232 @@
       </div>
       <div style="font-size:26px;font-weight:500;" id="calc-total">$0.00</div>
     </div>
-    <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 4 berichten per gesprek.</div>
+    <div style="font-size:11px;color:#555;margin-top:4px;line-height:1.6;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 4 berichten per gesprek.</div>
   </div>
 
-  <div class="section-title" style="margin-top:.5rem;">Werkelijk gebruik tot nu toe</div>
+  <div class="section-title" style="margin-top:1.5rem;">Model vergelijking</div>
   <div class="card">
-    <div class="row"><span class="row-label">Model</span><span class="row-val">Haiku 4.5</span></div>
-    <div class="row"><span class="row-label">Periode</span><span class="row-val">30 mei – 12 jun 2026</span></div>
+    <div class="row"><span class="row-label">Haiku 4.5</span><span class="row-val" style="font-size:13px;">$1 input / $5 output per 1M tokens — snel en goedkoop</span></div>
+    <div class="row"><span class="row-label">Sonnet 4.6 ⭐</span><span class="row-val" style="font-size:13px;">$3 input / $15 output per 1M tokens — beste balans</span></div>
+    <div class="row"><span class="row-label">Opus 4.7</span><span class="row-val" style="font-size:13px;">$5 input / $25 output per 1M tokens — meest intelligent</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Werkelijk gebruik tot nu toe</div>
+  <div class="card">
+    <div class="row"><span class="row-label">Model</span><span class="row-val">Sonnet 4.6</span></div>
+    <div class="row"><span class="row-label">Periode</span><span class="row-val">30 mei – 22 jun 2026</span></div>
     <div class="row"><span class="row-label">Totale kosten</span><span class="row-val">$0,68 ≈ €0,62</span></div>
     <div class="row"><span class="row-label">Geschat ~240 gesprekken</span><span class="row-val"><span class="badge badge-green">~$0,003 per gesprek</span></span></div>
   </div>
+
 </div>
 
-<!-- VOOR SANDER -->
-<div id="tab-sander" class="tab-content">
-  <div class="section-title">WordPress embed snippet</div>
-  <div class="snippet-box">
-    &lt;script src="https://mokum-bot.pdscloud.nl/widget.js" async defer&gt;&lt;/script&gt;
-    <button class="copy-btn" onclick="copySnippet()">Kopieer</button>
-  </div>
-  <div id="copy-confirm" style="font-size:12px;color:#4caf7d;margin-top:6px;display:none;">Gekopieerd!</div>
+<!-- RUBRIEKEN -->
+<div id="tab-rubrieken" class="tab-content">
 
-  <div class="section-title" style="margin-top:1.5rem;">Installatie-instructies</div>
-  <div class="card">
-    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Installeer WPCode plugin</div><div class="step-desc">WordPress dashboard → Plugins → Nieuwe plugin → zoek "WPCode" → Installeren & activeren</div></div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Ga naar Headers & Footers</div><div class="step-desc">Code Snippets → Headers & Footers</div></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Plak in Body/Footer</div><div class="step-desc">Plak de script tag in het Body/Footer veld — niet in de header</div></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Save Changes → testen</div><div class="step-desc">Bezoek poolen-amsterdam.nl → rechtsonder verschijnt de 8 ball knop</div></div></div>
+  <div class="info-box">📋 Elke rubriek in het menu heeft een bijbehorend bestand in de kennisbronnen. Mark of Nick kunnen dit bestand bijwerken via Storage Explorer.</div>
+
+  <div class="section-title">Alle rubrieken</div>
+  <div class="rubriek-grid">
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🎱</div>
+      <div>
+        <div class="rubriek-name">Pool & Biljart</div>
+        <div class="rubriek-file">kennisbronnen/pool-biljart/</div>
+        <div class="rubriek-status"><span class="badge badge-blue">Aanpasbaar</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🎯</div>
+      <div>
+        <div class="rubriek-name">Darts</div>
+        <div class="rubriek-file">kennisbronnen/darts/</div>
+        <div class="rubriek-status"><span class="badge badge-blue">Aanpasbaar</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">📅</div>
+      <div>
+        <div class="rubriek-name">Openingstijden</div>
+        <div class="rubriek-file">kennisbronnen/openingstijden/</div>
+        <div class="rubriek-status"><span class="badge badge-blue">Aanpasbaar</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">💶</div>
+      <div>
+        <div class="rubriek-name">Tarieven</div>
+        <div class="rubriek-file">kennisbronnen/tarieven/</div>
+        <div class="rubriek-status"><span class="badge badge-blue">Aanpasbaar</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🏆</div>
+      <div>
+        <div class="rubriek-name">Toernooien</div>
+        <div class="rubriek-file">kennisbronnen/toernooien/</div>
+        <div class="rubriek-status"><span class="badge badge-green">+ Automatisch via Cuescore</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">📖</div>
+      <div>
+        <div class="rubriek-name">Spelregels</div>
+        <div class="rubriek-file">kennisbronnen/spelregels/</div>
+        <div class="rubriek-status"><span class="badge badge-green">Al ingevuld</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🍺</div>
+      <div>
+        <div class="rubriek-name">Eten & Drinken</div>
+        <div class="rubriek-file">kennisbronnen/eten-drinken/</div>
+        <div class="rubriek-status"><span class="badge badge-blue">Aanpasbaar</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">📺</div>
+      <div>
+        <div class="rubriek-name">Sport kijken</div>
+        <div class="rubriek-file">kennisbronnen/sport-evenementen/</div>
+        <div class="rubriek-status"><span class="badge badge-red">Nog in te vullen</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🔧</div>
+      <div>
+        <div class="rubriek-name">Keu reparatie</div>
+        <div class="rubriek-file">kennisbronnen/keu-reparatie/</div>
+        <div class="rubriek-status"><span class="badge badge-red">Nog in te vullen</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🛒</div>
+      <div>
+        <div class="rubriek-name">Keu & Accessoires</div>
+        <div class="rubriek-file">kennisbronnen/keu-shop/</div>
+        <div class="rubriek-status"><span class="badge badge-red">Nog in te vullen</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🎓</div>
+      <div>
+        <div class="rubriek-name">Clinics & Coaching</div>
+        <div class="rubriek-file">kennisbronnen/clinics-coaching/</div>
+        <div class="rubriek-status"><span class="badge badge-red">Nog in te vullen</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🕹️</div>
+      <div>
+        <div class="rubriek-name">Spelletjes & Gaming</div>
+        <div class="rubriek-file">kennisbronnen/spelletjes-gaming/</div>
+        <div class="rubriek-status"><span class="badge badge-red">Nog in te vullen</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">📍</div>
+      <div>
+        <div class="rubriek-name">Locatie & Parkeren</div>
+        <div class="rubriek-file">kennisbronnen/locatie/</div>
+        <div class="rubriek-status"><span class="badge badge-blue">Aanpasbaar</span></div>
+      </div>
+    </div>
+
+    <div class="rubriek-item">
+      <div class="rubriek-emoji">🔒</div>
+      <div>
+        <div class="rubriek-name">Intern</div>
+        <div class="rubriek-file">kennisbronnen/intern/</div>
+        <div class="rubriek-status"><span class="badge badge-gray">Wachtwoord: internal</span></div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="section-title" style="margin-top:1.5rem;">Wat Sander moet weten</div>
-  <div class="card">
-    <div class="row"><span class="row-label">Updates bot</span><span class="row-val" style="font-size:13px;">Automatisch — geen actie nodig</span></div>
-    <div class="row"><span class="row-label">CSS conflicten</span><span class="row-val" style="font-size:13px;">Geen — eigen stijl</span></div>
-    <div class="row"><span class="row-label">Laadtijd impact</span><span class="row-val" style="font-size:13px;">Geen — async defer</span></div>
-    <div class="row"><span class="row-label">Mobiel</span><span class="row-val"><span class="badge badge-green">Responsive</span></span></div>
-    <div class="row"><span class="row-label">Verwijderen</span><span class="row-val" style="font-size:13px;">Regel weghalen in WPCode</span></div>
+  <div class="warning-box">🔴 <strong>Rubrieken "Nog in te vullen"</strong> — de bot kan hier nu alleen algemene vragen over beantwoorden. Vul de bestanden in via Storage Explorer voor betere antwoorden.</div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Voorbeeld kennisbron bestand</div>
+  <div class="card" style="font-family:monospace;font-size:12px;color:#888;line-height:2;">
+    <div style="color:#cc4444;"># Sport evenementen kijken bij Mokum</div>
+    <div style="color:#666;">_Bijgewerkt: juni 2026_</div>
+    <br>
+    <div style="color:#ccc;">## Welke sporten tonen we?</div>
+    <div>Mokum toont alle grote voetbalwedstrijden, Champions League,</div>
+    <div>Eredivisie en grote dartsevenementen op onze schermen.</div>
+    <br>
+    <div style="color:#ccc;">## Hoeveel schermen?</div>
+    <div>We hebben 4 grote schermen verspreid door de zaal.</div>
+    <br>
+    <div style="color:#ccc;">## Tips</div>
+    <div>Kom op tijd bij populaire wedstrijden — het kan druk zijn!</div>
   </div>
+
 </div>
 
-<!-- VOOR MARK -->
-<div id="tab-mark" class="tab-content">
-  <div class="section-title">Stap 1 — SAS token aanmaken (Peter doet dit)</div>
-  <div class="card">
-    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Ga naar Azure Portal</div><div class="step-desc"><a href="https://portal.azure.com" style="color:#cc4444;" target="_blank">portal.azure.com</a> → Storage accounts → mokumbotrg904a → Containers → kennisbronnen</div></div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Klik op Generate SAS</div><div class="step-desc">Bovenaan de container pagina — niet via de storage account zelf, maar direct op de container</div></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Stel de rechten in</div><div class="step-desc">Permissions: Read, Write, List, Delete — Expiry: 12 juni 2027 → klik Generate SAS token and URL</div></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Kopieer de Blob SAS URL</div><div class="step-desc">De onderste URL (begint met https://mokumbotrg904a.blob.core.windows.net/kennisbronnen?sv=...) — die geef je aan Mark</div></div></div>
+<!-- PROBLEMEN -->
+<div id="tab-problemen" class="tab-content">
+
+  <div class="section-title">Veelvoorkomende situaties</div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;">🤔 De bot geeft verkeerde of verouderde informatie</div>
+    <div style="font-size:13px;color:#888;line-height:1.7;">Update het bestand in Storage Explorer met de juiste informatie. De bot gebruikt het direct na uploaden.</div>
   </div>
 
-  <div class="section-title" style="margin-top:1.5rem;">Stap 2 — Storage Explorer installeren (Mark doet dit)</div>
-  <div class="card">
-    <div class="step"><div class="step-num">1</div><div class="step-body"><div class="step-title">Download Storage Explorer</div><div class="step-desc"><a href="https://azure.microsoft.com/nl-nl/products/storage/storage-explorer" style="color:#cc4444;" target="_blank">azure.microsoft.com → Storage Explorer</a> → Download Windows → installeren & openen</div></div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-body"><div class="step-title">Klik op Connect (stopcontact-icoon linksboven)</div><div class="step-desc">Kies "Blob container" → klik Next → kies "Shared access signature URL (SAS)"</div></div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-body"><div class="step-title">Plak de SAS URL van Peter</div><div class="step-desc">Plak de volledige URL in het veld "Blob container SAS URL" → Next → Connect</div></div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-body"><div class="step-title">Bestanden beheren</div><div class="step-desc">Sleep bestanden naar binnen, verwijder of bekijk — werkt als Windows Verkenner. Direct actief na uploaden.</div></div></div>
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;">❓ De bot zegt dat hij iets niet weet</div>
+    <div style="font-size:13px;color:#888;line-height:1.7;">Er is nog geen kennisbron bestand voor dat onderwerp. Maak een .txt bestand aan met de informatie en upload het naar de juiste map.</div>
   </div>
 
-  <div class="section-title" style="margin-top:1.5rem;">Wat Mark kan beheren</div>
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;">🌐 De bot is niet zichtbaar op de website</div>
+    <div style="font-size:13px;color:#888;line-height:1.7;">Ververs de pagina met Ctrl+Shift+R (hard refresh). Werkt het nog niet? Neem contact op met Peter.</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;">🔑 Wachtwoord intern werkt niet</div>
+    <div style="font-size:13px;color:#888;line-height:1.7;">Het wachtwoord is <code style="background:#222;padding:1px 6px;border-radius:4px;">internal</code> (in het Engels, kleine letters). Let op: niet "intern" maar "internal".</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:8px;">📁 Bestand uploaden lukt niet in Storage Explorer</div>
+    <div style="font-size:13px;color:#888;line-height:1.7;">Controleer of het bestand de extensie .txt of .md heeft. Word documenten (.docx) en PDF's worden niet ondersteund. Neem contact op met Peter als het probleem aanhoudt — de SAS token kan verlopen zijn.</div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-title">Contact</div>
+
+  <div class="contact-card">
+    <div class="contact-avatar">👨‍💻</div>
+    <div>
+      <div style="font-size:15px;font-weight:500;">Peter de Swart</div>
+      <div style="font-size:13px;color:#666;margin-top:4px;">Ontwikkelaar Mokum Magic 8 Ball</div>
+      <div style="font-size:12px;color:#555;margin-top:8px;line-height:1.8;">Voor technische problemen, nieuwe functies of aanpassingen aan de bot.</div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Handige links</div>
   <div class="card">
-    <div class="row"><span class="row-label">📄 Toernooi-info</span><span class="row-val"><span class="badge badge-blue">toernooien/</span></span></div>
-    <div class="row"><span class="row-label">🕐 Openingstijden</span><span class="row-val"><span class="badge badge-blue">openingstijden/</span></span></div>
-    <div class="row"><span class="row-label">💶 Tarieven</span><span class="row-val"><span class="badge badge-blue">tarieven/</span></span></div>
-    <div class="row"><span class="row-label">🔒 Intern personeel</span><span class="row-val"><span class="badge badge-blue">intern/</span></span></div>
-    <div class="row"><span class="row-label">🏆 Toernooi-uitslagen</span><span class="row-val"><span class="badge badge-blue">toernooi-historie/</span></span></div>
+    <div class="row"><span class="row-label">🤖 De bot</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl" style="color:#cc4444;font-size:13px;" target="_blank">mokum-bot.pdscloud.nl</a></span></div>
+    <div class="row"><span class="row-label">📊 Dashboard</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/dashboard.html" style="color:#cc4444;font-size:13px;" target="_blank">dashboard.html</a> — wachtwoord: mkm!</span></div>
+    <div class="row"><span class="row-label">🏆 Toernooien</span><span class="row-val"><a href="https://cuescore.com/mokumpooldarts/tournaments" style="color:#cc4444;font-size:13px;" target="_blank">cuescore.com</a></span></div>
+    <div class="row"><span class="row-label">🎓 Clinics</span><span class="row-val"><a href="https://nickvandenberg.com" style="color:#cc4444;font-size:13px;" target="_blank">nickvandenberg.com</a></span></div>
   </div>
-  <div class="card" style="margin-top:0;">
-    <div class="row"><span class="row-label">Bestandsformaat</span><span class="row-val">.md of .txt</span></div>
-    <div class="row"><span class="row-label">Effect na uploaden</span><span class="row-val"><span class="badge badge-green">Direct actief</span></span></div>
-    <div class="row"><span class="row-label">SAS token</span><span class="row-val" style="font-size:13px;">Peter maakt aan tijdens afspraak</span></div>
-  </div>
+
 </div>
 
 </div>
@@ -304,12 +474,6 @@ function updateCalc() {
   const cost = (convos * 4 * 800 / 1000000 * m.input) + (convos * 4 * 600 / 1000000 * m.output)
   document.getElementById('calc-total').textContent = '$' + cost.toFixed(2)
   document.getElementById('calc-detail').textContent = m.name + ' — ' + Math.round(convos * 4 * 1400 / 1000) + 'K tokens/maand'
-}
-
-function copySnippet() {
-  navigator.clipboard.writeText('<script src="https://mokum-bot.pdscloud.nl/widget.js" async defer><\/script>')
-  document.getElementById('copy-confirm').style.display = 'block'
-  setTimeout(() => { document.getElementById('copy-confirm').style.display = 'none' }, 2000)
 }
 
 updateCalc()
