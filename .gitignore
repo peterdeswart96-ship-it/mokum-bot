@@ -14,3 +14,7 @@ deploy.ps1
 src/components/ChatWidget.jsx.old
 node_modules
 kennisbronnen-upload/
+
+dist/
+upload-kennisbronnen.ps1
+src/config/bubbletexts.js
