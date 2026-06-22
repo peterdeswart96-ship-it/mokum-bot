@@ -14,7 +14,7 @@
     border: '#2a2a2a', white: '#ffffff', gray: '#888888',
   }
 
-  const WIDGET_CONFIG = { bottom: '90px', right: '24px', width: '440px' }
+ const WIDGET_CONFIG = { bottom: '70px', right: '10px', width: '440px' }
 
   const BUBBLE_TEXTS = [
     'Ask me anything!',

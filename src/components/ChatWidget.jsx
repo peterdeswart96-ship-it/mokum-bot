@@ -17,9 +17,10 @@ const C = {
 }
 
 const WIDGET_CONFIG = {
-  bottom: "90px",
-  right:  "24px",
-  width:  "440px",   // desktop breedte
+  bottom: "70px",
+  right:  "10px",
+  width:  "440px",
+}
 }
 
 // Responsive breedte: op mobiel (< 480px) bijna volledige schermbreedte
