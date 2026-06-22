@@ -21,7 +21,6 @@ const WIDGET_CONFIG = {
   right:  "10px",
   width:  "440px",
 }
-}
 
 // Responsive breedte: op mobiel (< 480px) bijna volledige schermbreedte
 function getWidgetWidth(expanded) {
