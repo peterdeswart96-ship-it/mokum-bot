@@ -372,10 +372,6 @@ export default function ChatWidget() {
 
   const isMobile = windowWidth < 480
   const chatWidth = expanded ? "min(80vw, 900px)" : (isMobile ? `${windowWidth - 16}px` : WIDGET_CONFIG.width)
-  // Hoogte altijd begrensd: nooit hoger dan het scherm minus de bottom offset, sluitknop en marge
-  // 90px = bottom, 80px = sluitknop + marge, 16px = adembreedte aan bovenkant
-  const maxSafeHeight = "calc(100vh - 90px - 80px - 16px)"
-  const chatHeight = expanded ? "80vh" : (isMobile ? maxSafeHeight : `min(580px, ${maxSafeHeight})`)
   const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
 
   return (
@@ -385,7 +381,9 @@ export default function ChatWidget() {
         <div style={{
           marginBottom: "16px",
           width: chatWidth,
-          height: chatHeight,
+          // Hoogte: dvh houdt rekening met Safari adresbalk op iPhone
+          // 90px = bottom widget, 80px = sluitknop + marge, 16px = adembreedte bovenkant
+          height: expanded ? "80dvh" : (isMobile ? "calc(100dvh - 90px - 80px - 16px)" : "min(580px, calc(100dvh - 90px - 80px - 16px))"),
           borderRadius: "16px", overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
           display: "flex", flexDirection: "column",
