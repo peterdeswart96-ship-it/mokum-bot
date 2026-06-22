@@ -7,7 +7,8 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
   body { background: #0a0a0a; color: #fff; min-height: 100vh; }
-  
+
+  /* Login */
   #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
   .login-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 2rem; width: 100%; max-width: 380px; text-align: center; }
   .login-card h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.06em; margin-bottom: 4px; }
@@ -18,6 +19,7 @@
   .btn-red:hover { background: #990000; }
   #login-error { color: #ff6b6b; font-size: 13px; margin-top: 8px; display: none; }
 
+  /* Dashboard */
   #dashboard { display: none; }
   header { background: #161616; border-bottom: 1px solid #2a2a2a; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
   header h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.06em; }
@@ -25,46 +27,99 @@
   .logout-btn { background: none; border: 1px solid #2a2a2a; color: #888; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
   .logout-btn:hover { color: #fff; }
 
-  main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  /* Tabs */
+  .tab-bar { background: #111; border-bottom: 1px solid #2a2a2a; padding: 0 24px; display: flex; gap: 4px; }
+  .tab { padding: 12px 18px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #888; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap; transition: color 0.15s; }
+  .tab:hover { color: #ccc; }
+  .tab.active { color: #fff; border-bottom: 2px solid #cc0000; font-weight: 600; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Layout */
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
   .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
   .metric { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem; text-align: center; }
-  .metric-val { font-size: 24px; font-weight: 500; }
-  .metric-label { font-size: 12px; color: #888; margin-top: 4px; }
-
+  .metric-val { font-size: 28px; font-weight: 700; color: #fff; }
+  .metric-val.red { color: #cc0000; }
+  .metric-label { font-size: 12px; color: #666; margin-top: 4px; }
   .card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-  .card-title { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .card-title { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
+  /* Controls */
   input[type=date], input[type=text], select { background: #1f1f1f; border: 1px solid #2a2a2a; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; width: 100%; }
   input:focus, select:focus { outline: none; border-color: #cc0000; }
   .btn { background: none; border: 1px solid #2a2a2a; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
   .btn:hover { background: #2a2a2a; }
-  .btn-sm-red { background: #cc0000; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .btn-sm-red { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
   .btn-sm-red:hover { background: #990000; }
   .btn-sm-red:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .convo-item { border-bottom: 1px solid #1f1f1f; padding: 12px 0; cursor: pointer; }
+  /* Gesprekken */
+  .convo-item { border-bottom: 1px solid #1f1f1f; padding: 12px 0; cursor: pointer; transition: background 0.1s; }
   .convo-item:last-child { border-bottom: none; }
   .convo-item:hover { background: #1a1a1a; margin: 0 -1.25rem; padding: 12px 1.25rem; border-radius: 8px; }
   .convo-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-  .convo-meta { font-size: 12px; color: #888; }
-  .convo-detail { background: #111; border-radius: 8px; padding: 12px; margin-top: 8px; display: none; }
-  .msg-user { background: #cc0000; color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.4; }
-  .msg-bot { background: #1f1f1f; border: 1px solid #2a2a2a; padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.4; }
+  .convo-meta { font-size: 12px; color: #666; }
+  .convo-detail { background: #0f0f0f; border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
+  .msg-user { background: #cc0000; color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
+  .msg-bot { background: #1f1f1f; border: 1px solid #2a2a2a; padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.5; }
 
-  .analyse-item { background: #1f1f1f; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
-  .progress-bar { background: #2a2a2a; border-radius: 2px; height: 4px; margin-top: 6px; }
-  .progress-fill { background: #cc0000; height: 4px; border-radius: 2px; }
-  .empty { text-align: center; padding: 3rem; color: #888; }
-  .status { font-size: 12px; color: #888; margin-top: 8px; }
-  .status.ok { color: #4caf50; }
-  .status.err { color: #ff6b6b; }
+  /* Analyse */
+  .analyse-item { background: #1f1f1f; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+  .analyse-item strong { color: #fff; }
+  .insight-box { background: #1a0a0a; border-left: 3px solid #cc0000; border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; color: #ddd; }
+  .tip-box { background: #0a1a0a; border-left: 3px solid #4caf50; border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; color: #ccc; }
+  .warning-item { background: #1a1000; border-left: 3px solid #cc9900; border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #cc9900; }
 
-  @media (max-width: 600px) { .metrics { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+  /* Progress bars */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { font-size: 13px; color: #ccc; min-width: 140px; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #2a2a2a; border-radius: 3px; height: 6px; }
+  .bar-fill { background: #cc0000; height: 6px; border-radius: 3px; transition: width 0.6s ease; }
+  .bar-fill.green { background: #4caf50; }
+  .bar-fill.blue { background: #4d9de0; }
+  .bar-val { font-size: 12px; color: #666; min-width: 32px; text-align: right; }
+
+  /* Chart */
+  .chart-container { position: relative; height: 180px; margin-top: 8px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-bottom: 20px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .chart-bar { width: 100%; background: #cc0000; border-radius: 3px 3px 0 0; transition: height 0.5s ease; min-height: 2px; }
+  .chart-bar-label { font-size: 9px; color: #555; text-align: center; position: absolute; bottom: 0; }
+  .chart-bar-val { font-size: 10px; color: #888; }
+
+  /* Tags */
+  .tag { display: inline-block; background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 20px; padding: 3px 10px; font-size: 12px; color: #888; margin: 2px; }
+  .tag.red { background: #1a0a0a; border-color: #440000; color: #cc4444; }
+  .tag.green { background: #0a1a0a; border-color: #004400; color: #4caf50; }
+  .tag.blue { background: #0a0f1a; border-color: #002244; color: #4d9de0; }
+
+  /* Misc */
+  .empty { text-align: center; padding: 3rem; color: #555; font-size: 13px; }
+  .loading { text-align: center; padding: 2rem; color: #666; font-size: 13px; }
+  .status-ok { color: #4caf50; font-size: 12px; }
+  .status-err { color: #ff6b6b; font-size: 12px; }
+  .divider { height: 1px; background: #1f1f1f; margin: 16px 0; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+  .badge-green { background: #0d2e1a; color: #4caf7d; }
+  .badge-red { background: #1a0a0a; color: #cc4444; }
+  .badge-blue { background: #0d1f35; color: #4d9de0; }
+  .badge-gray { background: #222; color: #666; }
+  .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 20px; }
+
+  @media (max-width: 700px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .tab { padding: 10px 12px; font-size: 12px; }
+  }
 </style>
 </head>
 <body>
 
+<!-- Login -->
 <div id="login-screen">
   <div class="login-card">
     <div style="font-size: 48px; margin-bottom: 12px;">🎱</div>
@@ -76,60 +131,160 @@
   </div>
 </div>
 
+<!-- Dashboard -->
 <div id="dashboard">
   <header>
     <div>
       <h1>MOKUM MAGIC 8 BALL</h1>
-      <span>Gesprekken Dashboard</span>
+      <span id="header-sub">Dashboard</span>
     </div>
     <button class="logout-btn" onclick="logout()">Uitloggen</button>
   </header>
-  <main>
 
-    <div class="metrics" id="metrics">
-      <div class="metric"><div class="metric-val" id="m-totaal">—</div><div class="metric-label">Totaal gesprekken</div></div>
-      <div class="metric"><div class="metric-val" id="m-gefilterd">—</div><div class="metric-label">Gefilterd</div></div>
-      <div class="metric"><div class="metric-val" id="m-vandaag">—</div><div class="metric-label">Vandaag</div></div>
-      <div class="metric"><div class="metric-val" id="m-dagen">—</div><div class="metric-label">Actieve dagen</div></div>
-    </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('mark', this)">🎱 Mark & Nick — Bot verbeteren</button>
+    <button class="tab" onclick="showTab('sander', this)">🌐 Sander — Website verbeteren</button>
+    <button class="tab" onclick="showTab('gesprekken', this)">💬 Alle gesprekken</button>
+  </div>
 
-    <div class="grid-2">
+  <!-- TAB: MARK & NICK -->
+  <div id="tab-mark" class="tab-content active">
+    <main>
+
+      <div class="metrics" id="metrics-mark">
+        <div class="metric"><div class="metric-val red" id="m-totaal">—</div><div class="metric-label">Totaal gesprekken</div></div>
+        <div class="metric"><div class="metric-val" id="m-vandaag">—</div><div class="metric-label">Vandaag</div></div>
+        <div class="metric"><div class="metric-val" id="m-week">—</div><div class="metric-label">Deze week</div></div>
+        <div class="metric"><div class="metric-val" id="m-actief">—</div><div class="metric-label">Actieve dagen</div></div>
+      </div>
+
+      <!-- Filter -->
       <div class="card">
-        <div class="card-title">Filter op periode</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <div style="flex:1;"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Van</label><input type="date" id="datum-van" /></div>
-          <div style="flex:1;"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Tot</label><input type="date" id="datum-tot" /></div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-sm-red" onclick="filterGesprekken()" style="flex:1;">Toepassen</button>
-          <button class="btn" onclick="resetFilter()" style="flex:1;">Reset</button>
+        <div class="card-title">Periode & filter</div>
+        <div class="grid-2">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Van</label><input type="date" id="datum-van" /></div>
+            <div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Tot</label><input type="date" id="datum-tot" /></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-end;">
+            <button class="btn-sm-red" onclick="filterEnRender()" style="flex:1;">Toepassen</button>
+            <button class="btn" onclick="resetFilter()" style="flex:1;">Reset</button>
+            <button class="btn-sm-red" id="analyse-btn" onclick="startAnalyse('mark')" style="flex:2;">🤖 Analyseer met AI</button>
+          </div>
         </div>
       </div>
+
+      <!-- Grafieken -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Gesprekken per dag (laatste 14 dagen)</div>
+          <div id="chart-dagen" class="chart-container"><div class="loading">Laden...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Meest besproken onderwerpen</div>
+          <div id="chart-onderwerpen"><div class="loading">Laden...</div></div>
+        </div>
+      </div>
+
+      <!-- API Kosten schatting -->
       <div class="card">
-        <div class="card-title">Zoeken</div>
-        <input type="text" id="zoek-input" placeholder="Zoek in vragen en antwoorden..." oninput="zoekGesprekken()" style="margin-bottom:8px;" />
-        <div class="status" id="zoek-status"></div>
+        <div class="card-title">Geschatte API kosten</div>
+        <div class="grid-3" id="kosten-grid">
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:#666;margin-bottom:4px;">Totaal gesprekken geanalyseerd</div>
+            <div style="font-size:22px;font-weight:700;" id="kosten-gesprekken">—</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:#666;margin-bottom:4px;">Geschatte tokens</div>
+            <div style="font-size:22px;font-weight:700;" id="kosten-tokens">—</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:11px;color:#666;margin-bottom:4px;">Geschatte kosten (Sonnet 4.6)</div>
+            <div style="font-size:22px;font-weight:700;color:#cc0000;" id="kosten-totaal">—</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#444;margin-top:10px;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 3 berichten per gesprek. $3/$15 per 1M tokens.</div>
       </div>
-    </div>
 
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="card-title" style="margin-bottom:0;">Gesprekken</div>
-        <span style="font-size:12px;color:#888;" id="lijst-count"></span>
+      <!-- AI Analyse resultaat -->
+      <div class="card" id="analyse-card-mark">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">🤖 AI-analyse — Bot verbeteren</div>
+          <span id="analyse-status-mark" class="status-ok"></span>
+        </div>
+        <div id="analyse-resultaat-mark">
+          <div style="font-size:13px;color:#555;">Klik op "Analyseer met AI" om een analyse te starten. De AI analyseert de gesprekken en geeft concrete tips om de bot te verbeteren.</div>
+        </div>
       </div>
-      <div id="gesprekken-lijst"><div class="empty">Laden...</div></div>
-    </div>
 
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="card-title" style="margin-bottom:0;">AI-analyse</div>
-        <button class="btn-sm-red" id="analyse-btn" onclick="analyseGesprekken()">Analyseer gesprekken</button>
+    </main>
+  </div>
+
+  <!-- TAB: SANDER -->
+  <div id="tab-sander" class="tab-content">
+    <main>
+
+      <div class="metrics">
+        <div class="metric"><div class="metric-val red" id="s-totaal">—</div><div class="metric-label">Totaal gesprekken</div></div>
+        <div class="metric"><div class="metric-val" id="s-uniek-vragen">—</div><div class="metric-label">Unieke vragen</div></div>
+        <div class="metric"><div class="metric-val" id="s-nl">—</div><div class="metric-label">NL gesprekken</div></div>
+        <div class="metric"><div class="metric-val" id="s-en">—</div><div class="metric-label">EN gesprekken</div></div>
       </div>
-      <div id="analyse-resultaat"><div style="font-size:13px;color:#888;">Klik op "Analyseer gesprekken" om een analyse te starten op basis van de huidige selectie.</div></div>
-    </div>
 
-  </main>
-</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">Analyse voor website beheerder</div>
+          <button class="btn-sm-red" id="analyse-btn-sander" onclick="startAnalyse('sander')">🤖 Analyseer voor website</button>
+        </div>
+        <div style="font-size:13px;color:#555;margin-bottom:14px;">Deze analyse bekijkt welke informatie bezoekers zoeken die <em>niet</em> op de website staat, of onduidelijk is. Gebruik dit om poolen-amsterdam.nl te verbeteren.</div>
+        <div id="analyse-resultaat-sander">
+          <div style="font-size:13px;color:#555;">Klik op "Analyseer voor website" om te starten.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Meest gezochte onderwerpen</div>
+          <div id="sander-onderwerpen"><div class="loading">Klik op analyseer om te laden...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Taalverdeling bezoekers</div>
+          <div id="sander-talen"><div class="loading">Laden...</div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- TAB: GESPREKKEN -->
+  <div id="tab-gesprekken" class="tab-content">
+    <main>
+
+      <div class="card">
+        <div class="card-title">Zoeken & filteren</div>
+        <div class="grid-2">
+          <input type="text" id="zoek-input" placeholder="Zoek in vragen en antwoorden..." oninput="zoekGesprekken()" />
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;"><input type="date" id="zoek-van" /></div>
+            <div style="flex:1;"><input type="date" id="zoek-tot" /></div>
+            <button class="btn" onclick="resetZoek()">Reset</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#555;margin-top:8px;" id="zoek-status"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="card-title" style="margin-bottom:0;">Gesprekken</div>
+          <span style="font-size:12px;color:#555;" id="lijst-count"></span>
+        </div>
+        <div id="gesprekken-lijst"><div class="loading">Laden...</div></div>
+      </div>
+
+    </main>
+  </div>
+
+</div><!-- end dashboard -->
 
 <script>
 const API = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net/api"
@@ -138,6 +293,7 @@ const HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
 let alleGesprekken = []
 let gefilterd = []
 
+// Login
 async function sha256(str) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("")
@@ -161,20 +317,22 @@ function logout() {
   location.reload()
 }
 
-if (sessionStorage.getItem("mkm-auth") === "1") {
-  document.getElementById("login-screen").style.display = "none"
-  document.getElementById("dashboard").style.display = "block"
+function showTab(name, btn) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"))
+  document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"))
+  document.getElementById("tab-" + name).classList.add("active")
+  if (btn) btn.classList.add("active")
 }
 
+// Data laden
 async function laadGesprekken() {
-  document.getElementById("gesprekken-lijst").innerHTML = '<div class="empty">Gesprekken laden...</div>'
   try {
     const resp = await fetch(`${API}/gesprekken?action=list`)
     const data = await resp.json()
     const namen = data.namen || []
 
     const gesprekken = []
-    const batch = namen.slice(0, 100)
+    const batch = namen.slice(0, 200)
     for (const naam of batch) {
       try {
         const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`)
@@ -185,49 +343,235 @@ async function laadGesprekken() {
 
     alleGesprekken = gesprekken.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     gefilterd = [...alleGesprekken]
-    updateMetrics()
-    renderGesprekken()
 
-    const vandaag = new Date()
-    const maandGeleden = new Date(vandaag)
+    // Stel standaard datumfilter in
+    const nu = new Date()
+    const maandGeleden = new Date(nu)
     maandGeleden.setMonth(maandGeleden.getMonth() - 1)
     document.getElementById("datum-van").value = maandGeleden.toISOString().split("T")[0]
-    document.getElementById("datum-tot").value = vandaag.toISOString().split("T")[0]
+    document.getElementById("datum-tot").value = nu.toISOString().split("T")[0]
+
+    updateAlles()
   } catch(e) {
     document.getElementById("gesprekken-lijst").innerHTML = `<div class="empty">Fout bij laden: ${e.message}</div>`
   }
 }
 
-function updateMetrics() {
-  const vandaag = new Date().toDateString()
-  document.getElementById("m-totaal").textContent = alleGesprekken.length
-  document.getElementById("m-gefilterd").textContent = gefilterd.length
-  document.getElementById("m-vandaag").textContent = gefilterd.filter(g => new Date(g.timestamp).toDateString() === vandaag).length
-  document.getElementById("m-dagen").textContent = new Set(gefilterd.map(g => new Date(g.timestamp).toDateString())).size
+function updateAlles() {
+  updateMetricsMarkNick()
+  updateMetricsSander()
+  renderChartDagen()
+  renderChartOnderwerpen()
+  renderKosten()
+  renderTaalverdeling()
+  renderGesprekken()
 }
 
+// Metrics Mark & Nick
+function updateMetricsMarkNick() {
+  const nu = new Date()
+  const vandaag = nu.toDateString()
+  const weekGeleden = new Date(nu); weekGeleden.setDate(weekGeleden.getDate() - 7)
+
+  document.getElementById("m-totaal").textContent = alleGesprekken.length
+  document.getElementById("m-vandaag").textContent = gefilterd.filter(g => new Date(g.timestamp).toDateString() === vandaag).length
+  document.getElementById("m-week").textContent = gefilterd.filter(g => new Date(g.timestamp) >= weekGeleden).length
+  document.getElementById("m-actief").textContent = new Set(gefilterd.map(g => new Date(g.timestamp).toDateString())).size
+}
+
+// Metrics Sander
+function updateMetricsSander() {
+  const uniekVragen = new Set(alleGesprekken.flatMap(g => (g.messages || []).filter(m => m.role === "user").map(m => m.content?.toLowerCase().trim().substring(0, 60)))).size
+  const nlGesprekken = alleGesprekken.filter(g => detecteerTaal(g) === "nl").length
+  const enGesprekken = alleGesprekken.filter(g => detecteerTaal(g) === "en").length
+
+  document.getElementById("s-totaal").textContent = alleGesprekken.length
+  document.getElementById("s-uniek-vragen").textContent = uniekVragen
+  document.getElementById("s-nl").textContent = nlGesprekken
+  document.getElementById("s-en").textContent = enGesprekken
+}
+
+function detecteerTaal(gesprek) {
+  const welkom = gesprek.messages?.[0]?.content || ""
+  if (welkom.includes("Ik ben de Mokum") || welkom.includes("Waar kan ik")) return "nl"
+  if (welkom.includes("I'm the Mokum") || welkom.includes("What can I help")) return "en"
+  const eersteVraag = gesprek.messages?.find(m => m.role === "user")?.content || ""
+  const nlWoorden = ["wat", "hoe", "wanneer", "waar", "zijn", "kan", "het", "de", "een", "ik", "je", "wil"]
+  const nlScore = nlWoorden.filter(w => eersteVraag.toLowerCase().includes(w)).length
+  return nlScore >= 2 ? "nl" : "en"
+}
+
+// Chart: gesprekken per dag
+function renderChartDagen() {
+  const container = document.getElementById("chart-dagen")
+  if (gefilterd.length === 0) { container.innerHTML = '<div class="empty">Geen data</div>'; return }
+
+  const dagenMap = {}
+  const nu = new Date()
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(nu); d.setDate(d.getDate() - i)
+    const key = d.toISOString().split("T")[0]
+    dagenMap[key] = 0
+  }
+  gefilterd.forEach(g => {
+    const key = new Date(g.timestamp).toISOString().split("T")[0]
+    if (dagenMap[key] !== undefined) dagenMap[key]++
+  })
+
+  const vals = Object.values(dagenMap)
+  const max = Math.max(...vals, 1)
+  const labels = Object.keys(dagenMap).map(k => k.substring(5)) // MM-DD
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:3px;height:140px;padding-bottom:24px;position:relative;">
+      ${vals.map((v, i) => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;">
+          <div style="font-size:9px;color:#555;">${v > 0 ? v : ""}</div>
+          <div style="width:100%;background:#cc0000;border-radius:2px 2px 0 0;height:${Math.round((v/max)*100)}%;min-height:${v > 0 ? 3 : 0}px;opacity:0.85;"></div>
+          <div style="font-size:8px;color:#444;white-space:nowrap;transform:rotate(-45deg);transform-origin:top left;margin-top:2px;">${labels[i]}</div>
+        </div>
+      `).join("")}
+    </div>
+  `
+}
+
+// Chart: onderwerpen
+function detecteerOnderwerp(gesprek) {
+  const tekst = (gesprek.messages || []).map(m => m.content || "").join(" ").toLowerCase()
+  const onderwerpen = [
+    { naam: "Toernooien", keywords: ["toernooi", "tournament", "ranking", "inschrijv", "fluke", "mega", "cuescore", "wedstrijd"] },
+    { naam: "Openingstijden", keywords: ["open", "gesloten", "tijden", "hours", "wanneer open", "hoe laat"] },
+    { naam: "Tarieven", keywords: ["kost", "prijs", "tarief", "euro", "betaal", "price", "rate", "goedkoop"] },
+    { naam: "Spelregels", keywords: ["regel", "8-ball", "9-ball", "darts", "501", "cricket", "shuffleboard", "biljart"] },
+    { naam: "Locatie", keywords: ["adres", "route", "parkeer", "ov", "trein", "tram", "amstel", "rijden", "komen"] },
+    { naam: "Pool & Biljart", keywords: ["tafel", "keu", "reserveer", "pool tafel", "beschikbaar", "biljart"] },
+    { naam: "Eten & Drinken", keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "koffie", "food", "drink"] },
+    { naam: "Clinics", keywords: ["clinic", "les", "training", "coach", "nick", "privelessen"] },
+    { naam: "Sport kijken", keywords: ["sport", "voetbal", "wedstrijd kijk", "scherm", "champions", "eredivisie"] },
+    { naam: "Algemeen", keywords: ["mokum", "oprichter", "mark", "over", "faciliteit", "bedrijf"] },
+  ]
+  for (const o of onderwerpen) {
+    if (o.keywords.some(kw => tekst.includes(kw))) return o.naam
+  }
+  return "Overig"
+}
+
+function renderChartOnderwerpen() {
+  const container = document.getElementById("chart-onderwerpen")
+  if (gefilterd.length === 0) { container.innerHTML = '<div class="empty">Geen data</div>'; return }
+
+  const counts = {}
+  gefilterd.forEach(g => {
+    const o = detecteerOnderwerp(g)
+    counts[o] = (counts[o] || 0) + 1
+  })
+
+  const gesorteerd = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8)
+  const max = gesorteerd[0]?.[1] || 1
+
+  container.innerHTML = gesorteerd.map(([naam, count]) => `
+    <div class="bar-row">
+      <div class="bar-label">${naam}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round((count/max)*100)}%;"></div></div>
+      <div class="bar-val">${count}</div>
+    </div>
+  `).join("")
+
+  // Ook voor Sander tab
+  document.getElementById("sander-onderwerpen").innerHTML = gesorteerd.map(([naam, count]) => `
+    <div class="bar-row">
+      <div class="bar-label">${naam}</div>
+      <div class="bar-track"><div class="bar-fill blue" style="width:${Math.round((count/max)*100)}%;"></div></div>
+      <div class="bar-val">${count}</div>
+    </div>
+  `).join("")
+}
+
+// Kosten
+function renderKosten() {
+  const n = gefilterd.length
+  const tokensPerGesprek = 3 * (800 + 600)  // 3 berichten gemiddeld
+  const totaalTokens = n * tokensPerGesprek
+  const input = (n * 3 * 800 / 1e6) * 3    // $3 per 1M input tokens
+  const output = (n * 3 * 600 / 1e6) * 15  // $15 per 1M output tokens
+  const totaal = input + output
+
+  document.getElementById("kosten-gesprekken").textContent = n
+  document.getElementById("kosten-tokens").textContent = (totaalTokens / 1000).toFixed(0) + "K"
+  document.getElementById("kosten-totaal").textContent = "$" + totaal.toFixed(2)
+}
+
+// Taalverdeling
+function renderTaalverdeling() {
+  const nl = alleGesprekken.filter(g => detecteerTaal(g) === "nl").length
+  const en = alleGesprekken.filter(g => detecteerTaal(g) === "en").length
+  const totaal = alleGesprekken.length || 1
+  const nlPct = Math.round((nl / totaal) * 100)
+  const enPct = Math.round((en / totaal) * 100)
+
+  document.getElementById("sander-talen").innerHTML = `
+    <div class="bar-row">
+      <div class="bar-label">🇳🇱 Nederlands</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${nlPct}%;"></div></div>
+      <div class="bar-val">${nlPct}%</div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">🇬🇧 Engels</div>
+      <div class="bar-track"><div class="bar-fill blue" style="width:${enPct}%;"></div></div>
+      <div class="bar-val">${enPct}%</div>
+    </div>
+    <div style="font-size:12px;color:#555;margin-top:12px;">${nl} NL gesprekken · ${en} EN gesprekken · ${totaal} totaal</div>
+  `
+}
+
+// Filter
+function filterEnRender() {
+  const van = document.getElementById("datum-van").value
+  const tot = document.getElementById("datum-tot").value
+  gefilterd = alleGesprekken.filter(g => {
+    const d = new Date(g.timestamp)
+    if (van && d < new Date(van)) return false
+    if (tot && d > new Date(tot + "T23:59:59")) return false
+    return true
+  })
+  updateAlles()
+}
+
+function resetFilter() {
+  const nu = new Date()
+  const maandGeleden = new Date(nu); maandGeleden.setMonth(maandGeleden.getMonth() - 1)
+  document.getElementById("datum-van").value = maandGeleden.toISOString().split("T")[0]
+  document.getElementById("datum-tot").value = nu.toISOString().split("T")[0]
+  gefilterd = [...alleGesprekken]
+  updateAlles()
+}
+
+// Gesprekken tab
 function renderGesprekken() {
   const lijst = document.getElementById("gesprekken-lijst")
   document.getElementById("lijst-count").textContent = `${gefilterd.length} gesprekken`
   if (gefilterd.length === 0) { lijst.innerHTML = '<div class="empty">Geen gesprekken gevonden</div>'; return }
 
-  lijst.innerHTML = gefilterd.slice(0, 50).map((g, i) => {
+  lijst.innerHTML = gefilterd.slice(0, 100).map((g, i) => {
     const datum = new Date(g.timestamp)
     const datumStr = datum.toLocaleDateString("nl-NL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
     const eersteVraag = g.messages?.find(m => m.role === "user")?.content || "Geen vraag"
     const kort = eersteVraag.length > 90 ? eersteVraag.substring(0, 90) + "..." : eersteVraag
     const aantalBerichten = g.messages?.length || 0
+    const taal = detecteerTaal(g)
+    const onderwerp = detecteerOnderwerp(g)
 
     return `<div class="convo-item" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div style="flex:1;">
           <div class="convo-title">${kort}</div>
-          <div class="convo-meta">${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten</div>
+          <div class="convo-meta">${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span></div>
         </div>
-        <span style="color:#888;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
+        <span style="color:#555;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
       </div>
       <div class="convo-detail" id="detail-${i}">
-        ${[...(g.messages || []), ...(g.reply ? [{role:"assistant", content: g.reply}] : [])].map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 400)}${(m.content?.length || 0) > 400 ? "..." : ""}</div>`).join("")}
+        ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 500)}${(m.content?.length || 0) > 500 ? "..." : ""}</div>`).join("")}
+        ${g.reply ? `<div class="msg-bot"><strong style="color:#cc0000;font-size:11px;">ANTWOORD:</strong><br>${g.reply.substring(0, 500)}${g.reply.length > 500 ? "..." : ""}</div>` : ""}
       </div>
     </div>`
   }).join("")
@@ -239,100 +583,205 @@ function toggleDetail(i) {
   if (d) { const open = d.style.display === "block"; d.style.display = open ? "none" : "block"; c.textContent = open ? "›" : "⌄" }
 }
 
-function filterGesprekken() {
-  const van = document.getElementById("datum-van").value
-  const tot = document.getElementById("datum-tot").value
-  gefilterd = alleGesprekken.filter(g => {
-    const d = new Date(g.timestamp)
-    if (van && d < new Date(van)) return false
-    if (tot && d > new Date(tot + "T23:59:59")) return false
-    return true
-  })
-  updateMetrics()
-  renderGesprekken()
-}
-
-function resetFilter() {
-  document.getElementById("datum-van").value = ""
-  document.getElementById("datum-tot").value = ""
-  document.getElementById("zoek-input").value = ""
-  document.getElementById("zoek-status").textContent = ""
-  gefilterd = [...alleGesprekken]
-  updateMetrics()
-  renderGesprekken()
-}
-
 function zoekGesprekken() {
   const zoek = document.getElementById("zoek-input").value.toLowerCase().trim()
-  if (!zoek) { gefilterd = [...alleGesprekken]; document.getElementById("zoek-status").textContent = ""; updateMetrics(); renderGesprekken(); return }
-  gefilterd = alleGesprekken.filter(g => g.messages?.some(m => m.content?.toLowerCase().includes(zoek)))
-  document.getElementById("zoek-status").textContent = `${gefilterd.length} resultaten`
-  updateMetrics()
+  const van = document.getElementById("zoek-van").value
+  const tot = document.getElementById("zoek-tot").value
+  gefilterd = alleGesprekken.filter(g => {
+    if (van && new Date(g.timestamp) < new Date(van)) return false
+    if (tot && new Date(g.timestamp) > new Date(tot + "T23:59:59")) return false
+    if (zoek && !g.messages?.some(m => m.content?.toLowerCase().includes(zoek)) && !g.reply?.toLowerCase().includes(zoek)) return false
+    return true
+  })
+  document.getElementById("zoek-status").textContent = zoek || van || tot ? `${gefilterd.length} resultaten` : ""
   renderGesprekken()
 }
 
-async function analyseGesprekken() {
-  const btn = document.getElementById("analyse-btn")
-  const resultaat = document.getElementById("analyse-resultaat")
-  btn.disabled = true
-  btn.textContent = "Analyseren..."
-  resultaat.innerHTML = '<div style="font-size:13px;color:#888;">Bezig met analyseren...</div>'
+function resetZoek() {
+  document.getElementById("zoek-input").value = ""
+  document.getElementById("zoek-van").value = ""
+  document.getElementById("zoek-tot").value = ""
+  document.getElementById("zoek-status").textContent = ""
+  gefilterd = [...alleGesprekken]
+  renderGesprekken()
+}
 
-  const sample = gefilterd.slice(0, 30)
+// AI Analyse
+async function startAnalyse(type) {
+  const btnId = type === "mark" ? "analyse-btn" : "analyse-btn-sander"
+  const resultaatId = type === "mark" ? "analyse-resultaat-mark" : "analyse-resultaat-sander"
+  const statusId = type === "mark" ? "analyse-status-mark" : null
+
+  const btn = document.getElementById(btnId)
+  const resultaat = document.getElementById(resultaatId)
+
+  btn.disabled = true
+  btn.textContent = "⏳ Analyseren..."
+  resultaat.innerHTML = '<div class="loading">AI analyseert ' + Math.min(gefilterd.length, 50) + ' gesprekken...</div>'
+
+  // Bouw de gespreksdata op
+  const sample = gefilterd.slice(0, 50)
   const vragenTekst = sample.map((g, i) => {
-    const vragen = g.messages?.filter(m => m.role === "user").map(m => m.content).join(" | ") || ""
-    return `${i + 1}. ${vragen}`
+    const vragen = (g.messages || []).filter(m => m.role === "user").map(m => m.content).join(" | ")
+    const antwoord = g.reply || ""
+    return `${i+1}. VRAAG: ${vragen} | ANTWOORD: ${antwoord.substring(0, 200)}`
   }).join("\n")
+
+  const systemMark = `Je bent een data-analist voor Mokum Pool & Darts chatbot. Analyseer de gesprekken en geef PRAKTISCH advies om de bot te verbeteren. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
+{
+  "inzicht": "Korte samenvatting in 2-3 zinnen over wat opvalt in de gesprekken",
+  "veelgesteld": [
+    {"vraag": "Exacte of samengevatte vraag", "count": 3, "onderwerp": "Toernooien"}
+  ],
+  "fouten_of_verbeteringen": [
+    {"probleem": "Beschrijving van probleem of onduidelijkheid in bot antwoord", "suggestie": "Concrete verbetering"}
+  ],
+  "nieuwe_rubrieken": ["Rubriek die ontbreekt maar veel gevraagd wordt"],
+  "kennisbron_tips": ["Specifiek tip: voeg dit toe aan kennisbron X"],
+  "prioriteit": "hoog/middel/laag"
+}`
+
+  const systemSander = `Je bent een UX-analist voor de website poolen-amsterdam.nl. Analyseer chatbot gesprekken om te bepalen welke informatie ontbreekt of onduidelijk is op de website. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
+{
+  "inzicht": "Korte samenvatting wat bezoekers zoeken maar niet vinden op de website",
+  "ontbrekende_info": [
+    {"onderwerp": "Onderwerp", "beschrijving": "Welke info mist op de site", "prioriteit": "hoog/middel/laag"}
+  ],
+  "pagina_verbeteringen": [
+    {"pagina": "Welke pagina of sectie", "verbetering": "Concrete suggestie voor verbetering"}
+  ],
+  "veel_gestelde_vragen": [
+    {"vraag": "Vraag die bezoekers stellen", "antwoord_aanwezig_op_site": true}
+  ],
+  "samenvatting": "Drie concrete actiepunten voor Sander om de website te verbeteren"
+}`
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system: `Je bent een analist voor Mokum Pool & Darts chatbot data. Analyseer de gesprekken en geef advies in het Nederlands. Antwoord ALLEEN in JSON zonder markdown backticks:
-{"veelgesteld":["vraag1","vraag2","vraag3","vraag4","vraag5"],"onderwerpen":[{"naam":"naam","percentage":25}],"advies_prompts":["suggestie1","suggestie2","suggestie3"],"nieuwe_rubrieken":["rubriek1","rubriek2"],"inzicht":"Korte samenvatting in 2 zinnen"}`,
-        messages: [{ role: "user", content: `Analyseer deze ${sample.length} gesprekken:\n${vragenTekst}` }]
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system: type === "mark" ? systemMark : systemSander,
+        messages: [{ role: "user", content: `Analyseer deze ${sample.length} gesprekken van de Mokum Bot:\n\n${vragenTekst}` }]
       })
     })
+
     const data = await response.json()
     const text = data.content?.[0]?.text || "{}"
     const analyse = JSON.parse(text.replace(/```json|```/g, "").trim())
 
-    resultaat.innerHTML = `
-      <div class="analyse-item" style="margin-bottom:16px;background:#1a1a1a;border-left:3px solid #cc0000;padding:12px 16px;">💡 ${analyse.inzicht || ""}</div>
-      <div class="grid-2">
-        <div>
-          <div class="card-title">Meest gestelde vragen</div>
-          ${(analyse.veelgesteld || []).map((v, i) => `<div class="analyse-item"><span style="color:#888;font-size:12px;margin-right:8px;">${i+1}.</span>${v}</div>`).join("")}
-        </div>
-        <div>
-          <div class="card-title">Onderwerpen verdeling</div>
-          ${(analyse.onderwerpen || []).map(o => `<div class="analyse-item">${o.naam}<div style="display:flex;align-items:center;gap:8px;margin-top:4px;"><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:${Math.min(100,Math.round(o.percentage))}%;"></div></div><span style="font-size:12px;color:#888;">${Math.round(o.percentage)}%</span></div></div>`).join("")}
-        </div>
-      </div>
-      <div class="grid-2" style="margin-top:16px;">
-        <div>
-          <div class="card-title">Aanbevolen standaard prompts</div>
-          ${(analyse.advies_prompts || []).map(p => `<div class="analyse-item">+ ${p}</div>`).join("")}
-        </div>
-        <div>
-          <div class="card-title">Mogelijke nieuwe rubrieken</div>
-          ${(analyse.nieuwe_rubrieken || []).map(r => `<div class="analyse-item">📌 ${r}</div>`).join("")}
-        </div>
-      </div>
-    `
+    if (type === "mark") {
+      renderAnalyseMark(analyse)
+      if (statusId) document.getElementById(statusId).textContent = `✓ Geanalyseerd op ${new Date().toLocaleTimeString("nl-NL")}`
+    } else {
+      renderAnalyseSander(analyse)
+    }
+
   } catch(e) {
     resultaat.innerHTML = `<div style="color:#ff6b6b;font-size:13px;">Analyse mislukt: ${e.message}</div>`
   }
 
   btn.disabled = false
-  btn.textContent = "Opnieuw analyseren"
+  btn.textContent = type === "mark" ? "🤖 Opnieuw analyseren" : "🤖 Opnieuw analyseren"
 }
 
-if (sessionStorage.getItem("mkm-auth") === "1") { laadGesprekken() }
+function renderAnalyseMark(a) {
+  const el = document.getElementById("analyse-resultaat-mark")
+  el.innerHTML = `
+    <div class="insight-box">💡 ${a.inzicht || ""}</div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div>
+        <div class="section-label">Meest gestelde vragen</div>
+        ${(a.veelgesteld || []).map(v => `
+          <div class="analyse-item">
+            <div>${v.vraag}</div>
+            <div style="margin-top:4px;"><span class="tag">${v.onderwerp || ""}</span> ${v.count > 1 ? `<span class="tag red">${v.count}x gevraagd</span>` : ""}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div>
+        <div class="section-label">Fouten & verbeteringen in bot antwoorden</div>
+        ${(a.fouten_of_verbeteringen || []).length === 0
+          ? '<div style="font-size:13px;color:#4caf50;">✓ Geen duidelijke fouten gevonden</div>'
+          : (a.fouten_of_verbeteringen || []).map(f => `
+            <div class="warning-item">
+              <strong>⚠️ ${f.probleem}</strong><br>
+              <span style="color:#888;font-size:12px;">→ ${f.suggestie}</span>
+            </div>
+          `).join("")
+        }
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="section-label">Tips voor kennisbronnen</div>
+        ${(a.kennisbron_tips || []).map(tip => `<div class="tip-box">📁 ${tip}</div>`).join("")}
+      </div>
+      <div>
+        <div class="section-label">Mogelijke nieuwe rubrieken</div>
+        ${(a.nieuwe_rubrieken || []).map(r => `<div class="analyse-item">📌 ${r}</div>`).join("")}
+        ${(a.nieuwe_rubrieken || []).length === 0 ? '<div style="font-size:13px;color:#4caf50;">✓ Alle rubrieken lijken gedekt</div>' : ""}
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:#555;">Prioriteit:</span>
+      <span class="badge ${a.prioriteit === 'hoog' ? 'badge-red' : a.prioriteit === 'middel' ? 'badge-blue' : 'badge-gray'}">${a.prioriteit || "—"}</span>
+    </div>
+  `
+}
+
+function renderAnalyseSander(a) {
+  const el = document.getElementById("analyse-resultaat-sander")
+  el.innerHTML = `
+    <div class="insight-box">🌐 ${a.inzicht || ""}</div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div>
+        <div class="section-label">Ontbrekende informatie op de website</div>
+        ${(a.ontbrekende_info || []).map(o => `
+          <div class="analyse-item">
+            <strong>${o.onderwerp}</strong>
+            <div style="font-size:12px;color:#888;margin-top:4px;">${o.beschrijving}</div>
+            <div style="margin-top:6px;"><span class="badge ${o.prioriteit === 'hoog' ? 'badge-red' : o.prioriteit === 'middel' ? 'badge-blue' : 'badge-gray'}">${o.prioriteit}</span></div>
+          </div>
+        `).join("")}
+      </div>
+      <div>
+        <div class="section-label">Pagina verbeteringen</div>
+        ${(a.pagina_verbeteringen || []).map(p => `
+          <div class="tip-box">
+            <strong>${p.pagina}</strong><br>
+            <span style="font-size:12px;">→ ${p.verbetering}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="section-label">Veel gestelde vragen — aanwezig op de site?</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+      ${(a.veel_gestelde_vragen || []).map(v => `
+        <span class="tag ${v.antwoord_aanwezig_op_site ? 'green' : 'red'}" title="${v.vraag}">${v.antwoord_aanwezig_op_site ? "✓" : "✗"} ${v.vraag.substring(0, 40)}${v.vraag.length > 40 ? "..." : ""}</span>
+      `).join("")}
+    </div>
+
+    <div class="insight-box" style="border-color:#4d9de0;background:#0a0f1a;">
+      <strong style="color:#4d9de0;">📋 Actiepunten voor Sander:</strong><br>
+      ${a.samenvatting || ""}
+    </div>
+  `
+}
+
+// Init
+if (sessionStorage.getItem("mkm-auth") === "1") {
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("dashboard").style.display = "block"
+  laadGesprekken()
+}
 </script>
 </body>
 </html>
-
