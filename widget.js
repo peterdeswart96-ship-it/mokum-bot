@@ -1,22 +1,20 @@
 (function () {
   'use strict'
 
-  // Voorkom dubbele initialisatie
   if (window.__mokumWidgetLoaded) return
   window.__mokumWidgetLoaded = true
 
   const API_URL = 'https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net'
+  const DEFAULT_LANG = 'nl'
+  const INTERN_HASH = '3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f'
 
   const C = {
-    red: '#cc0000',
-    redDark: '#990000',
-    black: '#0a0a0a',
-    blackCard: '#161616',
-    blackInput: '#1f1f1f',
-    border: '#2a2a2a',
-    white: '#ffffff',
-    gray: '#888888',
+    red: '#cc0000', redDark: '#990000', black: '#0a0a0a',
+    blackCard: '#161616', blackInput: '#1f1f1f',
+    border: '#2a2a2a', white: '#ffffff', gray: '#888888',
   }
+
+  const WIDGET_CONFIG = { bottom: '90px', right: '24px', width: '440px' }
 
   const BUBBLE_TEXTS = [
     'Ask me anything!',
@@ -35,17 +33,13 @@
       backToTopics: '← Terug naar onderwerpen',
       backButton: '← Terug',
       askOther: '✏️ Ik wil een andere vraag stellen',
-      spelregelsIntro: 'Je hebt dus een vraag over spelregels... Over welke spelsoort wil je een vraag stellen?',
+      spelregelsIntro: 'Over welke spelsoort wil je een vraag stellen?',
       spelregelsBack: '← Terug naar spelregels',
+      internPwdPrompt: 'Dit is een beveiligde rubriek. Voer het wachtwoord in:',
+      internPwdError: 'Verkeerd wachtwoord',
+      internPwdBtn: 'Toegang',
       hoverTitle: 'IK WEET ALLES OVER:',
-      hoverInfo: [
-        '🕐 Openingstijden',
-        '💶 Tarieven & activiteiten',
-        '🏆 Toernooien & inschrijven',
-        '📍 Route & parkeren',
-        '🎯 Darts, biljart & shuffleboard',
-        '🏢 Bedrijfsuitjes & groepen',
-      ],
+      hoverInfo: ['🕐 Openingstijden', '💶 Tarieven & activiteiten', '🏆 Toernooien & inschrijven', '📍 Route & parkeren', '🎯 Darts, biljart & shuffleboard', '🏢 Bedrijfsuitjes & groepen'],
       topics: [
         { id: 'pool', emoji: '🎱', label: 'Pool & Biljart' },
         { id: 'darts', emoji: '🎯', label: 'Darts' },
@@ -53,7 +47,14 @@
         { id: 'tarieven', emoji: '💶', label: 'Tarieven' },
         { id: 'toernooien', emoji: '🏆', label: 'Toernooien' },
         { id: 'spelregels', emoji: '📖', label: 'Spelregels' },
+        { id: 'eten-drinken', emoji: '🍺', label: 'Eten & Drinken' },
+        { id: 'sport', emoji: '📺', label: 'Sport kijken' },
+        { id: 'keu-reparatie', emoji: '🔧', label: 'Keu reparatie' },
+        { id: 'keu-shop', emoji: '🛒', label: 'Keu & Accessoires' },
+        { id: 'clinics', emoji: '🎓', label: 'Clinics & Coaching' },
+        { id: 'gaming', emoji: '🕹️', label: 'Spelletjes & Gaming' },
         { id: 'locatie', emoji: '📍', label: 'Locatie & Parkeren' },
+        { id: 'intern', emoji: '🔒', label: 'Intern' },
         { id: 'anders', emoji: '❓', label: 'Anders' },
       ],
       questions: {
@@ -62,7 +63,14 @@
         openingstijden: ['Wanneer zijn jullie open?', 'Zijn jullie ook op feestdagen open?', 'Hoe laat is de laatste inloop?', 'Zijn de tijden in het weekend anders?'],
         tarieven: ['Wat kost een uur poolen?', 'Zijn er dagprijzen of avondprijzen?', 'Kan ik pinnen?', 'Zijn er groepstarieven?'],
         toernooien: ['Wanneer is het volgende toernooi?', 'Welke toernooien zijn er aankomende week?', 'Zijn er ook toernooien voor beginnende spelers?', 'Wat kost deelname?'],
+        'eten-drinken': ['Wat staat er op het menu?', 'Hebben jullie vegetarische opties?', 'Wat kosten de bieren?', 'Kunnen jullie pizzas bestellen?'],
+        sport: ['Welke sportwedstrijden kijken jullie vanavond?', 'Tonen jullie Champions League / Eredivisie?', 'Op hoeveel schermen wordt sport getoond?', 'Hoe vroeg moet ik er zijn voor een grote wedstrijd?'],
+        'keu-reparatie': ['Kunnen jullie mijn keu repareren?', 'Wat kost een keu reparatie?', 'Hoe lang duurt een reparatie?', 'Welke reparaties doen jullie?'],
+        'keu-shop': ['Verkopen jullie keuen?', 'Welke accessoires zijn er te koop?', 'Verkopen jullie pijlen voor darts?', 'Waar kan ik een keu passen?'],
+        clinics: ['Hoe boek ik een pool clinic?', 'Wat kost een privelес?', 'Voor welk niveau zijn de clinics?', 'Wie geeft de lessen?'],
+        gaming: ['Welke spelletjes zijn er bij Mokum?', 'Hebben jullie ook niet-pool spellen?', 'Zijn er console of arcade games?', 'Kan ik een game avond organiseren?'],
         locatie: ['Waar is Mokum gevestigd?', 'Hoe kom ik er met het OV?', 'Is er parkeergelegenheid?', 'Hoe ver is het van Amstel Station?'],
+        intern: ['Kun je de werkroosters laten zien?', 'Kun je de keukeninstructies laten zien?', 'Kun je de kassa-instructies laten zien?'],
       },
       spelregelsDisciplines: [
         { id: 'american-pool', emoji: '🎱', label: 'American Pool' },
@@ -87,17 +95,13 @@
       backToTopics: '← Back to topics',
       backButton: '← Back',
       askOther: '✏️ I want to ask a different question',
-      spelregelsIntro: 'So you have a question about game rules... Which discipline would you like to ask about?',
+      spelregelsIntro: 'Which discipline would you like to ask about?',
       spelregelsBack: '← Back to game rules',
+      internPwdPrompt: 'This is a secured section. Please enter the password:',
+      internPwdError: 'Incorrect password',
+      internPwdBtn: 'Access',
       hoverTitle: 'I KNOW ALL ABOUT:',
-      hoverInfo: [
-        '🕐 Opening hours',
-        '💶 Rates & activities',
-        '🏆 Tournaments & sign-up',
-        '📍 Route & parking',
-        '🎯 Darts, billiards & more',
-        '🏢 Corporate events',
-      ],
+      hoverInfo: ['🕐 Opening hours', '💶 Rates & activities', '🏆 Tournaments & sign-up', '📍 Route & parking', '🎯 Darts, billiards & more', '🏢 Corporate events'],
       topics: [
         { id: 'pool', emoji: '🎱', label: 'Pool & Billiards' },
         { id: 'darts', emoji: '🎯', label: 'Darts' },
@@ -105,7 +109,14 @@
         { id: 'tarieven', emoji: '💶', label: 'Rates' },
         { id: 'toernooien', emoji: '🏆', label: 'Tournaments' },
         { id: 'spelregels', emoji: '📖', label: 'Game Rules' },
+        { id: 'eten-drinken', emoji: '🍺', label: 'Food & Drinks' },
+        { id: 'sport', emoji: '📺', label: 'Watch Sports' },
+        { id: 'keu-reparatie', emoji: '🔧', label: 'Cue Repair' },
+        { id: 'keu-shop', emoji: '🛒', label: 'Cues & Accessories' },
+        { id: 'clinics', emoji: '🎓', label: 'Clinics & Coaching' },
+        { id: 'gaming', emoji: '🕹️', label: 'Games & Gaming' },
         { id: 'locatie', emoji: '📍', label: 'Location & Parking' },
+        { id: 'intern', emoji: '🔒', label: 'Internal' },
         { id: 'anders', emoji: '❓', label: 'Other' },
       ],
       questions: {
@@ -114,7 +125,14 @@
         openingstijden: ['When are you open?', 'Are you open on public holidays?', "What's the last entry time?", 'Are the weekend hours different?'],
         tarieven: ['How much does an hour of pool cost?', 'Are there day rates and evening rates?', 'Can I pay by card?', 'Are there group rates?'],
         toernooien: ['When is the next tournament?', 'Which tournaments are coming up next week?', 'Are there tournaments for beginners?', 'How much does it cost to participate?'],
+        'eten-drinken': ["What's on the menu?", 'Do you have vegetarian options?', 'How much are the beers?', 'Can we order pizzas?'],
+        sport: ['Which sports are you showing tonight?', 'Do you show Champions League / Eredivisie?', 'How many screens do you have for sports?', 'How early should I arrive for a big match?'],
+        'keu-reparatie': ['Can you repair my cue?', 'How much does a cue repair cost?', 'How long does a repair take?', 'What kind of repairs do you do?'],
+        'keu-shop': ['Do you sell cues?', 'What accessories do you sell?', 'Do you sell darts?', 'Where can I try out a cue?'],
+        clinics: ['How do I book a pool clinic?', 'How much does a private lesson cost?', 'What level are the clinics for?', 'Who gives the lessons?'],
+        gaming: ['What games are available at Mokum?', 'Do you have non-pool games?', 'Are there console or arcade games?', 'Can I organise a game night?'],
         locatie: ['Where is Mokum located?', 'How do I get there by public transport?', 'Is there parking available?', 'How far is it from Amstel Station?'],
+        intern: ['Can you show me the work schedules?', 'Can you show me instructions for the kitchen?', 'Can you show me instructions for the cash register?'],
       },
       spelregelsDisciplines: [
         { id: 'american-pool', emoji: '🎱', label: 'American Pool' },
@@ -133,31 +151,34 @@
     },
   }
 
-  // State
   let state = {
     open: false,
-    lang: detectLanguage(),
+    lang: DEFAULT_LANG,
     stage: 'topics',
     messages: [],
     input: '',
     loading: false,
     selectedTopic: null,
     selectedDiscipline: null,
+    internUnlocked: false,
+    internPwd: '',
+    internPwdError: false,
     bubbleTextIndex: 0,
-    hovered: false,
     expanded: false,
   }
 
-  function detectLanguage() {
-    const l = navigator.language?.toLowerCase() || 'en'
-    return l.startsWith('nl') ? 'nl' : 'en'
+  function tr() { return TRANSLATIONS[state.lang] }
+
+  function getWidth() {
+    const mobile = window.innerWidth < 480
+    if (state.expanded) return 'min(80vw, 900px)'
+    return mobile ? (window.innerWidth - 16) + 'px' : WIDGET_CONFIG.width
   }
 
-  function t() {
-    return TRANSLATIONS[state.lang]
+  function getRight() {
+    return window.innerWidth < 480 ? '8px' : WIDGET_CONFIG.right
   }
 
-  // Inject global styles
   function injectStyles() {
     if (document.getElementById('mokum-widget-styles')) return
     const style = document.createElement('style')
@@ -167,19 +188,11 @@
       #mokum-widget-root button { cursor: pointer; }
       #mokum-widget-root input:focus { outline: none; }
       #mokum-widget-root a { color: #ff6b6b; text-decoration: underline; }
-      @keyframes mokumBounce {
-        0%, 100% { transform: translateY(0); }
-        40% { transform: translateY(-18px); }
-        60% { transform: translateY(-10px); }
-      }
-      @keyframes mokumIdle {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-      }
+      @keyframes mokumBounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-18px); } 60% { transform: translateY(-10px); } }
+      @keyframes mokumIdle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
       .mokum-bounce { animation: mokumBounce 1.2s ease-in-out 3, mokumIdle 3s ease-in-out 3.6s infinite; }
       .mokum-chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
       .mokum-chat-body::-webkit-scrollbar { width: 4px; }
-      .mokum-chat-body::-webkit-scrollbar-track { background: transparent; }
       .mokum-chat-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
       .mokum-msg-bot { max-width: 85%; padding: 10px 14px; border-radius: 12px 12px 12px 2px; font-size: 14px; line-height: 1.55; background: #161616; color: #fff; border: 1px solid #2a2a2a; }
       .mokum-msg-bot p { margin: 0 0 6px 0; }
@@ -191,30 +204,20 @@
       .mokum-chip:hover { background: #2a2a2a; border-color: #444; }
       .mokum-chip-accent { background: #cc0000; border: none; }
       .mokum-chip-accent:hover { background: #990000; }
-      .mokum-back-btn { background: none; border: none; color: #888; font-size: 12px; padding: 4px 0; text-align: left; }
+      .mokum-chip-inline { width: auto !important; display: inline-block !important; }
+      .mokum-back-btn { background: none; border: none; color: #888; font-size: 12px; padding: 4px 0; text-align: left; cursor: pointer; }
     `
     document.head.appendChild(style)
   }
 
-  // SVG 8-ball icoon
   function eightBallSVG(size, animate) {
     return `<svg width="${size}" height="${Math.round(size * 1.1)}" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" class="${animate ? 'mokum-bounce' : ''}">
       <defs>
-        <radialGradient id="mw-ballGrad" cx="38%" cy="32%" r="62%">
-          <stop offset="0%" stop-color="#3a3a3a"/><stop offset="40%" stop-color="#111"/><stop offset="100%" stop-color="#0a0a0a"/>
-        </radialGradient>
-        <radialGradient id="mw-circleGrad" cx="42%" cy="38%" r="58%">
-          <stop offset="0%" stop-color="#fff"/><stop offset="70%" stop-color="#f0f0f0"/><stop offset="100%" stop-color="#ccc"/>
-        </radialGradient>
-        <radialGradient id="mw-hatGrad" cx="38%" cy="20%" r="70%">
-          <stop offset="0%" stop-color="#2e2e2e"/><stop offset="50%" stop-color="#141414"/><stop offset="100%" stop-color="#0a0a0a"/>
-        </radialGradient>
-        <radialGradient id="mw-brimGrad" cx="50%" cy="35%" r="65%">
-          <stop offset="0%" stop-color="#222"/><stop offset="100%" stop-color="#0a0a0a"/>
-        </radialGradient>
-        <radialGradient id="mw-shineGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fff" stop-opacity="0.16"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-        </radialGradient>
+        <radialGradient id="mw-ballGrad" cx="38%" cy="32%" r="62%"><stop offset="0%" stop-color="#3a3a3a"/><stop offset="40%" stop-color="#111"/><stop offset="100%" stop-color="#0a0a0a"/></radialGradient>
+        <radialGradient id="mw-circleGrad" cx="42%" cy="38%" r="58%"><stop offset="0%" stop-color="#fff"/><stop offset="70%" stop-color="#f0f0f0"/><stop offset="100%" stop-color="#ccc"/></radialGradient>
+        <radialGradient id="mw-hatGrad" cx="38%" cy="20%" r="70%"><stop offset="0%" stop-color="#2e2e2e"/><stop offset="50%" stop-color="#141414"/><stop offset="100%" stop-color="#0a0a0a"/></radialGradient>
+        <radialGradient id="mw-brimGrad" cx="50%" cy="35%" r="65%"><stop offset="0%" stop-color="#222"/><stop offset="100%" stop-color="#0a0a0a"/></radialGradient>
+        <radialGradient id="mw-shineGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.16"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>
       </defs>
       <circle cx="100" cy="140" r="68" fill="url(#mw-ballGrad)"/>
       <ellipse cx="80" cy="118" rx="19" ry="12" fill="url(#mw-shineGrad)" transform="rotate(-20,80,118)"/>
@@ -229,420 +232,312 @@
       <g transform="translate(100,41) scale(0.56) translate(-100,-38)">
         <circle cx="100" cy="38" r="28" fill="#0a0a0a"/>
         <circle cx="100" cy="38" r="28" fill="none" stroke="#fff" stroke-width="2.2"/>
-        <g transform="translate(91,27)">
-          <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/>
-        </g>
-        <g transform="translate(109,27)">
-          <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/>
-        </g>
-        <g transform="translate(100,37)">
-          <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/>
-        </g>
+        <g transform="translate(91,27)"><line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/><line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(109,27)"><line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/><line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(100,37)"><line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/><line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#cc0000" stroke-width="2.2" stroke-linecap="round"/></g>
         <text x="100" y="52" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="8" font-weight="900" fill="#fff" letter-spacing="1.5">MOKUM</text>
       </g>
     </svg>`
   }
 
-  // Simpele markdown naar HTML converter
-  function markdownToHtml(text) {
-    return text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^## (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^# (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
-      .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>')
+  function flagNLSVG() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="24" height="16"><rect width="9" height="2" y="0" fill="#AE1C28"/><rect width="9" height="2" y="2" fill="#FFFFFF"/><rect width="9" height="2" y="4" fill="#21468B"/></svg>`
+  }
+
+  function flagGBSVG() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="24" height="16"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></svg>`
   }
 
   function formatBotMessage(text) {
     const lines = text.split('\n')
     let html = ''
     let inList = false
-
     for (const line of lines) {
       const trimmed = line.trim()
       if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
         if (!inList) { html += '<ul style="margin:4px 0;padding-left:16px;">'; inList = true }
-        const content = trimmed.substring(2)
-        html += `<li style="margin:2px 0;line-height:1.6;">${applyInlineMarkdown(content)}</li>`
+        html += `<li style="margin:2px 0;line-height:1.6;">${applyInline(trimmed.substring(2))}</li>`
       } else {
         if (inList) { html += '</ul>'; inList = false }
-        if (trimmed === '') {
-          html += '<br>'
-        } else if (trimmed.startsWith('### ') || trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
-          html += `<p style="margin:0 0 6px 0;"><strong>${applyInlineMarkdown(trimmed.replace(/^#+\s/, ''))}</strong></p>`
-        } else {
-          html += `<p style="margin:0 0 6px 0;">${applyInlineMarkdown(trimmed)}</p>`
-        }
+        if (trimmed === '') { html += '<br>' }
+        else if (trimmed.match(/^#{1,3} /)) { html += `<p style="margin:0 0 6px 0;"><strong>${applyInline(trimmed.replace(/^#+\s/, ''))}</strong></p>` }
+        else { html += `<p style="margin:0 0 6px 0;">${applyInline(trimmed)}</p>` }
       }
     }
     if (inList) html += '</ul>'
     return html
   }
 
-  function applyInlineMarkdown(text) {
+  function applyInline(text) {
     return text
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#ff6b6b;text-decoration:underline;">$1</a>')
   }
 
-  // Render functies
+  function el(tag, style, html, attrs) {
+    const e = document.createElement(tag)
+    if (style) e.style.cssText = style
+    if (html !== undefined) e.innerHTML = html
+    if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+      if (k === 'class') e.className = v
+      else if (k === 'type') e.type = v
+      else if (k === 'placeholder') e.placeholder = v
+      else if (k === 'title') e.title = v
+      else e.setAttribute(k, v)
+    })
+    return e
+  }
+
+  function btn(label, onClick, extraStyle, extraClass) {
+    const b = document.createElement('button')
+    b.innerHTML = label
+    b.onclick = onClick
+    if (extraStyle) b.style.cssText = extraStyle
+    if (extraClass) b.className = extraClass
+    return b
+  }
+
+  function chip(label, onClick, accent, inline) {
+    const cls = 'mokum-chip' + (accent ? ' mokum-chip-accent' : '') + (inline ? ' mokum-chip-inline' : '')
+    return btn(label, onClick, null, cls)
+  }
+
   function render() {
     const root = document.getElementById('mokum-widget-root')
     if (!root) return
     root.innerHTML = ''
 
-    const tr = t()
+    const t = tr()
+    const w = getWidth()
+    const r = getRight()
+    const isMobile = window.innerWidth < 480
+    const chatHeight = state.expanded ? '80dvh' : (isMobile ? 'calc(100dvh - 90px - 80px - 16px)' : 'min(580px, calc(100dvh - 90px - 80px - 16px))')
 
     if (state.open) {
-      // Chat venster
-      const width = state.expanded ? 'min(80vw, 900px)' : '380px'
-      const height = state.expanded ? '80vh' : '580px'
-
-      const chatWindow = el('div', {
-        style: `position:fixed;bottom:100px;right:24px;width:${width};height:${height};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`,
-      })
+      const win = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`)
 
       // Header
-      const header = el('div', {
-        style: `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;`,
+      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;`)
+      const hdrL = el('div', 'display:flex;align-items:center;gap:10px;')
+      hdrL.innerHTML = eightBallSVG(34, false)
+      const hdrTitle = el('div', null, `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;">Pool & Darts Amsterdam</div>`)
+      hdrL.appendChild(hdrTitle)
+
+      const hdrR = el('div', 'display:flex;align-items:center;gap:6px;')
+
+      // Home knop
+      const homeBtn = btn('🏠', () => { resetChat(); render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:14px;padding:4px 8px;line-height:1.4;`)
+      homeBtn.title = state.lang === 'nl' ? 'Terug naar home' : 'Back to home'
+
+      // SVG vlaggen
+      const flagsWrap = el('div', 'display:flex;gap:4px;align-items:center;')
+      ;['nl', 'en'].forEach(l => {
+        const isActive = state.lang === l
+        const flagBtn = btn(l === 'nl' ? flagNLSVG() : flagGBSVG(), () => {
+          if (!isActive) { switchLang(l) }
+        }, `background:none;border:${isActive ? '2px solid #cc0000' : '2px solid transparent'};border-radius:4px;padding:2px;line-height:0;display:flex;align-items:center;`)
+        flagBtn.title = l === 'nl' ? 'Nederlands' : 'English'
+        flagsWrap.appendChild(flagBtn)
       })
-
-      const headerLeft = el('div', { style: 'display:flex;align-items:center;gap:10px;' })
-      headerLeft.innerHTML = eightBallSVG(36, false)
-      const headerTitle = el('div')
-      headerTitle.innerHTML = `<div style="font-weight:800;color:${C.white};font-size:14px;letter-spacing:0.06em;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;">Pool & Darts Amsterdam</div>`
-      headerLeft.appendChild(headerTitle)
-
-      const headerRight = el('div', { style: 'display:flex;align-items:center;gap:8px;' })
-
-      // Taalwisselaar
-      const langBtn = el('button', {
-        style: `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.white};font-size:16px;padding:3px 8px;line-height:1.4;`,
-        title: state.lang === 'nl' ? 'Switch to English' : 'Naar Nederlands',
-      })
-      langBtn.textContent = state.lang === 'nl' ? '🇬🇧' : '🇳🇱'
-      langBtn.onclick = () => {
-        state.lang = state.lang === 'nl' ? 'en' : 'nl'
-        state.messages = [{ role: 'assistant', content: TRANSLATIONS[state.lang].welcome }]
-        state.stage = 'topics'
-        state.selectedTopic = null
-        state.selectedDiscipline = null
-        render()
-      }
 
       // Expand knop
-      const expandBtn = el('button', {
-        style: `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:12px;padding:4px 8px;`,
-        title: state.expanded ? 'Verkleinen' : 'Maximaliseren',
-      })
-      expandBtn.textContent = state.expanded ? '⊡' : '⊞'
-      expandBtn.onclick = () => { state.expanded = !state.expanded; render() }
+      const expBtn = btn(state.expanded ? '⊡' : '⊞', () => { state.expanded = !state.expanded; render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:12px;padding:4px 8px;`)
 
       // Sluit knop
-      const closeBtn = el('button', {
-        style: `background:none;border:none;color:${C.gray};font-size:18px;font-weight:bold;padding:4px;line-height:1;`,
-      })
-      closeBtn.textContent = '✕'
-      closeBtn.onclick = () => { state.open = false; render() }
+      const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.gray};font-size:18px;font-weight:bold;padding:4px;line-height:1;`)
 
-      headerRight.append(langBtn, expandBtn, closeBtn)
-      header.append(headerLeft, headerRight)
+      hdrR.append(homeBtn, flagsWrap, expBtn, closeBtn)
+      hdr.append(hdrL, hdrR)
 
-      // Chat body
-      const body = el('div', { class: 'mokum-chat-body' })
+      // Body
+      const body = el('div', null, null, { class: 'mokum-chat-body' })
 
-      // Berichten
       state.messages.forEach(msg => {
-        const wrapper = el('div', { style: `display:flex;justify-content:${msg.role === 'user' ? 'flex-end' : 'flex-start'};` })
-        const bubble = el('div', { class: msg.role === 'user' ? 'mokum-msg-user' : 'mokum-msg-bot' })
-        if (msg.role === 'assistant') {
-          bubble.innerHTML = formatBotMessage(msg.content)
-        } else {
-          bubble.textContent = msg.content
-        }
-        wrapper.appendChild(bubble)
-        body.appendChild(wrapper)
+        const wrap = el('div', `display:flex;justify-content:${msg.role === 'user' ? 'flex-end' : 'flex-start'};`)
+        const bubble = el('div', null, null, { class: msg.role === 'user' ? 'mokum-msg-user' : 'mokum-msg-bot' })
+        if (msg.role === 'assistant') bubble.innerHTML = formatBotMessage(msg.content)
+        else bubble.textContent = msg.content
+        wrap.appendChild(bubble)
+        body.appendChild(wrap)
       })
 
-      // Loading
       if (state.loading) {
-        const loadWrapper = el('div', { style: 'display:flex;justify-content:flex-start;' })
-        const loadBubble = el('div', { style: `padding:10px 14px;border-radius:12px 12px 12px 2px;font-size:14px;background:${C.blackCard};color:${C.gray};border:1px solid ${C.border};` })
-        loadBubble.textContent = tr.typing
-        loadWrapper.appendChild(loadBubble)
-        body.appendChild(loadWrapper)
+        const lw = el('div', 'display:flex;justify-content:flex-start;')
+        lw.appendChild(el('div', `padding:10px 14px;border-radius:12px 12px 12px 2px;font-size:14px;background:${C.blackCard};color:${C.gray};border:1px solid ${C.border};`, t.typing))
+        body.appendChild(lw)
       }
 
       // Stage: topics
       if (state.stage === 'topics' && !state.loading) {
-        const wrap = el('div', { style: 'display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;' })
-        tr.topics.forEach(topic => {
-          const btn = el('button', { class: 'mokum-chip', style: 'width:auto;' })
-          btn.textContent = `${topic.emoji} ${topic.label}`
-          btn.onclick = () => selectTopic(topic)
-          wrap.appendChild(btn)
-        })
+        const wrap = el('div', 'display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;')
+        t.topics.forEach(topic => wrap.appendChild(chip(`${topic.emoji} ${topic.label}`, () => selectTopic(topic), false, true)))
         body.appendChild(wrap)
+      }
+
+      // Stage: intern login
+      if (state.stage === 'intern-login' && !state.loading) {
+        const wrap = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:4px;')
+        wrap.appendChild(el('div', `font-size:13px;color:${C.white};margin-bottom:4px;`, `🔒 ${t.internPwdPrompt}`))
+        const pwdInput = el('input', `padding:10px 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${state.internPwdError ? C.red : C.border};`, null, { type: 'password', placeholder: state.lang === 'nl' ? 'Wachtwoord...' : 'Password...' })
+        pwdInput.value = state.internPwd
+        pwdInput.oninput = e => { state.internPwd = e.target.value }
+        pwdInput.onkeydown = e => { if (e.key === 'Enter') checkInternPwd() }
+        wrap.appendChild(pwdInput)
+        if (state.internPwdError) wrap.appendChild(el('div', `font-size:12px;color:${C.red};`, t.internPwdError))
+        wrap.appendChild(chip(t.internPwdBtn, checkInternPwd, true))
+        wrap.appendChild(btn(t.backButton, () => { state.stage = 'topics'; render() }, null, 'mokum-back-btn'))
+        body.appendChild(wrap)
+        setTimeout(() => pwdInput.focus(), 100)
       }
 
       // Stage: spelregels disciplines
       if (state.stage === 'spelregels' && !state.loading) {
-        const wrap = el('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-top:4px;' })
-        tr.spelregelsDisciplines.forEach(disc => {
-          const btn = el('button', { class: 'mokum-chip' })
-          btn.textContent = `${disc.emoji} ${disc.label}`
-          btn.onclick = () => { state.selectedDiscipline = disc; state.stage = 'spelregels-questions'; render() }
-          wrap.appendChild(btn)
-        })
-        const otherBtn = el('button', { class: 'mokum-chip mokum-chip-accent' })
-        otherBtn.textContent = tr.askOther
-        otherBtn.onclick = () => { state.stage = 'chat'; render() }
-        wrap.appendChild(otherBtn)
-        const backBtn = el('button', { class: 'mokum-back-btn' })
-        backBtn.textContent = tr.backButton
-        backBtn.onclick = () => { state.stage = 'topics'; render() }
-        wrap.appendChild(backBtn)
+        const wrap = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:4px;')
+        t.spelregelsDisciplines.forEach(disc => wrap.appendChild(chip(`${disc.emoji} ${disc.label}`, () => { state.selectedDiscipline = disc; state.stage = 'spelregels-questions'; render() })))
+        wrap.appendChild(chip(t.askOther, () => { state.stage = 'chat'; render() }, true))
+        wrap.appendChild(btn(t.backButton, () => { state.stage = 'topics'; render() }, null, 'mokum-back-btn'))
         body.appendChild(wrap)
       }
 
       // Stage: spelregels vragen
       if (state.stage === 'spelregels-questions' && state.selectedDiscipline && !state.loading) {
-        const wrap = el('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-top:4px;' })
-        const label = el('div', { style: `font-size:12px;color:${C.gray};margin-bottom:2px;` })
-        label.textContent = `${state.selectedDiscipline.emoji} ${state.selectedDiscipline.label}`
-        wrap.appendChild(label)
-        const questions = tr.spelregelsQuestions[state.selectedDiscipline.id] || []
-        questions.forEach(q => {
-          const btn = el('button', { class: 'mokum-chip' })
-          btn.textContent = q
-          btn.onclick = () => sendMessage(q)
-          wrap.appendChild(btn)
-        })
-        const otherBtn = el('button', { class: 'mokum-chip mokum-chip-accent' })
-        otherBtn.textContent = tr.askOther
-        otherBtn.onclick = () => { state.stage = 'chat'; render() }
-        wrap.appendChild(otherBtn)
-        const backBtn = el('button', { class: 'mokum-back-btn' })
-        backBtn.textContent = tr.spelregelsBack
-        backBtn.onclick = () => { state.stage = 'spelregels'; render() }
-        wrap.appendChild(backBtn)
+        const wrap = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:4px;')
+        wrap.appendChild(el('div', `font-size:12px;color:${C.gray};margin-bottom:2px;`, `${state.selectedDiscipline.emoji} ${state.selectedDiscipline.label}`))
+        ;(t.spelregelsQuestions[state.selectedDiscipline.id] || []).forEach(q => wrap.appendChild(chip(q, () => sendMessage(q))))
+        wrap.appendChild(chip(t.askOther, () => { state.stage = 'chat'; render() }, true))
+        wrap.appendChild(btn(t.spelregelsBack, () => { state.stage = 'spelregels'; render() }, null, 'mokum-back-btn'))
         body.appendChild(wrap)
       }
 
       // Stage: questions
       if (state.stage === 'questions' && state.selectedTopic && !state.loading) {
-        const wrap = el('div', { style: 'display:flex;flex-direction:column;gap:8px;margin-top:4px;' })
-        const label = el('div', { style: `font-size:12px;color:${C.gray};margin-bottom:2px;` })
-        const topicData = tr.topics.find(tp => tp.id === state.selectedTopic.id)
-        label.textContent = `${state.selectedTopic.emoji} ${topicData?.label || ''}`
-        wrap.appendChild(label)
-        const questions = tr.questions[state.selectedTopic.id] || []
-        questions.forEach(q => {
-          const btn = el('button', { class: 'mokum-chip' })
-          btn.textContent = q
-          btn.onclick = () => sendMessage(q)
-          wrap.appendChild(btn)
-        })
-        const otherBtn = el('button', { class: 'mokum-chip mokum-chip-accent' })
-        otherBtn.textContent = tr.askOther
-        otherBtn.onclick = () => { state.stage = 'chat'; render() }
-        wrap.appendChild(otherBtn)
-        const backBtn = el('button', { class: 'mokum-back-btn' })
-        backBtn.textContent = tr.backButton
-        backBtn.onclick = () => { state.stage = 'topics'; render() }
-        wrap.appendChild(backBtn)
+        const wrap = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:4px;')
+        const topicData = t.topics.find(tp => tp.id === state.selectedTopic.id)
+        wrap.appendChild(el('div', `font-size:12px;color:${C.gray};margin-bottom:2px;`, `${state.selectedTopic.emoji} ${topicData?.label || ''}`))
+        ;(t.questions[state.selectedTopic.id] || []).forEach(q => wrap.appendChild(chip(q, () => sendMessage(q))))
+        wrap.appendChild(chip(t.askOther, () => { state.stage = 'chat'; render() }, true))
+        wrap.appendChild(btn(t.backButton, () => { state.stage = 'topics'; render() }, null, 'mokum-back-btn'))
         body.appendChild(wrap)
       }
 
       // Terug knop in chat
-      if (state.stage === 'chat' && state.messages.length <= 3 && !state.loading) {
-        const backBtn = el('button', { class: 'mokum-back-btn' })
-        backBtn.textContent = tr.backToTopics
-        backBtn.onclick = resetChat
-        body.appendChild(backBtn)
+      if (state.stage === 'chat' && !state.loading) {
+        body.appendChild(btn(t.backToTopics, () => { resetChat(); render() }, null, 'mokum-back-btn'))
       }
 
-      // Scroll naar beneden
       setTimeout(() => { body.scrollTop = body.scrollHeight }, 50)
 
-      // Input
-      const showInput = ['chat', 'questions', 'spelregels', 'spelregels-questions'].includes(state.stage)
-      let inputArea = null
-      if (showInput) {
-        inputArea = el('div', {
-          style: `border-top:1px solid ${C.border};background:${C.blackCard};padding:12px 16px;display:flex;gap:8px;flex-shrink:0;`,
-        })
-        const input = el('input', {
-          type: 'text',
-          placeholder: tr.placeholder,
-          style: `flex:1;padding:10px 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};outline:none;`,
-        })
-        input.value = state.input
-        input.oninput = (e) => { state.input = e.target.value }
-        input.onkeydown = (e) => { if (e.key === 'Enter') sendMessage() }
+      // Input — altijd zichtbaar
+      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:12px 16px;display:flex;gap:8px;flex-shrink:0;`)
+      const input = el('input', `flex:1;padding:10px 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
+      input.value = state.input
+      input.oninput = e => { state.input = e.target.value }
+      input.onkeydown = e => { if (e.key === 'Enter') sendMessage() }
+      const sendBtnEl = btn('→', () => sendMessage(), `padding:10px 18px;border-radius:8px;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
+      sendBtnEl.disabled = state.loading
+      inputArea.append(input, sendBtnEl)
 
-        const sendBtn = el('button', {
-          style: `padding:10px 18px;border-radius:8px;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`,
-        })
-        sendBtn.textContent = '→'
-        sendBtn.disabled = state.loading
-        sendBtn.onclick = () => sendMessage()
-        inputArea.append(input, sendBtn)
-
-        // Focus input
-        setTimeout(() => input.focus(), 100)
-      }
-
-      chatWindow.append(header, body)
-      if (inputArea) chatWindow.appendChild(inputArea)
-      root.appendChild(chatWindow)
+      win.append(hdr, body, inputArea)
+      root.appendChild(win)
     }
 
     // Floating knop
     if (!state.open) {
-      const floatWrap = el('div', {
-        style: 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;',
-      })
+      const floatWrap = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;`)
 
-      // Speech bubble
-      const bubble = el('div', { style: 'position:relative;display:inline-block;margin-bottom:18px;' })
-      const bubbleInner = el('div', {
-        style: 'background:white;border:3.5px solid #111;border-radius:12px;padding:10px 16px;position:relative;',
-      })
-      const bubbleText = el('span', {
-        style: 'font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;color:#cc0000;display:block;white-space:nowrap;text-align:center;',
-      })
-      bubbleText.textContent = BUBBLE_TEXTS[state.bubbleTextIndex]
-      const arrow = el('div', {
-        style: 'position:absolute;bottom:-16px;right:32px;width:4px;height:16px;background:#111;border-radius:2px;',
-      })
+      const bubble = el('div', 'position:relative;display:inline-block;margin-bottom:18px;')
+      const bubbleInner = el('div', 'background:white;border:3.5px solid #111;border-radius:12px;padding:10px 16px;position:relative;')
+      const bubbleText = el('span', 'font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;color:#cc0000;display:block;white-space:nowrap;text-align:center;', BUBBLE_TEXTS[state.bubbleTextIndex])
+      const arrow = el('div', 'position:absolute;bottom:-16px;right:32px;width:4px;height:16px;background:#111;border-radius:2px;')
       bubbleInner.appendChild(bubbleText)
       bubble.append(bubbleInner, arrow)
 
-      // 8-ball knop
-      const ballBtn = el('button', {
-        style: 'background:transparent;border:none;padding:0;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.6));transition:transform 0.2s;',
-      })
+      const ballBtn = btn('', () => {
+        state.open = true
+        if (state.messages.length === 0) state.messages = [{ role: 'assistant', content: tr().welcome }]
+        render()
+      }, 'background:transparent;border:none;padding:0;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.6));transition:transform 0.2s;')
       ballBtn.innerHTML = eightBallSVG(64, true)
       ballBtn.onmouseenter = () => { ballBtn.style.transform = 'scale(1.1)' }
       ballBtn.onmouseleave = () => { ballBtn.style.transform = 'scale(1)' }
-      ballBtn.onclick = () => {
-        state.open = true
-        if (state.messages.length === 0) {
-          state.messages = [{ role: 'assistant', content: t().welcome }]
-        }
-        render()
-      }
 
       floatWrap.append(bubble, ballBtn)
       root.appendChild(floatWrap)
     }
 
-    // Sluit knop onder chat
+    // Sluit knop onder venster
     if (state.open) {
-      const closeWrap = el('div', { style: 'position:fixed;bottom:24px;right:24px;z-index:9999;' })
-      const closeBtn = el('button', {
-        style: `width:64px;height:64px;border-radius:50%;background:${C.black};border:2px solid ${C.border};display:flex;align-items:center;justify-content:center;color:${C.gray};font-size:20px;font-weight:bold;transition:transform 0.2s;`,
-      })
-      closeBtn.textContent = '✕'
+      const cw = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;margin-top:8px;`)
+      const closeBtn = btn('✕', () => { state.open = false; render() }, `width:64px;height:64px;border-radius:50%;background:${C.black};border:2px solid ${C.border};display:flex;align-items:center;justify-content:center;color:${C.gray};font-size:20px;font-weight:bold;transition:transform 0.2s;`)
       closeBtn.onmouseenter = () => { closeBtn.style.transform = 'scale(1.1)' }
       closeBtn.onmouseleave = () => { closeBtn.style.transform = 'scale(1)' }
-      closeBtn.onclick = () => { state.open = false; render() }
-      closeWrap.appendChild(closeBtn)
-      root.appendChild(closeWrap)
+      cw.appendChild(closeBtn)
+      root.appendChild(cw)
     }
-  }
-
-  function el(tag, attrs = {}) {
-    const element = document.createElement(tag)
-    Object.entries(attrs).forEach(([key, val]) => {
-      if (key === 'class') element.className = val
-      else if (key === 'style') element.style.cssText = val
-      else if (key === 'type') element.type = val
-      else if (key === 'placeholder') element.placeholder = val
-      else if (key === 'title') element.title = val
-      else element.setAttribute(key, val)
-    })
-    return element
   }
 
   function selectTopic(topic) {
-    if (topic.id === 'anders') {
-      state.stage = 'chat'
-    } else if (topic.id === 'spelregels') {
-      state.selectedTopic = topic
-      state.messages.push({ role: 'assistant', content: t().spelregelsIntro })
-      state.stage = 'spelregels'
-    } else {
-      state.selectedTopic = topic
+    if (topic.id === 'anders') { state.stage = 'chat' }
+    else if (topic.id === 'spelregels') { state.selectedTopic = topic; state.messages.push({ role: 'assistant', content: tr().spelregelsIntro }); state.stage = 'spelregels' }
+    else if (topic.id === 'intern' && !state.internUnlocked) { state.selectedTopic = topic; state.stage = 'intern-login' }
+    else { state.selectedTopic = topic; state.stage = 'questions' }
+    render()
+  }
+
+  async function checkInternPwd() {
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(state.internPwd))
+    const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
+    if (hashHex === INTERN_HASH) {
+      state.internUnlocked = true; state.internPwdError = false; state.internPwd = ''
+      state.selectedTopic = { id: 'intern', emoji: '🔒', label: state.lang === 'nl' ? 'Intern' : 'Internal' }
       state.stage = 'questions'
-    }
+    } else { state.internPwdError = true }
+    render()
+  }
+
+  function switchLang(newLang) {
+    state.lang = newLang
+    state.messages = [{ role: 'assistant', content: TRANSLATIONS[newLang].welcome }]
+    state.stage = 'topics'; state.selectedTopic = null; state.selectedDiscipline = null
+    state.internUnlocked = false; state.internPwd = ''; state.internPwdError = false
     render()
   }
 
   function resetChat() {
-    state.stage = 'topics'
-    state.selectedTopic = null
-    state.selectedDiscipline = null
-    state.messages = [{ role: 'assistant', content: t().welcome }]
-    state.input = ''
-    render()
+    state.stage = 'topics'; state.selectedTopic = null; state.selectedDiscipline = null
+    state.internUnlocked = false; state.internPwd = ''; state.internPwdError = false
+    state.messages = [{ role: 'assistant', content: tr().welcome }]; state.input = ''
   }
 
   async function sendMessage(text) {
-    const userMessage = text || state.input
-    if (!userMessage.trim()) return
-
-    state.messages.push({ role: 'user', content: userMessage })
-    state.input = ''
-    state.loading = true
-    state.stage = 'chat'
+    const msg = text || state.input
+    if (!msg.trim()) return
+    state.messages.push({ role: 'user', content: msg })
+    state.input = ''; state.loading = true; state.stage = 'chat'
     render()
-
     try {
-      const response = await fetch(`${API_URL}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: state.messages }),
-      })
-      const data = await response.json()
+      const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: state.messages }) })
+      const data = await res.json()
       state.messages.push({ role: 'assistant', content: data.reply })
-    } catch (err) {
-      state.messages.push({ role: 'assistant', content: t().error })
-    } finally {
-      state.loading = false
-      render()
-    }
+    } catch { state.messages.push({ role: 'assistant', content: tr().error }) }
+    finally { state.loading = false; render() }
   }
 
-  // Bubble tekst wisselen
   setInterval(() => {
-    if (!state.open) {
-      state.bubbleTextIndex = (state.bubbleTextIndex + 1) % BUBBLE_TEXTS.length
-      render()
-    }
+    if (!state.open) { state.bubbleTextIndex = (state.bubbleTextIndex + 1) % BUBBLE_TEXTS.length; render() }
   }, 15000)
 
-  // Initialiseer
+  window.addEventListener('resize', () => { if (state.open) render() })
+
   function init() {
     injectStyles()
     const root = document.createElement('div')
     root.id = 'mokum-widget-root'
     document.body.appendChild(root)
-    state.messages = [{ role: 'assistant', content: t().welcome }]
+    state.messages = [{ role: 'assistant', content: tr().welcome }]
     render()
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init)
-  } else {
-    init()
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
+  else init()
 })()
