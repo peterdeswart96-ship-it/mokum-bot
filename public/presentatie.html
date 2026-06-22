@@ -75,6 +75,7 @@
 
 <div class="tab-bar">
   <button class="tab active" onclick="showTab('overzicht', this)">🏠 Overzicht</button>
+  <button class="tab" onclick="showTab('talen', this)">🌐 Talen</button>
   <button class="tab" onclick="showTab('kennisbronnen', this)">📁 Kennisbronnen</button>
   <button class="tab" onclick="showTab('kosten', this)">💶 API kosten</button>
   <button class="tab" onclick="showTab('rubrieken', this)">📋 Rubrieken</button>
@@ -121,6 +122,96 @@
     <div class="row"><span class="row-label">🇳🇱 Nederlands</span><span class="row-val"><span class="badge badge-green">Standaard</span></span></div>
     <div class="row"><span class="row-label">🇬🇧 Engels</span><span class="row-val" style="font-size:13px;">Schakelbaar via vlag in de header</span></div>
     <div class="row"><span class="row-label">Andere talen</span><span class="row-val" style="font-size:13px;">Bot antwoordt automatisch in de taal van de bezoeker</span></div>
+  </div>
+
+</div>
+
+<!-- TALEN -->
+<div id="tab-talen" class="tab-content">
+
+  <div class="highlight-box">🌐 De bot past zich automatisch aan aan de taal van de bezoeker. Jullie hoeven hier niets voor in te stellen.</div>
+
+  <div class="section-title">Hoe werkt het?</div>
+  <div class="card">
+    <div class="row"><span class="row-label">Standaardtaal</span><span class="row-val"><span class="badge badge-green">Nederlands</span></span></div>
+    <div class="row"><span class="row-label">Taalherkenning</span><span class="row-val" style="font-size:13px;">Bot leest de taal van de vraag en antwoordt daarin</span></div>
+    <div class="row"><span class="row-label">Handmatig wisselen</span><span class="row-val" style="font-size:13px;">Via de vlaggen 🇳🇱 🇬🇧 in de header van de bot</span></div>
+    <div class="row"><span class="row-label">Menu taal</span><span class="row-val" style="font-size:13px;">Wisselt mee bij klikken op de vlag</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Ondersteunde talen</div>
+  <div class="card">
+    <div class="row">
+      <span class="row-label">🇳🇱 Nederlands</span>
+      <span class="row-val"><span class="badge badge-green">Volledig ondersteund</span></span>
+    </div>
+    <div class="row">
+      <span class="row-label">🇬🇧 Engels</span>
+      <span class="row-val"><span class="badge badge-green">Volledig ondersteund</span></span>
+    </div>
+    <div class="row">
+      <span class="row-label">🇩🇪 Duits, 🇪🇸 Spaans, 🇫🇷 Frans...</span>
+      <span class="row-val"><span class="badge badge-blue">Automatisch</span></span>
+    </div>
+    <div class="row">
+      <span class="row-label">Overige talen</span>
+      <span class="row-val" style="font-size:13px;">Bot probeert altijd te antwoorden in de taal van de vraag</span>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Voorbeelden</div>
+  <div class="card">
+    <div class="row">
+      <span class="row-label" style="font-size:13px;">Bezoeker schrijft in het Nederlands</span>
+      <span class="row-val" style="font-size:13px;">→ Bot antwoordt in het Nederlands</span>
+    </div>
+    <div class="row">
+      <span class="row-label" style="font-size:13px;">Bezoeker schrijft in het Engels</span>
+      <span class="row-val" style="font-size:13px;">→ Bot antwoordt in het Engels</span>
+    </div>
+    <div class="row">
+      <span class="row-label" style="font-size:13px;">Bezoeker klikt op 🇬🇧 vlag</span>
+      <span class="row-val" style="font-size:13px;">→ Menu en welkomstbericht wisselen naar Engels</span>
+    </div>
+    <div class="row">
+      <span class="row-label" style="font-size:13px;">Bezoeker schrijft in het Spaans</span>
+      <span class="row-val" style="font-size:13px;">→ Bot antwoordt automatisch in het Spaans</span>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">Kennisbronnen en talen</div>
+  <div class="info-box">💡 De kennisbronnen die jullie uploaden zijn in het Nederlands. De bot vertaalt de informatie automatisch als een bezoeker in een andere taal vraagt. Jullie hoeven de bestanden niet in meerdere talen op te slaan.</div>
+
+  <div class="card">
+    <div class="row"><span class="row-label">Bestanden uploaden in</span><span class="row-val" style="font-size:13px;">Alleen Nederlands — de bot regelt de rest</span></div>
+    <div class="row"><span class="row-label">Vertaalkwaliteit</span><span class="row-val" style="font-size:13px;">Goed voor NL/EN, redelijk voor andere talen</span></div>
+    <div class="row"><span class="row-label">Adressen, namen, prijzen</span><span class="row-val" style="font-size:13px;">Worden nooit vertaald — blijven altijd correct</span></div>
+  </div>
+
+  <div class="section-title" style="margin-top:1.5rem;">De vlaggen in de header</div>
+  <div class="card" style="padding:1.25rem;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+      <div style="display:flex;gap:6px;">
+        <div style="border:2px solid #cc0000;border-radius:4px;padding:3px 5px;line-height:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="28" height="18"><rect width="9" height="2" y="0" fill="#AE1C28"/><rect width="9" height="2" y="2" fill="#FFFFFF"/><rect width="9" height="2" y="4" fill="#21468B"/></svg>
+        </div>
+        <div style="border:2px solid transparent;border-radius:4px;padding:3px 5px;line-height:0;border-color:#2a2a2a;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="28" height="14"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></svg>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#888;">Bot staat in het <strong style="color:#fff;">Nederlands</strong> — rode rand om de Nederlandse vlag. Klik op de Engelse vlag om te wisselen.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="display:flex;gap:6px;">
+        <div style="border:2px solid transparent;border-radius:4px;padding:3px 5px;line-height:0;border-color:#2a2a2a;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="28" height="18"><rect width="9" height="2" y="0" fill="#AE1C28"/><rect width="9" height="2" y="2" fill="#FFFFFF"/><rect width="9" height="2" y="4" fill="#21468B"/></svg>
+        </div>
+        <div style="border:2px solid #cc0000;border-radius:4px;padding:3px 5px;line-height:0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" width="28" height="14"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></svg>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#888;">Bot staat in het <strong style="color:#fff;">Engels</strong> — rode rand om de Engelse vlag. Klik op de Nederlandse vlag om terug te wisselen.</div>
+    </div>
   </div>
 
 </div>
