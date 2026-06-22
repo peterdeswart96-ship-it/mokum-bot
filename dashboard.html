@@ -619,58 +619,20 @@ async function startAnalyse(type) {
   btn.textContent = "⏳ Analyseren..."
   resultaat.innerHTML = '<div class="loading">AI analyseert ' + Math.min(gefilterd.length, 50) + ' gesprekken...</div>'
 
-  // Bouw de gespreksdata op
+  // Bouw de gespreksdata op — wordt naar de backend gestuurd voor analyse
   const sample = gefilterd.slice(0, 50)
-  const vragenTekst = sample.map((g, i) => {
-    const vragen = (g.messages || []).filter(m => m.role === "user").map(m => m.content).join(" | ")
-    const antwoord = g.reply || ""
-    return `${i+1}. VRAAG: ${vragen} | ANTWOORD: ${antwoord.substring(0, 200)}`
-  }).join("\n")
-
-  const systemMark = `Je bent een data-analist voor Mokum Pool & Darts chatbot. Analyseer de gesprekken en geef PRAKTISCH advies om de bot te verbeteren. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
-{
-  "inzicht": "Korte samenvatting in 2-3 zinnen over wat opvalt in de gesprekken",
-  "veelgesteld": [
-    {"vraag": "Exacte of samengevatte vraag", "count": 3, "onderwerp": "Toernooien"}
-  ],
-  "fouten_of_verbeteringen": [
-    {"probleem": "Beschrijving van probleem of onduidelijkheid in bot antwoord", "suggestie": "Concrete verbetering"}
-  ],
-  "nieuwe_rubrieken": ["Rubriek die ontbreekt maar veel gevraagd wordt"],
-  "kennisbron_tips": ["Specifiek tip: voeg dit toe aan kennisbron X"],
-  "prioriteit": "hoog/middel/laag"
-}`
-
-  const systemSander = `Je bent een UX-analist voor de website poolen-amsterdam.nl. Analyseer chatbot gesprekken om te bepalen welke informatie ontbreekt of onduidelijk is op de website. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
-{
-  "inzicht": "Korte samenvatting wat bezoekers zoeken maar niet vinden op de website",
-  "ontbrekende_info": [
-    {"onderwerp": "Onderwerp", "beschrijving": "Welke info mist op de site", "prioriteit": "hoog/middel/laag"}
-  ],
-  "pagina_verbeteringen": [
-    {"pagina": "Welke pagina of sectie", "verbetering": "Concrete suggestie voor verbetering"}
-  ],
-  "veel_gestelde_vragen": [
-    {"vraag": "Vraag die bezoekers stellen", "antwoord_aanwezig_op_site": true}
-  ],
-  "samenvatting": "Drie concrete actiepunten voor Sander om de website te verbeteren"
-}`
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Via de backend — voorkomt CORS problemen bij directe Anthropic API aanroep
+    const response = await fetch(`${API}/analyse`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1500,
-        system: type === "mark" ? systemMark : systemSander,
-        messages: [{ role: "user", content: `Analyseer deze ${sample.length} gesprekken van de Mokum Bot:\n\n${vragenTekst}` }]
-      })
+      body: JSON.stringify({ gesprekken: sample, type })
     })
 
     const data = await response.json()
-    const text = data.content?.[0]?.text || "{}"
-    const analyse = JSON.parse(text.replace(/```json|```/g, "").trim())
+    if (data.error) throw new Error(data.error)
+    const analyse = data.analyse
 
     if (type === "mark") {
       renderAnalyseMark(analyse)
