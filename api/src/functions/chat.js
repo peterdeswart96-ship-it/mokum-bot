@@ -501,10 +501,10 @@ app.http("analyse", {
         }
       }
 
-      // Bouw gespreksdata op voor de AI
+      // Bouw gespreksdata op voor de AI — antwoorden kort houden om JSON afkapping te voorkomen
       const vragenTekst = gesprekken.slice(0, 50).map((g, i) => {
         const vragen = (g.messages || []).filter(m => m.role === "user").map(m => m.content).join(" | ")
-        const antwoord = (g.reply || "").substring(0, 200)
+        const antwoord = (g.reply || "").substring(0, 100)
         return `${i + 1}. VRAAG: ${vragen} | ANTWOORD: ${antwoord}`
       }).join("\n")
 
@@ -517,7 +517,7 @@ app.http("analyse", {
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-sonnet-4-6",
-        max_tokens: 1500,
+        max_tokens: 2000,
         system: type === "sander" ? systemSander : systemMark,
         messages: [{ role: "user", content: `Analyseer deze ${Math.min(gesprekken.length, 50)} gesprekken van de Mokum Bot:\n\n${vragenTekst}` }],
       })
