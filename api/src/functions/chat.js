@@ -191,9 +191,11 @@ async function saveTournaments(tournaments) {
 
 async function fetchBlobContent(blobPath, sasToken) {
   try {
+    // Encode de bestandsnaam correct — spaties en speciale tekens in bestandsnamen
+    const encodedPath = blobPath.split("/").map(segment => encodeURIComponent(segment)).join("/")
     const options = {
       hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
-      path: `/${CONTAINER}/${blobPath}?${sasToken}`,
+      path: `/${CONTAINER}/${encodedPath}?${sasToken}`,
       method: "GET",
       headers: { "x-ms-version": "2020-04-08" },
     }
