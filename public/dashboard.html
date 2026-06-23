@@ -601,33 +601,35 @@
       <div id="htab-rubrieken" style="display:none;">
         <div style="background:#0d1a2e;border:1px solid #1a3a5a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4d9de0;">📋 Elke rubriek heeft een bijbehorend bestand in de kennisbronnen. Upload een nieuw bestand via de wizard om de bot-informatie bij te werken.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          ${[
-            ["🎱","Pool & Biljart","pool-biljart","badge-blue","Aanpasbaar"],
-            ["🎯","Darts","darts","badge-blue","Aanpasbaar"],
-            ["📅","Openingstijden","openingstijden","badge-blue","Aanpasbaar"],
-            ["💶","Tarieven","tarieven","badge-blue","Aanpasbaar"],
-            ["🏆","Toernooien","toernooien","badge-green","+ Cuescore automatisch"],
-            ["📖","Spelregels","spelregels","badge-green","Al ingevuld"],
-            ["🍺","Eten & Drinken","eten-drinken","badge-blue","Aanpasbaar"],
-            ["📺","Sport kijken","sport-evenementen","badge-red","Nog in te vullen"],
-            ["🔧","Keu reparatie","keu-reparatie","badge-red","Nog in te vullen"],
-            ["🛒","Keu & Accessoires","keu-shop","badge-red","Nog in te vullen"],
-            ["🎓","Clinics & Coaching","clinics-coaching","badge-red","Nog in te vullen"],
-            ["🕹️","Spelletjes & Gaming","spelletjes-gaming","badge-red","Nog in te vullen"],
-            ["📍","Locatie & Parkeren","locatie","badge-blue","Aanpasbaar"],
-            ["🔒","Intern","intern","badge-gray","Wachtwoord: internal"],
-          ].map(([emoji,naam,map,badge,status]) => `
-            <div class="card" style="padding:.875rem;margin-bottom:0;">
-              <div style="display:flex;align-items:flex-start;gap:10px;">
-                <div style="font-size:20px;">${emoji}</div>
-                <div>
-                  <div style="font-size:13px;font-weight:600;margin-bottom:3px;">${naam}</div>
-                  <div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/${map}/</div>
-                  <span class="badge ${badge}">${status}</span>
-                </div>
-              </div>
-            </div>
-          `).join("")}
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎱</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Pool & Biljart</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/pool-biljart/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎯</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Darts</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/darts/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📅</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Openingstijden</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/openingstijden/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">💶</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Tarieven</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/tarieven/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🏆</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Toernooien</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/toernooien/</div><span class="badge badge-green">+ Cuescore automatisch</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📖</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Spelregels</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/spelregels/</div><span class="badge badge-green">Al ingevuld</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🍺</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Eten & Drinken</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/eten-drinken/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📺</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Sport kijken</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/sport-evenementen/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔧</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Keu reparatie</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/keu-reparatie/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🛒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Keu & Accessoires</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/keu-shop/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎓</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Clinics & Coaching</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/clinics-coaching/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🕹️</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Spelletjes & Gaming</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/spelletjes-gaming/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📍</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Locatie & Parkeren</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/locatie/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Intern</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/intern/</div><span class="badge badge-gray">Wachtwoord: internal</span></div></div></div>
+
         </div>
       </div>
 
