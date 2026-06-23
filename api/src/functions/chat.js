@@ -566,3 +566,82 @@ app.http("analyse", {
     }
   },
 })
+
+// Kennisbron upload endpoint — voor de upload wizard in het dashboard
+app.http("kennisbron-upload", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") {
+      return { status: 204, headers: corsHeaders }
+    }
+    try {
+      const body = await request.json()
+      const { bestandsnaam, map, inhoud } = body
+
+      if (!bestandsnaam || !map || !inhoud) {
+        return {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "bestandsnaam, map en inhoud zijn verplicht" }),
+        }
+      }
+
+      // Valideer bestandsnaam — alleen letters, cijfers, koppeltekens en punt
+      const veiligBestandsnaam = bestandsnaam.replace(/[^a-zA-Z0-9\-_.]/g, "-").toLowerCase()
+      const blobPath = `${map}/${veiligBestandsnaam}`
+
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) {
+        return {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Geen SAS token geconfigureerd" }),
+        }
+      }
+
+      const contentBytes = Buffer.from(inhoud, "utf-8")
+      const options = {
+        hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+        path: `/${CONTAINER}/${encodeURIComponent(map)}/${encodeURIComponent(veiligBestandsnaam)}?${sasToken}`,
+        method: "PUT",
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Length": contentBytes.length,
+          "x-ms-blob-type": "BlockBlob",
+          "x-ms-version": "2020-04-08",
+        },
+      }
+
+      const result = await httpsRequest(options, contentBytes)
+
+      if (result.status === 201) {
+        context.log(`Kennisbron geupload: ${blobPath}`)
+        return {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ success: true, pad: blobPath }),
+        }
+      } else {
+        context.log(`Upload mislukt (${result.status}):`, result.body)
+        return {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: `Upload mislukt: HTTP ${result.status}` }),
+        }
+      }
+    } catch (error) {
+      context.log("Upload error:", error)
+      return {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: error.message }),
+      }
+    }
+  },
+})
