@@ -117,6 +117,16 @@
   .tag { background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #888; cursor: pointer; transition: all 0.15s; }
   .tag:hover { background: #2a2a2a; color: #fff; border-color: #444; }
   .highlight-box { background: #0d2e1a; border: 1px solid #1a3a1a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #4caf7d; line-height: 1.6; }
+  /* Handleiding subtabs — uniforme styling */
+  #tab-handleiding .card-title { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  #tab-handleiding .card { font-size: 13px; }
+  #tab-handleiding .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; font-size: 13px; }
+  #tab-handleiding .row:last-child { border-bottom: none; }
+  #tab-handleiding .row-label { color: #aaa; font-size: 13px; font-weight: 400; flex: 1; }
+  #tab-handleiding .row-val { font-size: 13px; font-weight: 400; color: #fff; text-align: right; }
+  #tab-handleiding .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { #tab-handleiding .grid-2 { grid-template-columns: 1fr; } }
+
   @media (max-width: 700px) {
     .metrics { grid-template-columns: 1fr 1fr; }
     .grid-2 { grid-template-columns: 1fr; }
@@ -498,12 +508,12 @@
         <div class="card-title" style="margin-top:20px;">Wat kan de bot?</div>
         <div class="grid-2">
           <div class="card" style="padding:.875rem 1rem;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Voor bezoekers</div>
-            <div style="font-size:12px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren</div>
+            <div style="font-size:13px;color:#888;margin-bottom:8px;">Voor bezoekers</div>
+            <div style="font-size:13px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren</div>
           </div>
           <div class="card" style="padding:.875rem 1rem;">
-            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Intern (met wachtwoord)</div>
-            <div style="font-size:12px;color:#666;line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info</div>
+            <div style="font-size:13px;color:#888;margin-bottom:8px;">Intern (met wachtwoord)</div>
+            <div style="font-size:13px;color:#666;line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info</div>
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid #222;">
               <div style="font-size:12px;color:#666;margin-bottom:4px;">Intern wachtwoord:</div>
               <code style="background:#222;padding:4px 10px;border-radius:6px;font-size:14px;color:#fff;">internal</code>
@@ -557,7 +567,7 @@
           <div style="display:flex;align-items:flex-start;gap:12px;">
             <div style="font-size:24px;">📱</div>
             <div>
-              <div style="font-size:14px;font-weight:600;color:#4d9de0;margin-bottom:6px;">Stuur Peter een WhatsApp na elke upload</div>
+              <div style="font-size:13px;color:#4d9de0;margin-bottom:6px;">📱 Stuur Peter een WhatsApp na elke upload</div>
               <div style="font-size:13px;color:#888;line-height:1.7;">Vermeld <strong style="color:#ccc;">wat</strong> je hebt toegevoegd en <strong style="color:#ccc;">in welke map</strong>. Zo kan Peter de algemene instructies bijwerken.<br><span style="color:#555;font-size:12px;">Voorbeeld: "Hoi Peter, ik heb betaling.txt geüpload in de map algemeen."</span></div>
             </div>
           </div>
@@ -637,19 +647,19 @@
       <div id="htab-problemen" style="display:none;">
         <div class="card-title">Veelvoorkomende situaties</div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">🤔 De bot geeft verkeerde of verouderde informatie</div>
+          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🤔 De bot geeft verkeerde of verouderde informatie</div>
           <div style="font-size:13px;color:#888;line-height:1.7;">Gebruik de <strong style="color:#fff;">📁 Kennisbron uploaden</strong> wizard om een bestand bij te werken. De bot gebruikt het direct.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">❓ De bot zegt dat hij iets niet weet</div>
+          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">❓ De bot zegt dat hij iets niet weet</div>
           <div style="font-size:13px;color:#888;line-height:1.7;">Er is nog geen kennisbron bestand voor dat onderwerp. Maak één aan via de wizard.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">🌐 De bot is niet zichtbaar op de website</div>
+          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🌐 De bot is niet zichtbaar op de website</div>
           <div style="font-size:13px;color:#888;line-height:1.7;">Ververs de pagina met Ctrl+Shift+R. Werkt het nog niet? Neem contact op met Peter.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">🔑 Wachtwoord intern werkt niet</div>
+          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🔑 Wachtwoord intern werkt niet</div>
           <div style="font-size:13px;color:#888;line-height:1.7;">Het wachtwoord is <code style="background:#222;padding:1px 6px;border-radius:4px;">internal</code> (Engels, kleine letters).</div>
         </div>
         <div class="divider"></div>
