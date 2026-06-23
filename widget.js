@@ -468,10 +468,7 @@
     // Sluit knop onder venster
     if (state.open) {
       const cw = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;margin-top:8px;`)
-      const closeBtn = btn('✕', () => { state.open = false; render() }, `width:64px;height:64px;border-radius:50%;background:${C.black};border:2px solid ${C.border};display:flex;align-items:center;justify-content:center;color:${C.gray};font-size:20px;font-weight:bold;transition:transform 0.2s;`)
-      closeBtn.onmouseenter = () => { closeBtn.style.transform = 'scale(1.1)' }
-      closeBtn.onmouseleave = () => { closeBtn.style.transform = 'scale(1)' }
-      cw.appendChild(closeBtn)
+
       root.appendChild(cw)
     }
   }
