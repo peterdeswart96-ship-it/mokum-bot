@@ -541,15 +541,7 @@ export default function ChatWidget() {
         </div>
       )}
 
-      {/* Sluit knop */}
-      {open && (
-        <button
-          onClick={() => setOpen(false)}
-          style={{ marginTop: "8px", width: "64px", height: "64px", borderRadius: "50%", backgroundColor: C.black, border: `2px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: C.gray, fontSize: "20px", fontWeight: "bold", cursor: "pointer" }}
-          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-        >✕</button>
-      )}
+
     </div>
   )
 }
