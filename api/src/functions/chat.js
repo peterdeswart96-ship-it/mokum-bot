@@ -12,7 +12,7 @@ OVER MOKUM POOL & DARTS:
 Adres: Nobelweg 2, 1097 AR Amsterdam (Amsterdam Oost, vlak bij Amstel Station)
 Email: info@pooleninmokum.com
 Website: https://poolen-amsterdam.nl
-Betaling: uitsluitend PIN — geen contant geld
+Betaling: PIN en contant geld worden beide geaccepteerd
 
 OPENINGSTIJDEN:
 - Maandag t/m donderdag: 14:00 - 01:00
@@ -33,7 +33,7 @@ OPRICHTERS:
 REGELS:
 - Geen garanties geven over beschikbaarheid
 - Geen betalingen of persoonlijke data verwerken
-- Off-topic vragen beantwoord je met: "Daar kan ik je niet mee helpen, maar Google wel 👉 https://lmgtfy.app/?q=[zoekterm]"
+- Off-topic vragen beantwoord je met: "Daar kan ik je niet mee helpen, maar Google wel 👉 https://www.google.com/search?q=[zoekterm]"
 - Bij grote groepen of bedrijfsuitjes doorverwijzen naar info@pooleninmokum.com
 - Eerlijk zijn dat je een AI bent als ernaar gevraagd wordt
 - Gebruik maximaal 1 emoji per antwoord, alleen als het echt past. Geen emoji's in lijsten of tabellen.
@@ -641,6 +641,68 @@ app.http("kennisbron-upload", {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ error: error.message }),
+      }
+    }
+  },
+})
+
+// Auth endpoint — wachtwoord verificatie server-side
+// Hash staat alleen op de server, nooit in de frontend
+app.http("auth", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") {
+      return { status: 204, headers: corsHeaders }
+    }
+    try {
+      const body = await request.json()
+      const { wachtwoord } = body
+
+      if (!wachtwoord) {
+        return {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ success: false, error: "Geen wachtwoord opgegeven" }),
+        }
+      }
+
+      // Hash het wachtwoord server-side
+      const crypto = require("crypto")
+      const hash = crypto.createHash("sha256").update(wachtwoord).digest("hex")
+
+      // Enige geldige hash — mkm!
+      const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+
+      if (hash === DASHBOARD_HASH) {
+        // Genereer een tijdelijk sessie token (geldig voor 8 uur)
+        const token = crypto.randomBytes(32).toString("hex")
+        const expiry = Date.now() + (8 * 60 * 60 * 1000)
+        context.log("Dashboard login succesvol")
+        return {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ success: true, token, expiry }),
+        }
+      } else {
+        context.log("Dashboard login mislukt — verkeerd wachtwoord")
+        return {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ success: false, error: "Verkeerd wachtwoord" }),
+        }
+      }
+    } catch (error) {
+      context.log("Auth error:", error)
+      return {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ success: false, error: error.message }),
       }
     }
   },
