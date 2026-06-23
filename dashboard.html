@@ -150,10 +150,11 @@
   </header>
 
   <div class="tab-bar">
-    <button class="tab active" onclick="showTab('mark', this)">🎱 Mark & Nick — Bot verbeteren</button>
-    <button class="tab" onclick="showTab('sander', this)">🌐 Sander — Website verbeteren</button>
+    <button class="tab active" onclick="showTab('mark', this)">🎱 Analyse</button>
+    <button class="tab" onclick="showTab('sander', this)">🌐 Website tips</button>
     <button class="tab" onclick="showTab('upload', this)">📁 Kennisbron uploaden</button>
-    <button class="tab" onclick="showTab('gesprekken', this)">💬 Alle gesprekken</button>
+    <button class="tab" onclick="showTab('gesprekken', this)">💬 Gesprekken</button>
+    <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
 
   <!-- TAB: MARK & NICK -->
@@ -465,6 +466,200 @@
           <span style="font-size:12px;color:#555;" id="lijst-count"></span>
         </div>
         <div id="gesprekken-lijst"><div class="loading">Laden...</div></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- TAB: HANDLEIDING -->
+  <div id="tab-handleiding" class="tab-content">
+    <main>
+
+      <!-- Subtab balk -->
+      <div style="display:flex;gap:4px;border-bottom:1px solid #1f1f1f;margin-bottom:24px;flex-wrap:wrap;">
+        <button class="btn" id="htab-btn-overzicht" onclick="showHTab('overzicht')" style="border-radius:0;border-bottom:2px solid #cc0000;color:#fff;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🏠 Overzicht</button>
+        <button class="btn" id="htab-btn-talen" onclick="showHTab('talen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🌐 Talen</button>
+        <button class="btn" id="htab-btn-kennisbronnen" onclick="showHTab('kennisbronnen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📁 Kennisbronnen</button>
+        <button class="btn" id="htab-btn-kosten" onclick="showHTab('kosten')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">💶 API kosten</button>
+        <button class="btn" id="htab-btn-rubrieken" onclick="showHTab('rubrieken')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📋 Rubrieken</button>
+        <button class="btn" id="htab-btn-problemen" onclick="showHTab('problemen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🔧 Problemen</button>
+      </div>
+
+      <!-- SUBTAB: OVERZICHT -->
+      <div id="htab-overzicht">
+        <div class="insight-box" style="margin-bottom:16px;">✅ De Mokum Magic 8 Ball is live op <strong>poolen-amsterdam.nl</strong>. Bezoekers zien de bot rechtsonder op elke pagina.</div>
+        <div class="card-title">Hoe werkt het?</div>
+        <div class="card">
+          <div class="row"><span class="row-label">🌐 WordPress site</span><span class="row-val" style="font-size:13px;">Bot laadt automatisch via één script tag</span></div>
+          <div class="row"><span class="row-label">🤖 Claude AI</span><span class="row-val" style="font-size:13px;">Beantwoordt vragen op basis van jullie informatie</span></div>
+          <div class="row"><span class="row-label">📁 Kennisbronnen</span><span class="row-val" style="font-size:13px;">Bestanden die jullie zelf uploaden via de wizard</span></div>
+          <div class="row"><span class="row-label">🔄 Updates</span><span class="row-val"><span class="badge badge-green">Automatisch</span></span></div>
+        </div>
+        <div class="card-title" style="margin-top:20px;">Wat kan de bot?</div>
+        <div class="grid-2">
+          <div class="card" style="padding:.875rem 1rem;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Voor bezoekers</div>
+            <div style="font-size:12px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren</div>
+          </div>
+          <div class="card" style="padding:.875rem 1rem;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Intern (met wachtwoord)</div>
+            <div style="font-size:12px;color:#666;line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info</div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #222;">
+              <div style="font-size:12px;color:#666;margin-bottom:4px;">Intern wachtwoord:</div>
+              <code style="background:#222;padding:4px 10px;border-radius:6px;font-size:14px;color:#fff;">internal</code>
+            </div>
+          </div>
+        </div>
+        <div class="card-title" style="margin-top:20px;">Handige links</div>
+        <div class="card">
+          <div class="row"><span class="row-label">🤖 De bot</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl" style="color:#cc4444;" target="_blank">mokum-bot.pdscloud.nl</a></span></div>
+          <div class="row"><span class="row-label">🏆 Toernooien</span><span class="row-val"><a href="https://cuescore.com/mokumpooldarts/tournaments" style="color:#cc4444;" target="_blank">cuescore.com</a></span></div>
+          <div class="row"><span class="row-label">🎓 Clinics</span><span class="row-val"><a href="https://nickvandenberg.com" style="color:#cc4444;" target="_blank">nickvandenberg.com</a></span></div>
+        </div>
+      </div>
+
+      <!-- SUBTAB: TALEN -->
+      <div id="htab-talen" style="display:none;">
+        <div class="insight-box" style="margin-bottom:16px;">🌐 De bot past zich automatisch aan aan de taal van de bezoeker. Jullie hoeven hier niets voor in te stellen.</div>
+        <div class="card-title">Hoe werkt het?</div>
+        <div class="card">
+          <div class="row"><span class="row-label">Standaardtaal</span><span class="row-val"><span class="badge badge-green">Nederlands</span></span></div>
+          <div class="row"><span class="row-label">Taalherkenning</span><span class="row-val" style="font-size:13px;">Bot leest de taal van de vraag en antwoordt daarin</span></div>
+          <div class="row"><span class="row-label">Handmatig wisselen</span><span class="row-val" style="font-size:13px;">Via de vlaggen 🇳🇱 🇬🇧 in de header van de bot</span></div>
+        </div>
+        <div class="card-title" style="margin-top:20px;">Ondersteunde talen</div>
+        <div class="card">
+          <div class="row"><span class="row-label">🇳🇱 Nederlands</span><span class="row-val"><span class="badge badge-green">Volledig ondersteund</span></span></div>
+          <div class="row"><span class="row-label">🇬🇧 Engels</span><span class="row-val"><span class="badge badge-green">Volledig ondersteund</span></span></div>
+          <div class="row"><span class="row-label">🇩🇪 Duits, 🇪🇸 Spaans, 🇫🇷 Frans...</span><span class="row-val"><span class="badge badge-blue">Automatisch</span></span></div>
+        </div>
+        <div class="card-title" style="margin-top:20px;">Kennisbronnen en talen</div>
+        <div class="card">
+          <div class="row"><span class="row-label">Bestanden uploaden in</span><span class="row-val" style="font-size:13px;">Alleen Nederlands — de bot regelt de rest</span></div>
+          <div class="row"><span class="row-label">Vertaalkwaliteit</span><span class="row-val" style="font-size:13px;">Goed voor NL/EN, redelijk voor andere talen</span></div>
+          <div class="row"><span class="row-label">Adressen, namen, prijzen</span><span class="row-val" style="font-size:13px;">Worden nooit vertaald — blijven altijd correct</span></div>
+        </div>
+      </div>
+
+      <!-- SUBTAB: KENNISBRONNEN -->
+      <div id="htab-kennisbronnen" style="display:none;">
+        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="showTab('upload', document.querySelector('[onclick*=upload]'))" style="background:none;border:none;color:#cc4444;cursor:pointer;font-size:13px;text-decoration:underline;">📁 Kennisbron uploaden wizard</button> — de bot gebruikt het direct.</div>
+        <div class="card-title">Hoe werkt het?</div>
+        <div class="card">
+          <div class="row"><span class="row-label">Uploaden via</span><span class="row-val" style="font-size:13px;">Wizard in dit dashboard (tab Kennisbron uploaden)</span></div>
+          <div class="row"><span class="row-label">Bestandsformaat</span><span class="row-val"><code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.txt</code> of <code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.md</code></span></div>
+          <div class="row"><span class="row-label">Effect na uploaden</span><span class="row-val"><span class="badge badge-green">Direct actief</span></span></div>
+          <div class="row"><span class="row-label">Bestand bijwerken</span><span class="row-val" style="font-size:13px;">Opnieuw uploaden met dezelfde naam</span></div>
+        </div>
+        <div class="card-title" style="margin-top:20px;">Praktijkvoorbeeld — betalingsinformatie</div>
+        <div style="background:#0d2e1a;border:1px solid #1a3a1a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4caf7d;">💡 <strong>Situatie:</strong> Je wil de betalingsinformatie aanpassen. Ga naar de wizard, kies "Betaling en betaalmethoden" en typ de nieuwe tekst. De bot gebruikt het direct.</div>
+        <div class="card" style="background:#0a1420;border-color:#1a3a5a;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="font-size:24px;">📱</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#4d9de0;margin-bottom:6px;">Stuur Peter een WhatsApp na elke upload</div>
+              <div style="font-size:13px;color:#888;line-height:1.7;">Vermeld <strong style="color:#ccc;">wat</strong> je hebt toegevoegd en <strong style="color:#ccc;">in welke map</strong>. Zo kan Peter de algemene instructies bijwerken.<br><span style="color:#555;font-size:12px;">Voorbeeld: "Hoi Peter, ik heb betaling.txt geüpload in de map algemeen."</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB: API KOSTEN -->
+      <div id="htab-kosten" style="display:none;">
+        <div style="background:#0d1a2e;border:1px solid #1a3a5a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4d9de0;">💡 De bot gebruikt Claude AI van Anthropic. Je betaalt per bericht (token). Hieronder kun je berekenen wat het kost bij jouw verwachte gebruik.</div>
+        <div class="card-title">Interactieve calculator</div>
+        <div class="card">
+          <div class="slider-row">
+            <label>Gesprekken per maand</label>
+            <input type="range" min="50" max="2000" value="300" step="50" id="h-slider-convos" oninput="updateHCalc()">
+            <span id="h-val-convos">300</span>
+          </div>
+          <div class="model-btn-row">
+            <button onclick="setHModel('haiku', this)" id="h-btn-haiku" class="model-btn">Haiku 4.5<br><span style="font-size:11px;color:#666;">Goedkoopst</span></button>
+            <button onclick="setHModel('sonnet', this)" id="h-btn-sonnet" class="model-btn active">Sonnet 4.6<br><span style="font-size:11px;color:#666;">⭐ Aanbevolen</span></button>
+            <button onclick="setHModel('opus', this)" id="h-btn-opus" class="model-btn">Opus 4.7<br><span style="font-size:11px;color:#666;">Meest capabel</span></button>
+          </div>
+          <div class="total-box">
+            <div>
+              <div style="font-size:13px;color:#888;">Geschatte maandkosten Claude API</div>
+              <div style="font-size:11px;color:#666;margin-top:2px;" id="h-calc-detail"></div>
+            </div>
+            <div style="font-size:26px;font-weight:500;" id="h-calc-total">$0.00</div>
+          </div>
+          <div style="font-size:11px;color:#555;margin-top:4px;line-height:1.6;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 4 berichten per gesprek.</div>
+        </div>
+        <div class="card-title" style="margin-top:20px;">Werkelijk gebruik tot nu toe</div>
+        <div class="card">
+          <div class="row"><span class="row-label">Model</span><span class="row-val">Sonnet 4.6</span></div>
+          <div class="row"><span class="row-label">Periode</span><span class="row-val">30 mei – 22 jun 2026</span></div>
+          <div class="row"><span class="row-label">Totale kosten</span><span class="row-val">$0,68 ≈ €0,62</span></div>
+          <div class="row"><span class="row-label">Geschat ~240 gesprekken</span><span class="row-val"><span class="badge badge-green">~$0,003 per gesprek</span></span></div>
+        </div>
+      </div>
+
+      <!-- SUBTAB: RUBRIEKEN -->
+      <div id="htab-rubrieken" style="display:none;">
+        <div style="background:#0d1a2e;border:1px solid #1a3a5a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4d9de0;">📋 Elke rubriek heeft een bijbehorend bestand in de kennisbronnen. Upload een nieuw bestand via de wizard om de bot-informatie bij te werken.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${[
+            ["🎱","Pool & Biljart","pool-biljart","badge-blue","Aanpasbaar"],
+            ["🎯","Darts","darts","badge-blue","Aanpasbaar"],
+            ["📅","Openingstijden","openingstijden","badge-blue","Aanpasbaar"],
+            ["💶","Tarieven","tarieven","badge-blue","Aanpasbaar"],
+            ["🏆","Toernooien","toernooien","badge-green","+ Cuescore automatisch"],
+            ["📖","Spelregels","spelregels","badge-green","Al ingevuld"],
+            ["🍺","Eten & Drinken","eten-drinken","badge-blue","Aanpasbaar"],
+            ["📺","Sport kijken","sport-evenementen","badge-red","Nog in te vullen"],
+            ["🔧","Keu reparatie","keu-reparatie","badge-red","Nog in te vullen"],
+            ["🛒","Keu & Accessoires","keu-shop","badge-red","Nog in te vullen"],
+            ["🎓","Clinics & Coaching","clinics-coaching","badge-red","Nog in te vullen"],
+            ["🕹️","Spelletjes & Gaming","spelletjes-gaming","badge-red","Nog in te vullen"],
+            ["📍","Locatie & Parkeren","locatie","badge-blue","Aanpasbaar"],
+            ["🔒","Intern","intern","badge-gray","Wachtwoord: internal"],
+          ].map(([emoji,naam,map,badge,status]) => `
+            <div class="card" style="padding:.875rem;margin-bottom:0;">
+              <div style="display:flex;align-items:flex-start;gap:10px;">
+                <div style="font-size:20px;">${emoji}</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600;margin-bottom:3px;">${naam}</div>
+                  <div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/${map}/</div>
+                  <span class="badge ${badge}">${status}</span>
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- SUBTAB: PROBLEMEN -->
+      <div id="htab-problemen" style="display:none;">
+        <div class="card-title">Veelvoorkomende situaties</div>
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">🤔 De bot geeft verkeerde of verouderde informatie</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Gebruik de <strong style="color:#fff;">📁 Kennisbron uploaden</strong> wizard om een bestand bij te werken. De bot gebruikt het direct.</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">❓ De bot zegt dat hij iets niet weet</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Er is nog geen kennisbron bestand voor dat onderwerp. Maak één aan via de wizard.</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">🌐 De bot is niet zichtbaar op de website</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Ververs de pagina met Ctrl+Shift+R. Werkt het nog niet? Neem contact op met Peter.</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">🔑 Wachtwoord intern werkt niet</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Het wachtwoord is <code style="background:#222;padding:1px 6px;border-radius:4px;">internal</code> (Engels, kleine letters).</div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">Contact</div>
+        <div class="card" style="display:flex;align-items:center;gap:16px;">
+          <div style="width:48px;height:48px;background:#cc0000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👨‍💻</div>
+          <div>
+            <div style="font-size:15px;font-weight:600;">Peter de Swart</div>
+            <div style="font-size:13px;color:#666;margin-top:4px;">Ontwikkelaar Mokum Magic 8 Ball</div>
+            <div style="font-size:12px;color:#555;margin-top:6px;">Voor technische problemen, nieuwe functies of aanpassingen aan de bot.</div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -1122,11 +1317,54 @@ function wizardReset() {
   toonStap(1)
 }
 
+function showHTab(naam) {
+  ["overzicht","talen","kennisbronnen","kosten","rubrieken","problemen"].forEach(t => {
+    const el = document.getElementById(`htab-${t}`)
+    const btn = document.getElementById(`htab-btn-${t}`)
+    if (el) el.style.display = t === naam ? "block" : "none"
+    if (btn) {
+      btn.style.borderBottomColor = t === naam ? "#cc0000" : "transparent"
+      btn.style.color = t === naam ? "#fff" : "#666"
+    }
+  })
+  if (naam === "kosten") updateHCalc()
+}
+
+let hCurrentModel = "sonnet"
+const hModels = {
+  haiku:  { input: 1, output: 5, name: "Haiku 4.5" },
+  sonnet: { input: 3, output: 15, name: "Sonnet 4.6" },
+  opus:   { input: 5, output: 25, name: "Opus 4.7" },
+}
+
+function setHModel(m, btn) {
+  hCurrentModel = m
+  document.querySelectorAll("#htab-kosten .model-btn").forEach(b => b.classList.remove("active"))
+  document.getElementById(`h-btn-${m}`).classList.add("active")
+  updateHCalc()
+}
+
+function updateHCalc() {
+  const slider = document.getElementById("h-slider-convos")
+  const valEl = document.getElementById("h-val-convos")
+  const totalEl = document.getElementById("h-calc-total")
+  const detailEl = document.getElementById("h-calc-detail")
+  if (!slider) return
+  const convos = parseInt(slider.value)
+  if (valEl) valEl.textContent = convos
+  const m = hModels[hCurrentModel]
+  const cost = (convos * 4 * 800 / 1000000 * m.input) + (convos * 4 * 600 / 1000000 * m.output)
+  if (totalEl) totalEl.textContent = "$" + cost.toFixed(2)
+  if (detailEl) detailEl.textContent = m.name + " — " + Math.round(convos * 4 * 1400 / 1000) + "K tokens/maand"
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const mapSelect = document.getElementById("upload-map")
   const naamInput = document.getElementById("upload-bestandsnaam")
   if (mapSelect) mapSelect.addEventListener("change", updatePadPreview)
   if (naamInput) naamInput.addEventListener("input", updatePadPreview)
+  showHTab("overzicht")
+  updateHCalc()
 })
 
 // Init
