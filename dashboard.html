@@ -162,7 +162,7 @@
   <div class="tab-bar">
     <button class="tab active" onclick="showTab('mark', this)">🎱 Analyse</button>
     <button class="tab" onclick="showTab('sander', this)">🌐 Website tips</button>
-    <button class="tab" onclick="showTab('upload', this)">📁 Kennisbron uploaden</button>
+    <button class="tab" onclick="showTab('upload', this)">📁 Kennisbronnen uploaden</button>
     <button class="tab" onclick="showTab('gesprekken', this)">💬 Gesprekken</button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
@@ -553,25 +553,55 @@
 
       <!-- SUBTAB: KENNISBRONNEN -->
       <div id="htab-kennisbronnen" style="display:none;">
-        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="showTab('upload', document.querySelector('[onclick*=upload]'))" style="background:none;border:none;color:#cc4444;cursor:pointer;font-size:13px;text-decoration:underline;">📁 Kennisbron uploaden wizard</button> — de bot gebruikt het direct.</div>
+        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="showTab('upload', document.querySelector('[onclick*=upload]'))" style="background:none;border:none;color:#cc4444;cursor:pointer;font-size:13px;text-decoration:underline;">📁 Kennisbronnen uploaden wizard</button> — de bot gebruikt het direct.</div>
+
         <div class="card-title">Hoe werkt het?</div>
         <div class="card">
-          <div class="row"><span class="row-label">Uploaden via</span><span class="row-val" style="font-size:13px;">Wizard in dit dashboard (tab Kennisbron uploaden)</span></div>
+          <div class="row"><span class="row-label">Uploaden via</span><span class="row-val">Wizard in dit dashboard (tab Kennisbronnen uploaden)</span></div>
           <div class="row"><span class="row-label">Bestandsformaat</span><span class="row-val"><code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.txt</code> of <code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.md</code></span></div>
           <div class="row"><span class="row-label">Effect na uploaden</span><span class="row-val"><span class="badge badge-green">Direct actief</span></span></div>
-          <div class="row"><span class="row-label">Bestand bijwerken</span><span class="row-val" style="font-size:13px;">Opnieuw uploaden met dezelfde naam</span></div>
+          <div class="row"><span class="row-label">Bestand bijwerken</span><span class="row-val">Opnieuw uploaden met dezelfde naam</span></div>
+          <div class="row"><span class="row-label">Bestandsnaam</span><span class="row-val">Alleen letters, cijfers en koppeltekens — geen spaties</span></div>
         </div>
-        <div class="card-title" style="margin-top:20px;">Praktijkvoorbeeld — betalingsinformatie</div>
-        <div style="background:#0d2e1a;border:1px solid #1a3a1a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4caf7d;">💡 <strong>Situatie:</strong> Je wil de betalingsinformatie aanpassen. Ga naar de wizard, kies "Betaling en betaalmethoden" en typ de nieuwe tekst. De bot gebruikt het direct.</div>
-        <div class="card" style="background:#0a1420;border-color:#1a3a5a;">
-          <div style="display:flex;align-items:flex-start;gap:12px;">
-            <div style="font-size:24px;">📱</div>
-            <div>
-              <div style="font-size:13px;color:#4d9de0;margin-bottom:6px;">📱 Stuur Peter een WhatsApp na elke upload</div>
-              <div style="font-size:13px;color:#888;line-height:1.7;">Vermeld <strong style="color:#ccc;">wat</strong> je hebt toegevoegd en <strong style="color:#ccc;">in welke map</strong>. Zo kan Peter de algemene instructies bijwerken.<br><span style="color:#555;font-size:12px;">Voorbeeld: "Hoi Peter, ik heb betaling.txt geüpload in de map algemeen."</span></div>
-            </div>
-          </div>
+
+        <div class="card-title" style="margin-top:20px;">Stap-voor-stap uitleg</div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 1 — Beschrijf wat je wil toevoegen</div>
+          <div style="font-size:13px;color:#888;margin-bottom:10px;">Typ een omschrijving of klik op een snelkeuze categorie. De wizard stelt automatisch een bestandsnaam en map voor.</div>
+          <img src="wizard-stap1.png" alt="Stap 1 — Omschrijving invoeren" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
         </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 2 — Controleer bestandsnaam en categorie</div>
+          <div style="font-size:13px;color:#888;margin-bottom:10px;">De wizard stelt een logische bestandsnaam en categorie voor. Je kunt dit aanpassen. Spaties en speciale tekens worden automatisch vervangen.</div>
+          <img src="wizard-stap2.png" alt="Stap 2 — Bestandsnaam en categorie" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 3 — Voer de inhoud in</div>
+          <div style="font-size:13px;color:#888;margin-bottom:10px;">Typ de tekst die de bot moet gebruiken. Er staat al een template klaar met de juiste structuur. Je kunt ook een bestaand .txt bestand uploaden.</div>
+          <img src="wizard-stap3.png" alt="Stap 3 — Inhoud invoeren" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 4 — Bekijk de preview en upload</div>
+          <div style="font-size:13px;color:#888;margin-bottom:10px;">Controleer het bestandspad en de inhoud. Klik op Uploaden om het bestand naar de juiste map te sturen.</div>
+          <img src="wizard-stap4.png" alt="Stap 4 — Preview en uploaden" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 5 — Bevestiging</div>
+          <div style="font-size:13px;color:#888;margin-bottom:10px;">Na het uploaden zie je een groene bevestiging. Het bestand is direct actief — de bot gebruikt de nieuwe informatie meteen.</div>
+          <img src="wizard-stap5.png" alt="Stap 5 — Bevestiging upload" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 6 — Test de bot</div>
+          <div style="font-size:13px;color:#888;margin-bottom:10px;">Test direct of de bot de nieuwe informatie gebruikt door een relevante vraag te stellen. De bot pikt het meteen op.</div>
+          <img src="wizard-stap6.png" alt="Stap 6 — Bot test" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+        </div>
+
       </div>
 
       <!-- SUBTAB: API KOSTEN -->
