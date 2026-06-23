@@ -516,7 +516,7 @@
             <div style="font-size:13px;color:#666;line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info</div>
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid #222;">
               <div style="font-size:12px;color:#666;margin-bottom:4px;">Intern wachtwoord:</div>
-              <code style="background:#222;padding:4px 10px;border-radius:6px;font-size:14px;color:#fff;">internal</code>
+              <div style="font-size:13px;color:#888;">Vraag het wachtwoord op bij Peter</div>
             </div>
           </div>
         </div>
@@ -668,7 +668,7 @@
 
           <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📍</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Locatie & Parkeren</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/locatie/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Intern</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/intern/</div><span class="badge badge-gray">Wachtwoord: internal</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Intern</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/intern/</div><span class="badge badge-gray">Wachtwoord via Peter</span></div></div></div>
 
         </div>
       </div>
@@ -690,7 +690,7 @@
         </div>
         <div class="card" style="margin-bottom:10px;">
           <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🔑 Wachtwoord intern werkt niet</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Het wachtwoord is <code style="background:#222;padding:1px 6px;border-radius:4px;">internal</code> (Engels, kleine letters).</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Neem contact op met Peter voor het interne wachtwoord.</div>
         </div>
         <div class="divider"></div>
         <div class="card-title">Contact</div>
@@ -711,32 +711,48 @@
 
 <script>
 const API = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net/api"
-const HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
 
 let alleGesprekken = []
 let gefilterd = []
 
-// Login
-async function sha256(str) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("")
-}
-
+// Login — verificatie via backend, hash staat niet meer in de frontend
 async function login() {
   const pwd = document.getElementById("pwd-input").value
-  const hash = await sha256(pwd)
-  if (hash === HASH) {
-    sessionStorage.setItem("mkm-auth", "1")
-    document.getElementById("login-screen").style.display = "none"
-    document.getElementById("dashboard").style.display = "block"
-    laadGesprekken()
-  } else {
-    document.getElementById("login-error").style.display = "block"
+  const errEl = document.getElementById("login-error")
+  errEl.style.display = "none"
+  errEl.textContent = "Verkeerd wachtwoord"
+
+  try {
+    const resp = await fetch(`${API}/auth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wachtwoord: pwd })
+    })
+    const data = await resp.json()
+    if (data.success) {
+      sessionStorage.setItem("mkm-auth", data.token)
+      sessionStorage.setItem("mkm-expiry", data.expiry)
+      document.getElementById("login-screen").style.display = "none"
+      document.getElementById("dashboard").style.display = "block"
+      laadGesprekken()
+    } else {
+      errEl.style.display = "block"
+    }
+  } catch (e) {
+    errEl.textContent = "Verbindingsfout — probeer opnieuw"
+    errEl.style.display = "block"
   }
+}
+
+function isIngelogd() {
+  const token = sessionStorage.getItem("mkm-auth")
+  const expiry = sessionStorage.getItem("mkm-expiry")
+  return token && expiry && Date.now() < parseInt(expiry)
 }
 
 function logout() {
   sessionStorage.removeItem("mkm-auth")
+  sessionStorage.removeItem("mkm-expiry")
   location.reload()
 }
 
@@ -1410,7 +1426,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 
 // Init
-if (sessionStorage.getItem("mkm-auth") === "1") {
+if (isIngelogd()) {
   document.getElementById("login-screen").style.display = "none"
   document.getElementById("dashboard").style.display = "block"
   laadGesprekken()
