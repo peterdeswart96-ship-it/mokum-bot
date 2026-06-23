@@ -109,6 +109,14 @@
   .badge-gray { background: #222; color: #666; }
   .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 20px; }
 
+  .stap-dot { width: 32px; height: 32px; border-radius: 50%; background: #2a2a2a; color: #666; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s; }
+  .stap-dot.active { background: #cc0000; color: #fff; }
+  .stap-dot.done { background: #1a3a1a; color: #4caf50; }
+  .stap-lijn { flex: 1; height: 2px; background: #2a2a2a; margin: 0 6px; transition: background 0.3s; }
+  .stap-lijn.done { background: #cc0000; }
+  .tag { background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #888; cursor: pointer; transition: all 0.15s; }
+  .tag:hover { background: #2a2a2a; color: #fff; border-color: #444; }
+  .highlight-box { background: #0d2e1a; border: 1px solid #1a3a1a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #4caf7d; line-height: 1.6; }
   @media (max-width: 700px) {
     .metrics { grid-template-columns: 1fr 1fr; }
     .grid-2 { grid-template-columns: 1fr; }
@@ -144,6 +152,7 @@
   <div class="tab-bar">
     <button class="tab active" onclick="showTab('mark', this)">🎱 Mark & Nick — Bot verbeteren</button>
     <button class="tab" onclick="showTab('sander', this)">🌐 Sander — Website verbeteren</button>
+    <button class="tab" onclick="showTab('upload', this)">📁 Kennisbron uploaden</button>
     <button class="tab" onclick="showTab('gesprekken', this)">💬 Alle gesprekken</button>
   </div>
 
@@ -253,6 +262,183 @@
         </div>
       </div>
 
+    </main>
+  </div>
+
+  <!-- TAB: UPLOAD WIZARD -->
+  <div id="tab-upload" class="tab-content">
+    <main>
+
+      <div class="card" style="max-width:680px;margin:0 auto;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:40px;margin-bottom:8px;">📁</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Kennisbron uploaden</div>
+          <div style="font-size:13px;color:#666;">Voeg nieuwe informatie toe aan de bot in 4 stappen</div>
+        </div>
+
+        <!-- Stappen indicator -->
+        <div style="display:flex;align-items:center;margin-bottom:28px;" id="stap-indicator">
+          <div class="stap-dot active" id="dot-1">1</div>
+          <div class="stap-lijn" id="lijn-1"></div>
+          <div class="stap-dot" id="dot-2">2</div>
+          <div class="stap-lijn" id="lijn-2"></div>
+          <div class="stap-dot" id="dot-3">3</div>
+          <div class="stap-lijn" id="lijn-3"></div>
+          <div class="stap-dot" id="dot-4">4</div>
+        </div>
+
+        <!-- Stap 1: Wat wil je toevoegen? -->
+        <div id="upload-stap-1">
+          <div class="card-title">Stap 1 — Wat voor informatie wil je toevoegen?</div>
+          <div style="font-size:13px;color:#666;margin-bottom:16px;">Beschrijf kort wat je wil toevoegen. De wizard stelt daarna een bestandsnaam en categorie voor.</div>
+          <textarea id="upload-omschrijving"
+            placeholder="Bijv: We accepteren nu ook contant geld als betaalmethode naast PIN..."
+            style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;padding:12px 14px;min-height:100px;resize:vertical;font-family:Arial,sans-serif;line-height:1.5;"
+            oninput="this.style.borderColor='#cc0000'"></textarea>
+          <div style="margin-top:8px;font-size:12px;color:#555;">Of kies een categorie om direct mee te beginnen:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;" id="snelkeuze-knoppen">
+            <button class="tag" onclick="snelkeuze('Betaling en betaalmethoden')">💳 Betaling</button>
+            <button class="tag" onclick="snelkeuze('Openingstijden en sluitingstijden')">📅 Openingstijden</button>
+            <button class="tag" onclick="snelkeuze('Tarieven en prijzen voor activiteiten')">💶 Tarieven</button>
+            <button class="tag" onclick="snelkeuze('Sport evenementen die we tonen op de schermen')">📺 Sport</button>
+            <button class="tag" onclick="snelkeuze('Keu reparatie service')">🔧 Keu reparatie</button>
+            <button class="tag" onclick="snelkeuze('Keu en accessoires shop')">🛒 Keu shop</button>
+            <button class="tag" onclick="snelkeuze('Clinics en coaching door Nick van den Berg')">🎓 Clinics</button>
+            <button class="tag" onclick="snelkeuze('Spelletjes en gaming aanwezig bij Mokum')">🕹️ Gaming</button>
+            <button class="tag" onclick="snelkeuze('Algemene informatie over Mokum Pool en Darts')">ℹ️ Algemeen</button>
+            <button class="tag" onclick="snelkeuze('Interne instructies voor personeel')">🔒 Intern</button>
+          </div>
+          <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+            <button class="btn-sm-red" onclick="wizardStap2()">Volgende stap →</button>
+          </div>
+        </div>
+
+        <!-- Stap 2: Voorstel bestandsnaam en categorie -->
+        <div id="upload-stap-2" style="display:none;">
+          <div class="card-title">Stap 2 — Voorstel bestandsnaam en categorie</div>
+          <div style="font-size:13px;color:#666;margin-bottom:16px;">De wizard heeft een voorstel gemaakt op basis van je omschrijving. Je kunt dit aanpassen.</div>
+
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;color:#888;display:block;margin-bottom:6px;">Categorie (map in Azure Storage)</label>
+            <select id="upload-map" style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;padding:10px 12px;">
+              <option value="algemeen">algemeen — Algemene Mokum informatie</option>
+              <option value="openingstijden">openingstijden — Openingstijden</option>
+              <option value="tarieven">tarieven — Tarieven en prijzen</option>
+              <option value="sport-evenementen">sport-evenementen — Sport kijken</option>
+              <option value="keu-reparatie">keu-reparatie — Keu reparatie</option>
+              <option value="keu-shop">keu-shop — Keu en accessoires</option>
+              <option value="clinics-coaching">clinics-coaching — Clinics en coaching</option>
+              <option value="spelletjes-gaming">spelletjes-gaming — Spelletjes en gaming</option>
+              <option value="eten-drinken">eten-drinken — Eten en drinken</option>
+              <option value="locatie">locatie — Locatie en parkeren</option>
+              <option value="toernooien">toernooien — Toernooien</option>
+              <option value="pool-biljart">pool-biljart — Pool en biljart</option>
+              <option value="darts">darts — Darts</option>
+              <option value="intern">intern — Intern (alleen voor personeel)</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;color:#888;display:block;margin-bottom:6px;">Bestandsnaam</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="text" id="upload-bestandsnaam"
+                style="flex:1;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;padding:10px 12px;"
+                placeholder="bijv: betaling.txt" />
+              <span style="font-size:12px;color:#555;">.txt</span>
+            </div>
+            <div style="font-size:11px;color:#555;margin-top:4px;">Alleen letters, cijfers en koppeltekens. Geen spaties.</div>
+          </div>
+
+          <div style="background:#0a1a0a;border:1px solid #1a3a1a;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+            <div style="font-size:12px;color:#4caf50;margin-bottom:4px;">Volledig bestandspad:</div>
+            <div style="font-size:13px;font-family:monospace;color:#ccc;" id="pad-preview">kennisbronnen/algemeen/betaling.txt</div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;">
+            <button class="btn" onclick="wizardTerug(1)">← Terug</button>
+            <button class="btn-sm-red" onclick="wizardStap3()">Volgende stap →</button>
+          </div>
+        </div>
+
+        <!-- Stap 3: Inhoud invoeren -->
+        <div id="upload-stap-3" style="display:none;">
+          <div class="card-title">Stap 3 — Inhoud van het bestand</div>
+          <div style="font-size:13px;color:#666;margin-bottom:16px;">Typ de tekst die de bot moet gebruiken. Of upload een bestaand .txt bestand.</div>
+
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button class="btn" id="tab-typ" onclick="switchInvoer('typ')" style="flex:1;border-color:#cc0000;color:#fff;">✏️ Zelf typen</button>
+            <button class="btn" id="tab-upload-file" onclick="switchInvoer('bestand')" style="flex:1;">📄 Bestand uploaden</button>
+          </div>
+
+          <!-- Zelf typen -->
+          <div id="invoer-typ">
+            <div style="font-size:12px;color:#666;margin-bottom:8px;">Voorbeeld structuur:</div>
+            <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:12px;color:#666;margin-bottom:10px;line-height:1.8;">
+              # Onderwerp<br>
+              Bijgewerkt: <span id="datum-voorbeeld"></span><br><br>
+              Schrijf hier de informatie die de bot moet weten.<br>
+              Gebruik duidelijke zinnen. Elke regel is een apart gegeven.
+            </div>
+            <textarea id="upload-inhoud-typ"
+              placeholder="Typ hier de tekst..."
+              style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:13px;padding:12px 14px;min-height:180px;resize:vertical;font-family:monospace;line-height:1.6;"></textarea>
+          </div>
+
+          <!-- Bestand uploaden -->
+          <div id="invoer-bestand" style="display:none;">
+            <div style="border:2px dashed #2a2a2a;border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s;"
+              id="drop-zone"
+              ondragover="event.preventDefault();this.style.borderColor='#cc0000'"
+              ondragleave="this.style.borderColor='#2a2a2a'"
+              ondrop="handleDrop(event)">
+              <div style="font-size:32px;margin-bottom:8px;">📄</div>
+              <div style="font-size:14px;color:#888;margin-bottom:8px;">Sleep een .txt bestand hierheen</div>
+              <div style="font-size:12px;color:#555;margin-bottom:12px;">of</div>
+              <label style="background:#cc0000;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+                Bestand kiezen
+                <input type="file" accept=".txt,.md" style="display:none;" onchange="handleBestand(this)" />
+              </label>
+            </div>
+            <div id="bestand-naam" style="font-size:13px;color:#4caf50;margin-top:10px;display:none;"></div>
+            <textarea id="upload-inhoud-bestand"
+              placeholder="Bestandsinhoud wordt hier getoond..."
+              style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:13px;padding:12px 14px;min-height:120px;resize:vertical;font-family:monospace;line-height:1.6;margin-top:10px;display:none;"></textarea>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:16px;">
+            <button class="btn" onclick="wizardTerug(2)">← Terug</button>
+            <button class="btn-sm-red" onclick="wizardStap4()">Bekijk preview →</button>
+          </div>
+        </div>
+
+        <!-- Stap 4: Preview en bevestigen -->
+        <div id="upload-stap-4" style="display:none;">
+          <div class="card-title">Stap 4 — Preview en bevestigen</div>
+          <div style="font-size:13px;color:#666;margin-bottom:16px;">Controleer de informatie voordat je uploadt.</div>
+
+          <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:8px;padding:14px;margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:12px;color:#666;">Bestandspad</span>
+              <span style="font-size:12px;font-family:monospace;color:#ccc;" id="preview-pad"></span>
+            </div>
+            <div style="height:1px;background:#222;margin-bottom:8px;"></div>
+            <div style="font-size:12px;color:#666;margin-bottom:6px;">Inhoud preview:</div>
+            <pre id="preview-inhoud" style="font-size:12px;color:#aaa;line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;"></pre>
+          </div>
+
+          <div class="highlight-box" style="margin-bottom:16px;">
+            ✅ Na het uploaden gebruikt de bot deze informatie direct. Stuur ook even een WhatsApp naar Peter zodat hij de instructies kan bijwerken!
+          </div>
+
+          <div id="upload-resultaat" style="display:none;"></div>
+
+          <div style="display:flex;justify-content:space-between;">
+            <button class="btn" onclick="wizardTerug(3)" id="terug-btn-4">← Terug</button>
+            <button class="btn-sm-red" id="upload-bevestig-btn" onclick="voerUploadUit()">📤 Uploaden</button>
+          </div>
+        </div>
+
+      </div>
     </main>
   </div>
 
@@ -737,6 +923,211 @@ function renderAnalyseSander(a) {
     </div>
   `
 }
+
+// ============================================================
+// UPLOAD WIZARD
+// ============================================================
+
+const CATEGORIE_MAP = {
+  "betaling": "algemeen", "contant": "algemeen", "pin": "algemeen",
+  "openingstijden": "openingstijden", "tijden": "openingstijden",
+  "tarief": "tarieven", "prijs": "tarieven", "kost": "tarieven",
+  "sport": "sport-evenementen", "voetbal": "sport-evenementen", "scherm": "sport-evenementen",
+  "keu reparatie": "keu-reparatie", "reparatie": "keu-reparatie",
+  "keu shop": "keu-shop", "accessoires": "keu-shop",
+  "clinic": "clinics-coaching", "coaching": "clinics-coaching", "les": "clinics-coaching",
+  "gaming": "spelletjes-gaming", "spelletje": "spelletjes-gaming",
+  "eten": "eten-drinken", "drinken": "eten-drinken", "menu": "eten-drinken",
+  "locatie": "locatie", "parkeer": "locatie", "adres": "locatie",
+  "toernooi": "toernooien", "ranking": "toernooien",
+  "pool": "pool-biljart", "biljart": "pool-biljart",
+  "darts": "darts", "pijlen": "darts",
+  "intern": "intern", "personeel": "intern",
+}
+
+const BESTANDSNAAM_MAP = {
+  "algemeen": "informatie", "openingstijden": "openingstijden",
+  "tarieven": "tarieven", "sport-evenementen": "sport-programma",
+  "keu-reparatie": "keu-reparatie", "keu-shop": "keu-shop",
+  "clinics-coaching": "clinics", "spelletjes-gaming": "gaming",
+  "eten-drinken": "menu", "locatie": "locatie",
+  "toernooien": "toernooien", "pool-biljart": "pool-info",
+  "darts": "darts-info", "intern": "intern-info",
+}
+
+let wizardInvoerModus = "typ"
+
+function snelkeuze(tekst) {
+  document.getElementById("upload-omschrijving").value = tekst
+  document.getElementById("upload-omschrijving").style.borderColor = "#cc0000"
+}
+
+function bepaalCategorie(tekst) {
+  const lower = tekst.toLowerCase()
+  for (const [sleutel, categorie] of Object.entries(CATEGORIE_MAP)) {
+    if (lower.includes(sleutel)) return categorie
+  }
+  return "algemeen"
+}
+
+function bepaalBestandsnaam(tekst, categorie) {
+  const lower = tekst.toLowerCase()
+  if (lower.includes("betaling") || lower.includes("contant") || lower.includes("pin")) return "betaling.txt"
+  if (lower.includes("openingstijden") || lower.includes("tijden")) return "openingstijden.txt"
+  if (lower.includes("tarief") || lower.includes("prijs")) return "tarieven.txt"
+  if (lower.includes("voetbal")) return "voetbal.txt"
+  if (lower.includes("menu") || lower.includes("eten")) return "menu.txt"
+  return (BESTANDSNAAM_MAP[categorie] || "informatie") + ".txt"
+}
+
+function updatePadPreview() {
+  const mapEl = document.getElementById("upload-map")
+  const naamEl = document.getElementById("upload-bestandsnaam")
+  if (!mapEl || !naamEl) return
+  const map = mapEl.value
+  const naam = (naamEl.value || "bestand").replace(/[^a-zA-Z0-9\-_]/g, "-").toLowerCase()
+  const padEl = document.getElementById("pad-preview")
+  if (padEl) padEl.textContent = `kennisbronnen/${map}/${naam}.txt`
+}
+
+function wizardStap2() {
+  const omschrijving = document.getElementById("upload-omschrijving").value.trim()
+  if (!omschrijving) { alert("Beschrijf eerst wat je wil toevoegen."); return }
+  const categorie = bepaalCategorie(omschrijving)
+  const bestandsnaam = bepaalBestandsnaam(omschrijving, categorie)
+  document.getElementById("upload-map").value = categorie
+  document.getElementById("upload-bestandsnaam").value = bestandsnaam.replace(".txt", "")
+  updatePadPreview()
+  const el = document.getElementById("datum-voorbeeld")
+  if (el) el.textContent = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "long", year: "numeric" })
+  document.getElementById("upload-inhoud-typ").value = `# ${omschrijving}\nBijgewerkt: ${new Date().toLocaleDateString("nl-NL")}\n\n`
+  toonStap(2)
+}
+
+function wizardStap3() {
+  if (!document.getElementById("upload-bestandsnaam").value.trim()) { alert("Vul een bestandsnaam in."); return }
+  updatePadPreview()
+  toonStap(3)
+}
+
+function wizardStap4() {
+  const inhoud = getInhoud()
+  if (!inhoud.trim()) { alert("Vul eerst de inhoud in."); return }
+  const map = document.getElementById("upload-map").value
+  const naam = document.getElementById("upload-bestandsnaam").value.replace(".txt","").replace(/[^a-zA-Z0-9\-_]/g, "-").toLowerCase()
+  document.getElementById("preview-pad").textContent = `kennisbronnen/${map}/${naam}.txt`
+  document.getElementById("preview-inhoud").textContent = inhoud.substring(0, 800) + (inhoud.length > 800 ? "..." : "")
+  document.getElementById("upload-resultaat").style.display = "none"
+  document.getElementById("upload-bevestig-btn").disabled = false
+  document.getElementById("upload-bevestig-btn").textContent = "📤 Uploaden"
+  toonStap(4)
+}
+
+function wizardTerug(naarStap) { toonStap(naarStap) }
+
+function toonStap(stap) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById(`upload-stap-${i}`)
+    if (el) el.style.display = i === stap ? "block" : "none"
+    const dot = document.getElementById(`dot-${i}`)
+    if (!dot) continue
+    dot.classList.remove("active", "done")
+    if (i < stap) { dot.classList.add("done"); dot.textContent = "✓" }
+    else if (i === stap) { dot.classList.add("active"); dot.textContent = i }
+    else dot.textContent = i
+    if (i < 4) { const lijn = document.getElementById(`lijn-${i}`); if (lijn) lijn.classList.toggle("done", i < stap) }
+  }
+}
+
+function switchInvoer(modus) {
+  wizardInvoerModus = modus
+  document.getElementById("invoer-typ").style.display = modus === "typ" ? "block" : "none"
+  document.getElementById("invoer-bestand").style.display = modus === "bestand" ? "block" : "none"
+  document.getElementById("tab-typ").style.cssText += modus === "typ" ? ";border-color:#cc0000;color:#fff" : ";border-color:#2a2a2a;color:#888"
+  document.getElementById("tab-upload-file").style.cssText += modus === "bestand" ? ";border-color:#cc0000;color:#fff" : ";border-color:#2a2a2a;color:#888"
+}
+
+function getInhoud() {
+  return wizardInvoerModus === "typ"
+    ? document.getElementById("upload-inhoud-typ").value
+    : document.getElementById("upload-inhoud-bestand").value
+}
+
+function handleBestand(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    document.getElementById("upload-inhoud-bestand").value = e.target.result
+    document.getElementById("upload-inhoud-bestand").style.display = "block"
+    document.getElementById("bestand-naam").textContent = `✓ ${file.name} geladen`
+    document.getElementById("bestand-naam").style.display = "block"
+  }
+  reader.readAsText(file, "UTF-8")
+}
+
+function handleDrop(e) {
+  e.preventDefault()
+  document.getElementById("drop-zone").style.borderColor = "#2a2a2a"
+  const file = e.dataTransfer.files[0]
+  if (!file || (!file.name.endsWith(".txt") && !file.name.endsWith(".md"))) { alert("Alleen .txt of .md bestanden."); return }
+  const reader = new FileReader()
+  reader.onload = ev => {
+    document.getElementById("upload-inhoud-bestand").value = ev.target.result
+    document.getElementById("upload-inhoud-bestand").style.display = "block"
+    document.getElementById("bestand-naam").textContent = `✓ ${file.name} geladen`
+    document.getElementById("bestand-naam").style.display = "block"
+  }
+  reader.readAsText(file, "UTF-8")
+}
+
+async function voerUploadUit() {
+  const btn = document.getElementById("upload-bevestig-btn")
+  const resultaat = document.getElementById("upload-resultaat")
+  const map = document.getElementById("upload-map").value
+  const naam = document.getElementById("upload-bestandsnaam").value.replace(".txt","").replace(/[^a-zA-Z0-9\-_]/g, "-").toLowerCase() + ".txt"
+  const inhoud = getInhoud()
+  btn.disabled = true
+  btn.textContent = "⏳ Uploaden..."
+  resultaat.style.display = "none"
+  try {
+    const resp = await fetch(`${API}/kennisbron-upload`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bestandsnaam: naam, map, inhoud })
+    })
+    const data = await resp.json()
+    if (data.success) {
+      resultaat.style.cssText = "display:block;background:#0d2e1a;border:1px solid #1a3a1a;border-radius:8px;padding:14px;color:#4caf7d;font-size:14px;margin-bottom:12px;"
+      resultaat.innerHTML = `✅ <strong>Gelukt!</strong> Geüpload naar <code style="background:#0a1a0a;padding:2px 6px;border-radius:4px;">${data.pad}</code><br><br>De bot gebruikt dit direct. Stuur Peter ook even een WhatsApp!`
+      btn.textContent = "✓ Geüpload"
+      const terugBtn = document.getElementById("terug-btn-4")
+      terugBtn.textContent = "← Nieuw bestand uploaden"
+      terugBtn.onclick = () => wizardReset()
+    } else { throw new Error(data.error || "Onbekende fout") }
+  } catch (e) {
+    resultaat.style.cssText = "display:block;background:#1a0a0a;border:1px solid #440000;border-radius:8px;padding:14px;color:#ff6b6b;font-size:13px;margin-bottom:12px;"
+    resultaat.textContent = `❌ Upload mislukt: ${e.message}`
+    btn.disabled = false
+    btn.textContent = "📤 Opnieuw proberen"
+  }
+}
+
+function wizardReset() {
+  ["upload-omschrijving","upload-inhoud-typ","upload-inhoud-bestand"].forEach(id => { const el = document.getElementById(id); if(el) el.value = "" })
+  ;["bestand-naam","upload-inhoud-bestand","upload-resultaat"].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = "none" })
+  const terugBtn = document.getElementById("terug-btn-4")
+  if (terugBtn) { terugBtn.textContent = "← Terug"; terugBtn.onclick = () => wizardTerug(3) }
+  switchInvoer("typ")
+  toonStap(1)
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const mapSelect = document.getElementById("upload-map")
+  const naamInput = document.getElementById("upload-bestandsnaam")
+  if (mapSelect) mapSelect.addEventListener("change", updatePadPreview)
+  if (naamInput) naamInput.addEventListener("input", updatePadPreview)
+})
 
 // Init
 if (sessionStorage.getItem("mkm-auth") === "1") {

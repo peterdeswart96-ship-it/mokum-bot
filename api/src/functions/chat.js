@@ -191,9 +191,11 @@ async function saveTournaments(tournaments) {
 
 async function fetchBlobContent(blobPath, sasToken) {
   try {
+    // Encode de bestandsnaam correct — spaties en speciale tekens in bestandsnamen
+    const encodedPath = blobPath.split("/").map(segment => encodeURIComponent(segment)).join("/")
     const options = {
       hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
-      path: `/${CONTAINER}/${blobPath}?${sasToken}`,
+      path: `/${CONTAINER}/${encodedPath}?${sasToken}`,
       method: "GET",
       headers: { "x-ms-version": "2020-04-08" },
     }
@@ -501,29 +503,53 @@ app.http("analyse", {
         }
       }
 
-      // Bouw gespreksdata op voor de AI — antwoorden kort houden om JSON afkapping te voorkomen
-      const vragenTekst = gesprekken.slice(0, 50).map((g, i) => {
-        const vragen = (g.messages || []).filter(m => m.role === "user").map(m => m.content).join(" | ")
-        const antwoord = (g.reply || "").substring(0, 100)
-        return `${i + 1}. VRAAG: ${vragen} | ANTWOORD: ${antwoord}`
+      // Bouw gespreksdata op voor de AI — bewust kort houden
+      const vragenTekst = gesprekken.slice(0, 30).map((g, i) => {
+        const vragen = (g.messages || []).filter(m => m.role === "user").map(m => m.content?.substring(0, 80)).join(" | ")
+        return `${i + 1}. ${vragen}`
       }).join("\n")
 
-      const systemMark = `Je bent een data-analist voor Mokum Pool & Darts chatbot. Analyseer de gesprekken en geef PRAKTISCH advies om de bot te verbeteren. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
-{"inzicht":"Korte samenvatting in 2-3 zinnen over wat opvalt in de gesprekken","veelgesteld":[{"vraag":"Exacte of samengevatte vraag","count":3,"onderwerp":"Toernooien"}],"fouten_of_verbeteringen":[{"probleem":"Beschrijving van probleem of onduidelijkheid in bot antwoord","suggestie":"Concrete verbetering"}],"nieuwe_rubrieken":["Rubriek die ontbreekt maar veel gevraagd wordt"],"kennisbron_tips":["Specifieke tip: voeg dit toe aan kennisbron X"],"prioriteit":"hoog/middel/laag"}`
+      const systemMark = `Analyseer chatbot gesprekken van Mokum Pool & Darts. Geef advies in het Nederlands. Antwoord ALLEEN in geldig JSON zonder markdown:
+{"inzicht":"2 zinnen samenvatting","veelgesteld":[{"vraag":"vraag","count":1,"onderwerp":"onderwerp"}],"fouten_of_verbeteringen":[{"probleem":"probleem","suggestie":"suggestie"}],"nieuwe_rubrieken":["rubriek"],"kennisbron_tips":["tip"],"prioriteit":"hoog"}`
 
-      const systemSander = `Je bent een UX-analist voor de website poolen-amsterdam.nl. Analyseer chatbot gesprekken om te bepalen welke informatie ontbreekt of onduidelijk is op de website. Antwoord UITSLUITEND in geldig JSON zonder markdown of backticks:
-{"inzicht":"Korte samenvatting wat bezoekers zoeken maar niet vinden op de website","ontbrekende_info":[{"onderwerp":"Onderwerp","beschrijving":"Welke info mist op de site","prioriteit":"hoog/middel/laag"}],"pagina_verbeteringen":[{"pagina":"Welke pagina of sectie","verbetering":"Concrete suggestie voor verbetering"}],"veel_gestelde_vragen":[{"vraag":"Vraag die bezoekers stellen","antwoord_aanwezig_op_site":true}],"samenvatting":"Drie concrete actiepunten voor Sander om de website te verbeteren"}`
+      const systemSander = `Analyseer chatbot gesprekken. Bepaal welke info ontbreekt op poolen-amsterdam.nl. Antwoord ALLEEN in geldig JSON zonder markdown:
+{"inzicht":"2 zinnen samenvatting","ontbrekende_info":[{"onderwerp":"onderwerp","beschrijving":"beschrijving","prioriteit":"hoog"}],"pagina_verbeteringen":[{"pagina":"pagina","verbetering":"verbetering"}],"veel_gestelde_vragen":[{"vraag":"vraag","antwoord_aanwezig_op_site":true}],"samenvatting":"3 actiepunten"}`
 
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-sonnet-4-6",
-        max_tokens: 2000,
+        max_tokens: 3000,
         system: type === "sander" ? systemSander : systemMark,
         messages: [{ role: "user", content: `Analyseer deze ${Math.min(gesprekken.length, 50)} gesprekken van de Mokum Bot:\n\n${vragenTekst}` }],
       })
 
       const text = response.content[0].text
-      const analyse = JSON.parse(text.replace(/```json|```/g, "").trim())
+      let analyse
+      try {
+        // Probeer direct te parsen
+        analyse = JSON.parse(text.replace(/```json|```/g, "").trim())
+      } catch (parseErr) {
+        // JSON afgekapt — probeer te repareren door af te sluiten
+        context.log("JSON parse fout, poging tot herstel:", parseErr.message)
+        let cleaned = text.replace(/```json|```/g, "").trim()
+        // Sluit openstaande strings en objecten
+        const openBraces = (cleaned.match(/\{/g) || []).length - (cleaned.match(/\}/g) || []).length
+        const openBrackets = (cleaned.match(/\[/g) || []).length - (cleaned.match(/\]/g) || []).length
+        if (cleaned.endsWith(",")) cleaned = cleaned.slice(0, -1)
+        for (let i = 0; i < openBrackets; i++) cleaned += "]"
+        for (let i = 0; i < openBraces; i++) cleaned += "}"
+        try {
+          analyse = JSON.parse(cleaned)
+          context.log("JSON hersteld na reparatie")
+        } catch (e2) {
+          // Geef fallback terug als alles mislukt
+          analyse = {
+            inzicht: "Analyse gedeeltelijk gelukt — te veel data voor volledige verwerking. Probeer met een kleinere periode.",
+            veelgesteld: [], fouten_of_verbeteringen: [], nieuwe_rubrieken: [], kennisbron_tips: [], prioriteit: "laag",
+            ontbrekende_info: [], pagina_verbeteringen: [], veel_gestelde_vragen: [], samenvatting: "Probeer opnieuw met een kortere periode."
+          }
+        }
+      }
 
       return {
         status: 200,
@@ -532,6 +558,85 @@ app.http("analyse", {
       }
     } catch (error) {
       context.log("Analyse error:", error)
+      return {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: error.message }),
+      }
+    }
+  },
+})
+
+// Kennisbron upload endpoint — voor de upload wizard in het dashboard
+app.http("kennisbron-upload", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") {
+      return { status: 204, headers: corsHeaders }
+    }
+    try {
+      const body = await request.json()
+      const { bestandsnaam, map, inhoud } = body
+
+      if (!bestandsnaam || !map || !inhoud) {
+        return {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "bestandsnaam, map en inhoud zijn verplicht" }),
+        }
+      }
+
+      // Valideer bestandsnaam — alleen letters, cijfers, koppeltekens en punt
+      const veiligBestandsnaam = bestandsnaam.replace(/[^a-zA-Z0-9\-_.]/g, "-").toLowerCase()
+      const blobPath = `${map}/${veiligBestandsnaam}`
+
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) {
+        return {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Geen SAS token geconfigureerd" }),
+        }
+      }
+
+      const contentBytes = Buffer.from(inhoud, "utf-8")
+      const options = {
+        hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+        path: `/${CONTAINER}/${encodeURIComponent(map)}/${encodeURIComponent(veiligBestandsnaam)}?${sasToken}`,
+        method: "PUT",
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Length": contentBytes.length,
+          "x-ms-blob-type": "BlockBlob",
+          "x-ms-version": "2020-04-08",
+        },
+      }
+
+      const result = await httpsRequest(options, contentBytes)
+
+      if (result.status === 201) {
+        context.log(`Kennisbron geupload: ${blobPath}`)
+        return {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ success: true, pad: blobPath }),
+        }
+      } else {
+        context.log(`Upload mislukt (${result.status}):`, result.body)
+        return {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: `Upload mislukt: HTTP ${result.status}` }),
+        }
+      }
+    } catch (error) {
+      context.log("Upload error:", error)
       return {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
