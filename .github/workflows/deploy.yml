@@ -31,7 +31,11 @@ jobs:
           publish_branch: ${{ github.ref_name == 'main' && 'gh-pages' || 'gh-pages-develop' }}
   deploy-backend:
     runs-on: ubuntu-latest
+    # TODO(#31): verwijder continue-on-error zodra de OIDC-deploy betrouwbaar groen draait
     continue-on-error: true
+    permissions:
+      id-token: write # vereist voor OIDC token exchange met Azure
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,21 +46,16 @@ jobs:
       - name: Install API dependencies
         run: npm install
         working-directory: ./api
-      - name: Create zip
-        run: cd api && zip -r ../api.zip .
-      - name: Deploy via Kudu zip deploy
-        env:
-          PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-        run: |
-          USERNAME=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userName=")[^"]+')
-          PASSWORD=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=userPWD=")[^"]+')
-          SCM_URL=$(echo "$PUBLISH_PROFILE" | grep -oP '(?<=publishUrl=")[^"]+' | head -1 | sed 's/:443//')
-          curl -X POST \
-            "https://$SCM_URL/api/zipdeploy" \
-            -u "$USERNAME:$PASSWORD" \
-            -H "Content-Type: application/zip" \
-            --data-binary @api.zip \
-            --fail \
-            --silent \
-            --show-error
-          echo "Backend deploy geslaagd"
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
+          package: ./api
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
