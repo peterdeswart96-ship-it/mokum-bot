@@ -334,6 +334,167 @@ async function getTournamentContext() {
   }
 }
 
+// === Fase 3: toernooi-resultaten uit de query-tables (issue #5) ===============
+
+const NAME_PARTICLES = new Set([
+  "van", "de", "den", "der", "het", "ter", "te", "von", "la", "el", "y",
+  "of", "the", "'t", "di", "da", "do", "dos",
+])
+
+function normalizeText(s) {
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function textTokens(s) {
+  return normalizeText(s).split(" ").filter(Boolean)
+}
+
+async function fetchPlayersIndex(sasToken) {
+  const options = {
+    hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+    path: `/toernooien-raw/players-index.json?${sasToken}`,
+    method: "GET",
+    headers: { "x-ms-version": "2020-04-08" },
+  }
+  const r = await httpsRequest(options)
+  if (r.status !== 200) return null
+  try {
+    return JSON.parse(r.body).players || null
+  } catch {
+    return null
+  }
+}
+
+async function tableQuery(table, filter, sasToken) {
+  const q = filter ? `$filter=${encodeURIComponent(filter)}&` : ""
+  const options = {
+    hostname: `${STORAGE_ACCOUNT}.table.core.windows.net`,
+    path: `/${table}()?${q}${sasToken}`,
+    method: "GET",
+    headers: {
+      Accept: "application/json;odata=nometadata",
+      "x-ms-version": "2020-04-08",
+    },
+  }
+  const r = await httpsRequest(options)
+  if (r.status !== 200) return []
+  try {
+    return JSON.parse(r.body).value || []
+  } catch {
+    return []
+  }
+}
+
+// Matcht spelernamen uit de vraag tegen de players-index. Voorkomt false
+// positives op veelvoorkomende voornamen via tokenfrequentie.
+function matchPlayers(question, index) {
+  const qTokens = new Set(textTokens(question))
+  if (qTokens.size === 0) return []
+  const qNorm = normalizeText(question)
+
+  // tokenfrequentie over alle namen
+  const freq = {}
+  const prepared = []
+  for (const [pid, name] of Object.entries(index)) {
+    const sig = textTokens(name).filter((t) => !NAME_PARTICLES.has(t) && t.length >= 2)
+    if (!sig.length) continue
+    for (const t of sig) freq[t] = (freq[t] || 0) + 1
+    prepared.push({ pid, name, sig })
+  }
+
+  const candidates = []
+  for (const { pid, name, sig } of prepared) {
+    const matched = sig.filter((t) => qTokens.has(t))
+    if (!matched.length) continue
+    const full = normalizeText(name)
+    const fullHit = full.length > 3 && qNorm.includes(full)
+    const lastName = sig[sig.length - 1]
+    const lastHit = qTokens.has(lastName)
+    const uniqueHit = matched.length === 1 && matched[0].length >= 4 && freq[matched[0]] <= 2
+    const qualifies =
+      fullHit || matched.length >= 2 || (lastHit && lastName.length >= 4) || uniqueHit
+    if (!qualifies) continue
+    const score = matched.length + (fullHit ? 3 : 0) + (lastHit ? 1 : 0)
+    candidates.push({ playerId: pid, name, score })
+  }
+  if (!candidates.length) return []
+  candidates.sort((a, b) => b.score - a.score)
+  const max = candidates[0].score
+  return candidates.filter((c) => c.score === max).slice(0, 4)
+}
+
+function resultLabel(r) {
+  const champ = r.isChampion === true || r.isChampion === "true"
+  const runner = r.isRunnerUp === true || r.isRunnerUp === "true"
+  if (champ) return "1e (winnaar)"
+  if (runner) return "2e (finale)"
+  if (r.reachedRound) return `tot ${r.reachedRound}`
+  return `poule positie ${r.groupPosition}`
+}
+
+async function getResultatenContext(messages, sasToken) {
+  if (!sasToken) return null
+  const lastMsg = messages[messages.length - 1]?.content || ""
+  const lower = normalizeText(lastMsg)
+  const winnerWords = ["winnaar", "won", "gewonnen", "kampioen", "champion", "winner"]
+  const asksWinner = winnerWords.some((w) => lower.includes(w))
+
+  const index = await fetchPlayersIndex(sasToken)
+  if (!index) return null
+  const players = matchPlayers(lastMsg, index)
+  if (!players.length && !asksWinner) return null
+
+  let ctx = ""
+
+  if (players.length) {
+    const parts = []
+    for (const p of players.slice(0, 3)) {
+      const rows = await tableQuery("PlayerResults", `PartitionKey eq '${p.playerId}'`, sasToken)
+      if (!rows.length) continue
+      rows.sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+      const titels = rows.filter((r) => r.isChampion === true || r.isChampion === "true").length
+      const recent = rows
+        .slice(0, 8)
+        .map(
+          (r) =>
+            `  - ${r.date} | ${r.tournamentName} (${r.discipline}): ${resultLabel(r)}, ${r.wins}W-${r.losses}V`
+        )
+        .join("\n")
+      parts.push(
+        `Speler: ${p.name}\nTotaal toernooien (afgerond): ${rows.length}, toernooizeges: ${titels}\nRecente resultaten:\n${recent}`
+      )
+    }
+    if (parts.length) ctx += "SPELER-RESULTATEN:\n\n" + parts.join("\n\n")
+  }
+
+  if (asksWinner && !players.length) {
+    const tours = await tableQuery("Tournaments", null, sasToken)
+    tours.sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    const recent = tours
+      .slice(0, 12)
+      .map((t) => `  - ${t.date} | ${t.name} (${t.discipline}): winnaar ${t.winnerName || "?"}`)
+      .join("\n")
+    if (recent) ctx += (ctx ? "\n\n" : "") + "RECENTE TOERNOOI-WINNAARS:\n" + recent
+  }
+
+  if (!ctx) return null
+  return (
+    "---\nTOERNOOI-RESULTATEN DATA (gebruik dit om vragen over eerdere toernooien en spelersprestaties te beantwoorden; " +
+    "matchen meerdere spelers, noem ze of vraag om de achternaam):\n\n" +
+    ctx +
+    "\n---"
+  )
+}
+
+// Export t.b.v. lokale tests (geen effect op de host)
+module.exports = { matchPlayers, normalizeText }
+
 const { app } = require("@azure/functions")
 
 app.http("chat", {
@@ -381,9 +542,17 @@ app.http("chat", {
         tournamentContext = await getTournamentContext()
         console.log("Toernooi context toegevoegd")
       }
+      let resultatenContext = null
+      try {
+        resultatenContext = await getResultatenContext(messages, sasToken)
+        if (resultatenContext) console.log("Resultaten-context toegevoegd")
+      } catch (err) {
+        console.log("Resultaten ophalen mislukt:", err.message)
+      }
       let systemPrompt = SYSTEM_PROMPT
       if (kennisbronContext) systemPrompt += `\n\n${kennisbronContext}`
       if (tournamentContext) systemPrompt += `\n\n${tournamentContext}`
+      if (resultatenContext) systemPrompt += `\n\n${resultatenContext}`
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-sonnet-4-6",
