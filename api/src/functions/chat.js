@@ -391,6 +391,144 @@ async function tableQuery(table, filter, sasToken) {
   }
 }
 
+// --- Series-leaderboards (beste spelers per reeks + periode) ------------------
+
+const SERIES_OPTIONS = ["Fluke Ranking", "MEGA Ranking", "8/10ball Zaterdag", "Alle toernooien"]
+
+// Classificeert een toernooinaam naar een terugkerende reeks.
+function classifySeries(name) {
+  const n = (name || "").toLowerCase()
+  if (n.includes("fluke")) return "Fluke Ranking"
+  if (n.includes("mega")) return "MEGA Ranking"
+  if (
+    n.includes("8 & 10") ||
+    n.includes("& 10ball") ||
+    n.includes("8ball ranking") ||
+    n.includes("10ball ranking")
+  )
+    return "8/10ball Zaterdag"
+  return "Overig"
+}
+
+// Leidt de gevraagde reeks af uit (genormaliseerde) vraagtekst, of null.
+function parseSeries(text) {
+  const n = normalizeText(text)
+  if (/\bfluke\b/.test(n)) return "Fluke Ranking"
+  if (/\bmega\b/.test(n)) return "MEGA Ranking"
+  if (/zaterdag|8 10ball|10ball|8ball|8 ball|10 ball|8 10\b/.test(n)) return "8/10ball Zaterdag"
+  if (/\balle\b|\balles\b|all toernooi|alle toernooien|iedereen|overall|in totaal|elk toernooi/.test(n))
+    return "all"
+  return null
+}
+
+// Leidt een periode af uit de vraag. Geeft {start,end,label} of {all,label} of null.
+function parsePeriod(text, today) {
+  const n = normalizeText(text)
+  const now = today || new Date()
+  const iso = (d) => d.toISOString().split("T")[0]
+  const daysAgo = (days) => {
+    const d = new Date(now)
+    d.setDate(d.getDate() - days)
+    return iso(d)
+  }
+  const ym = n.match(/\b(20\d{2})\b/)
+  if (ym) return { start: `${ym[1]}-01-01`, end: `${ym[1]}-12-31`, label: ym[1] }
+  if (/dit jaar|deze jaargang/.test(n)) {
+    const y = now.getFullYear()
+    return { start: `${y}-01-01`, end: `${y}-12-31`, label: `${y}` }
+  }
+  if (/vorig jaar/.test(n)) {
+    const y = now.getFullYear() - 1
+    return { start: `${y}-01-01`, end: `${y}-12-31`, label: `${y}` }
+  }
+  if (/dit seizoen|huidig seizoen|seizoen/.test(n)) {
+    const sy = now.getMonth() + 1 >= 9 ? now.getFullYear() : now.getFullYear() - 1
+    return { start: `${sy}-09-01`, end: iso(now), label: `seizoen ${sy}/${sy + 1}` }
+  }
+  if (/laatste maand|afgelopen maand|vorige maand|deze maand/.test(n))
+    return { start: daysAgo(31), end: iso(now), label: "afgelopen maand" }
+  if (/3 maanden|drie maanden|kwartaal/.test(n))
+    return { start: daysAgo(92), end: iso(now), label: "afgelopen 3 maanden" }
+  if (/half jaar|halfjaar|6 maanden|zes maanden/.test(n))
+    return { start: daysAgo(183), end: iso(now), label: "afgelopen half jaar" }
+  if (/laatste jaar|afgelopen jaar|12 maanden|twaalf maanden/.test(n))
+    return { start: daysAgo(365), end: iso(now), label: "afgelopen 12 maanden" }
+  if (/aller tijden|all time|ooit|altijd|hele historie|complete historie/.test(n))
+    return { all: true, label: "aller tijden" }
+  return null
+}
+
+// Gepagineerde table-query (volgt continuation tokens).
+function httpsGetWithHeaders(options) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = ""
+      res.on("data", (c) => (data += c))
+      res.on("end", () => resolve({ status: res.statusCode, body: data, headers: res.headers }))
+    })
+    req.on("error", reject)
+    req.end()
+  })
+}
+
+async function tableQueryPaged(table, filter, sasToken, cap = 8) {
+  let rows = []
+  let npk = null
+  let nrk = null
+  let pages = 0
+  do {
+    const parts = []
+    if (filter) parts.push(`$filter=${encodeURIComponent(filter)}`)
+    if (npk) parts.push(`NextPartitionKey=${encodeURIComponent(npk)}`)
+    if (nrk) parts.push(`NextRowKey=${encodeURIComponent(nrk)}`)
+    const qs = parts.length ? parts.join("&") + "&" : ""
+    const r = await httpsGetWithHeaders({
+      hostname: `${STORAGE_ACCOUNT}.table.core.windows.net`,
+      path: `/${table}()?${qs}${sasToken}`,
+      method: "GET",
+      headers: { Accept: "application/json;odata=nometadata", "x-ms-version": "2020-04-08" },
+    })
+    if (r.status !== 200) break
+    try {
+      rows = rows.concat(JSON.parse(r.body).value || [])
+    } catch {
+      break
+    }
+    npk = r.headers["x-ms-continuation-nextpartitionkey"]
+    nrk = r.headers["x-ms-continuation-nextrowkey"]
+    pages++
+  } while ((npk || nrk) && pages < cap)
+  return rows
+}
+
+// Aggregeert speler-resultaten tot een ranglijst op basis van toernooiprestaties.
+function buildLeaderboard(rows, seriesKey) {
+  const agg = {}
+  for (const r of rows) {
+    if (seriesKey !== "all" && classifySeries(r.tournamentName) !== seriesKey) continue
+    const pid = r.playerId
+    if (!agg[pid]) agg[pid] = { name: r.playerName, score: 0, titles: 0, finals: 0, appearances: 0, wins: 0, losses: 0 }
+    const a = agg[pid]
+    const champ = r.isChampion === true || r.isChampion === "true"
+    const runner = r.isRunnerUp === true || r.isRunnerUp === "true"
+    let pts = champ ? 8 : runner ? 5
+      : r.reachedRound === "Semi final" ? 3
+      : r.reachedRound === "Quarter final" ? 2
+      : r.reachedRound === "Last sixteen" ? 1
+      : 0
+    pts += (Number(r.wins) || 0) * 0.2
+    a.score += pts
+    a.appearances++
+    a.wins += Number(r.wins) || 0
+    a.losses += Number(r.losses) || 0
+    if (champ) a.titles++
+    if (champ || runner) a.finals++
+  }
+  return Object.values(agg).sort(
+    (x, y) => y.score - x.score || y.titles - x.titles || y.finals - x.finals || y.appearances - x.appearances
+  )
+}
+
 // Matcht spelernamen uit de vraag tegen de players-index. Voorkomt false
 // positives op veelvoorkomende voornamen via tokenfrequentie.
 function matchPlayers(question, index) {
@@ -442,6 +580,56 @@ async function getResultatenContext(messages, sasToken) {
   if (!sasToken) return null
   const lastMsg = messages[messages.length - 1]?.content || ""
   const lower = normalizeText(lastMsg)
+
+  // --- Leaderboard-intentie: beste spelers per reeks + periode ---------------
+  const leaderboardIntent = [
+    "beste speler", "beste spelers", "sterkste speler", "sterkste spelers",
+    "top speler", "top spelers", "best presterend", "wie doet het goed",
+    "wie doen het goed", "wie presteer", "ranglijst", "wie is de beste",
+    "wie zijn de beste", "spelers doen het goed", "goed bezig",
+  ].some((w) => lower.includes(w))
+
+  if (leaderboardIntent) {
+    // Combineer alle user-berichten zodat verduidelijking over meerdere beurten werkt.
+    const allUserText = messages.filter((m) => m.role === "user").map((m) => m.content || "").join(" \n ")
+    const series = parseSeries(allUserText)
+    const period = parsePeriod(allUserText)
+
+    if (!series || !period) {
+      const missing = []
+      if (!series) missing.push(`het type toernooi (opties: ${SERIES_OPTIONS.join(", ")})`)
+      if (!period)
+        missing.push("de periode (bijv. dit jaar 2026, afgelopen 3 maanden, een specifiek jaar, of aller tijden)")
+      return (
+        "---\nINSTRUCTIE: De gebruiker vraagt naar de beste/best presterende spelers, maar deze info ontbreekt nog: " +
+        missing.join(" en ") +
+        ". Stel EERST een korte, vriendelijke verduidelijkende vraag waarin je deze opties als keuzes aanbiedt, vóór je een ranglijst geeft. Verzin zelf geen resultaten.\n---"
+      )
+    }
+
+    const seriesKey = series === "all" ? "all" : series
+    const seriesLabel = series === "all" ? "Alle toernooien" : series
+    const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
+    const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
+    const board = buildLeaderboard(rows, seriesKey)
+    if (!board.length) {
+      return `---\nGEEN DATA: er zijn geen resultaten voor ${seriesLabel} in periode ${period.label}. Meld dit eerlijk en stel eventueel een andere periode of ander type toernooi voor.\n---`
+    }
+    const lines = board
+      .slice(0, 10)
+      .map(
+        (a, i) =>
+          `  ${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien, ${a.wins}W-${a.losses}V`
+      )
+      .join("\n")
+    return (
+      `---\nBESTE SPELERS — ${seriesLabel} — ${period.label} (gerangschikt op toernooiprestaties uit Mokum data; ` +
+      `gebruik dit om de vraag te beantwoorden, noem de top spelers met hun titels/finales):\n\n` +
+      lines +
+      "\n---"
+    )
+  }
+
   const winnerWords = ["winnaar", "won", "gewonnen", "kampioen", "champion", "winner"]
   const asksWinner = winnerWords.some((w) => lower.includes(w))
 
@@ -493,7 +681,7 @@ async function getResultatenContext(messages, sasToken) {
 }
 
 // Export t.b.v. lokale tests (geen effect op de host)
-module.exports = { matchPlayers, normalizeText }
+module.exports = { matchPlayers, normalizeText, parseSeries, parsePeriod, classifySeries, buildLeaderboard }
 
 const { app } = require("@azure/functions")
 
