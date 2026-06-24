@@ -31,8 +31,6 @@ jobs:
           publish_branch: ${{ github.ref_name == 'main' && 'gh-pages' || 'gh-pages-develop' }}
   deploy-backend:
     runs-on: ubuntu-latest
-    # TODO(#31): verwijder continue-on-error zodra de OIDC-deploy betrouwbaar groen draait
-    continue-on-error: true
     permissions:
       id-token: write # vereist voor OIDC token exchange met Azure
       contents: read
