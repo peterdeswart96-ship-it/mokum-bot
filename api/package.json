@@ -1,7 +1,7 @@
 {
   "name": "mokum-bot-api",
   "version": "1.0.0",
-  "main": "src/functions/chat.js",
+  "main": "src/functions/*.js",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@azure/functions": "^4.0.0"
