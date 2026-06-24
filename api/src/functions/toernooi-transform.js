@@ -331,6 +331,18 @@ async function transformAll(context) {
 // Export van pure functies t.b.v. lokale tests (heeft geen effect op de host)
 module.exports = { fixEncoding, bepaalWinnaar, transformTournament, diepsteRondePerSpeler }
 
+// Nachtelijk, na de sync (04:00) -> tables vers houden
+app.timer("toernooiTransformTimer", {
+  schedule: "0 15 4 * * *",
+  handler: async (myTimer, context) => {
+    try {
+      await transformAll(context)
+    } catch (err) {
+      context.log("Timer transform fout:", err.message)
+    }
+  },
+})
+
 app.http("toernooi-transform", {
   methods: ["POST", "GET", "OPTIONS"],
   authLevel: "anonymous",
