@@ -18,7 +18,7 @@
  const WIDGET_CONFIG = { bottom: '70px', right: '10px', width: '440px' }
 
   // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
-  const RATE_MAX = 6
+  const RATE_MAX = 2
   const RATE_WINDOW = 30000 // 30 seconden
 
   // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
