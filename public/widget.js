@@ -12,9 +12,19 @@
     red: '#cc0000', redDark: '#990000', black: '#0a0a0a',
     blackCard: '#161616', blackInput: '#1f1f1f',
     border: '#2a2a2a', white: '#ffffff', gray: '#888888',
+    anthracite: '#26262b',
   }
 
  const WIDGET_CONFIG = { bottom: '70px', right: '10px', width: '440px' }
+
+  // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
+  const CATEGORIES = [
+    { id: 'toernooien', emoji: '🏆', topics: ['toernooien', 'resultaten'], newTopics: ['resultaten'] },
+    { id: 'spelen', emoji: '🎱', topics: ['pool', 'darts', 'spelregels', 'gaming'] },
+    { id: 'praktisch', emoji: 'ℹ️', topics: ['openingstijden', 'tarieven', 'locatie', 'eten-drinken', 'sport'] },
+    { id: 'service', emoji: '🛠️', topics: ['keu-reparatie', 'keu-shop', 'clinics'] },
+    { id: 'overig', emoji: '📋', topics: ['intern', 'anders'] },
+  ]
 
   const BUBBLE_TEXTS = [
     'Ask me anything!',
@@ -40,12 +50,16 @@
       internPwdBtn: 'Toegang',
       hoverTitle: 'IK WEET ALLES OVER:',
       hoverInfo: ['🕐 Openingstijden', '💶 Tarieven & activiteiten', '🏆 Toernooien & inschrijven', '📍 Route & parkeren', '🎯 Darts, biljart & shuffleboard', '🏢 Bedrijfsuitjes & groepen'],
+      beginnerInfo: '👋 Nieuw hier? Stel je vraag direct onderaan in de balk, of bekijk hieronder voorbeeldvragen per rubriek.',
+      examplesBtn: 'Voorbeeldvragen per rubriek',
+      catTitles: { toernooien: 'Toernooien', spelen: 'Spelen & Regels', praktisch: 'Praktisch', service: 'Service', overig: 'Overig' },
       topics: [
         { id: 'pool', emoji: '🎱', label: 'Pool & Biljart' },
         { id: 'darts', emoji: '🎯', label: 'Darts' },
         { id: 'openingstijden', emoji: '📅', label: 'Openingstijden' },
         { id: 'tarieven', emoji: '💶', label: 'Tarieven' },
         { id: 'toernooien', emoji: '🏆', label: 'Toernooien' },
+        { id: 'resultaten', emoji: '📊', label: 'Toernooi resultaten' },
         { id: 'spelregels', emoji: '📖', label: 'Spelregels' },
         { id: 'eten-drinken', emoji: '🍺', label: 'Eten & Drinken' },
         { id: 'sport', emoji: '📺', label: 'Sport kijken' },
@@ -63,6 +77,7 @@
         openingstijden: ['Wanneer zijn jullie open?', 'Zijn jullie ook op feestdagen open?', 'Hoe laat is de laatste inloop?', 'Zijn de tijden in het weekend anders?'],
         tarieven: ['Wat kost een uur poolen?', 'Zijn er dagprijzen of avondprijzen?', 'Kan ik pinnen?', 'Zijn er groepstarieven?'],
         toernooien: ['Wanneer is het volgende toernooi?', 'Welke toernooien zijn er aankomende week?', 'Zijn er ook toernooien voor beginnende spelers?', 'Wat kost deelname?'],
+        resultaten: ['Wie won het laatste 8-ball toernooi?', 'Wie zijn de beste spelers van 2026?', 'Top 5 spelers per toernooisoort aller tijden', 'Wie zijn de beste 9-ball spelers dit jaar?', 'Laat de top 20 KNBB-rating zien'],
         'eten-drinken': ['Wat staat er op het menu?', 'Hebben jullie vegetarische opties?', 'Wat kosten de bieren?', 'Kunnen jullie pizzas bestellen?'],
         sport: ['Welke sportwedstrijden kijken jullie vanavond?', 'Tonen jullie Champions League / Eredivisie?', 'Op hoeveel schermen wordt sport getoond?', 'Hoe vroeg moet ik er zijn voor een grote wedstrijd?'],
         'keu-reparatie': ['Kunnen jullie mijn keu repareren?', 'Wat kost een keu reparatie?', 'Hoe lang duurt een reparatie?', 'Welke reparaties doen jullie?'],
@@ -102,12 +117,16 @@
       internPwdBtn: 'Access',
       hoverTitle: 'I KNOW ALL ABOUT:',
       hoverInfo: ['🕐 Opening hours', '💶 Rates & activities', '🏆 Tournaments & sign-up', '📍 Route & parking', '🎯 Darts, billiards & more', '🏢 Corporate events'],
+      beginnerInfo: '👋 New here? Ask your question directly in the bar below, or browse example questions per category.',
+      examplesBtn: 'Example questions per category',
+      catTitles: { toernooien: 'Tournaments', spelen: 'Games & Rules', praktisch: 'Practical', service: 'Service', overig: 'Other' },
       topics: [
         { id: 'pool', emoji: '🎱', label: 'Pool & Billiards' },
         { id: 'darts', emoji: '🎯', label: 'Darts' },
         { id: 'openingstijden', emoji: '📅', label: 'Opening Hours' },
         { id: 'tarieven', emoji: '💶', label: 'Rates' },
         { id: 'toernooien', emoji: '🏆', label: 'Tournaments' },
+        { id: 'resultaten', emoji: '📊', label: 'Tournament results' },
         { id: 'spelregels', emoji: '📖', label: 'Game Rules' },
         { id: 'eten-drinken', emoji: '🍺', label: 'Food & Drinks' },
         { id: 'sport', emoji: '📺', label: 'Watch Sports' },
@@ -125,6 +144,7 @@
         openingstijden: ['When are you open?', 'Are you open on public holidays?', "What's the last entry time?", 'Are the weekend hours different?'],
         tarieven: ['How much does an hour of pool cost?', 'Are there day rates and evening rates?', 'Can I pay by card?', 'Are there group rates?'],
         toernooien: ['When is the next tournament?', 'Which tournaments are coming up next week?', 'Are there tournaments for beginners?', 'How much does it cost to participate?'],
+        resultaten: ['Who won the last 8-ball tournament?', 'Who are the best players of 2026?', 'Top 5 players per tournament type all-time', 'Who are the best 9-ball players this year?', 'Show the top 20 KNBB rating'],
         'eten-drinken': ["What's on the menu?", 'Do you have vegetarian options?', 'How much are the beers?', 'Can we order pizzas?'],
         sport: ['Which sports are you showing tonight?', 'Do you show Champions League / Eredivisie?', 'How many screens do you have for sports?', 'How early should I arrive for a big match?'],
         'keu-reparatie': ['Can you repair my cue?', 'How much does a cue repair cost?', 'How long does a repair take?', 'What kind of repairs do you do?'],
@@ -165,6 +185,7 @@
     internPwdError: false,
     bubbleTextIndex: 0,
     expanded: false,
+    examplesOpen: false,
   }
 
   function tr() { return TRANSLATIONS[state.lang] }
@@ -318,7 +339,7 @@
 
       // Header
       const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;`)
-      const hdrL = el('div', 'display:flex;align-items:center;gap:10px;')
+      const hdrL = el('div', `display:flex;align-items:center;gap:9px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:5px 12px 5px 8px;`)
       hdrL.innerHTML = eightBallSVG(34, false)
       const hdrTitle = el('div', null, `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;">Pool & Darts Amsterdam</div>`)
       hdrL.appendChild(hdrTitle)
@@ -367,11 +388,54 @@
         body.appendChild(lw)
       }
 
-      // Stage: topics
+      // Stage: topics — beginner-uitleg + inklapbare voorbeeldvragen per categorie
       if (state.stage === 'topics' && !state.loading) {
-        const wrap = el('div', 'display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;')
-        t.topics.forEach(topic => wrap.appendChild(chip(`${topic.emoji} ${topic.label}`, () => selectTopic(topic), false, true)))
-        body.appendChild(wrap)
+        const container = el('div', 'display:flex;flex-direction:column;gap:10px;margin-top:4px;')
+
+        // Beginner-uitleg
+        container.appendChild(el('div',
+          `font-size:13px;color:#bbb;line-height:1.5;background:${C.anthracite};border:1px solid ${C.border};border-radius:10px;padding:10px 12px;`,
+          t.beginnerInfo))
+
+        // Inklapbare knop "Voorbeeldvragen per rubriek" met NEW-badge
+        const toggle = btn(
+          `<span style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;">
+             <span>📋 ${t.examplesBtn}</span>
+             <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+               <span style="background:${C.red};color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:0.05em;">NEW</span>
+               <span style="font-size:11px;">${state.examplesOpen ? '▲' : '▼'}</span>
+             </span>
+           </span>`,
+          () => { state.examplesOpen = !state.examplesOpen; render() },
+          `width:100%;text-align:left;background:${C.blackCard};border:1px solid ${C.border};border-radius:10px;color:${C.white};font-size:13px;font-weight:700;padding:11px 14px;`
+        )
+        container.appendChild(toggle)
+
+        // Categorie-overzicht (alleen zichtbaar bij uitklappen)
+        if (state.examplesOpen) {
+          CATEGORIES.forEach(cat => {
+            const catWrap = el('div', 'display:flex;flex-direction:column;gap:6px;')
+            const catTitle = (t.catTitles && t.catTitles[cat.id]) || cat.id
+            const newBadge = cat.newTopics
+              ? ` <span style="background:${C.red};color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:5px;vertical-align:middle;">NEW</span>`
+              : ''
+            catWrap.appendChild(el('div', 'margin-top:4px;',
+              `<span style="font-size:11px;font-weight:800;color:${C.gray};letter-spacing:0.06em;text-transform:uppercase;">${cat.emoji} ${catTitle}</span>${newBadge}`))
+            const chips = el('div', 'display:flex;flex-wrap:wrap;gap:6px;')
+            cat.topics.forEach(tid => {
+              const topic = t.topics.find(tp => tp.id === tid)
+              if (!topic) return
+              const isNew = cat.newTopics && cat.newTopics.indexOf(tid) !== -1
+              const label = `${topic.emoji} ${topic.label}` + (isNew
+                ? ` <span style="background:${C.red};color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;vertical-align:middle;">NEW</span>`
+                : '')
+              chips.appendChild(chip(label, () => selectTopic(topic), false, true))
+            })
+            catWrap.appendChild(chips)
+            container.appendChild(catWrap)
+          })
+        }
+        body.appendChild(container)
       }
 
       // Stage: intern login
@@ -504,6 +568,7 @@
     state.stage = 'topics'; state.selectedTopic = null; state.selectedDiscipline = null
     state.internUnlocked = false; state.internPwd = ''; state.internPwdError = false
     state.messages = [{ role: 'assistant', content: tr().welcome }]; state.input = ''
+    state.examplesOpen = false
   }
 
   async function sendMessage(text) {
