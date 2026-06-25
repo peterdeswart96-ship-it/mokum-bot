@@ -501,7 +501,7 @@
       setTimeout(() => { body.scrollTop = body.scrollHeight }, 50)
 
       // Input — altijd zichtbaar
-      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:12px 16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;`)
+      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:10px 16px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;`)
       const inputRow = el('div', 'display:flex;gap:8px;')
       const input = el('input', `flex:1;padding:10px 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
       input.value = state.input
@@ -516,10 +516,10 @@
       const sizeOpts = state.lang === 'nl'
         ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot']]
         : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large']]
-      const sizeRow = el('div', 'display:flex;align-items:center;gap:8px;')
-      sizeRow.appendChild(el('span', `color:${C.gray};font-size:12px;`, sizeLabelTxt))
+      const sizeRow = el('div', 'display:flex;align-items:center;gap:6px;')
+      sizeRow.appendChild(el('span', `color:${C.gray};font-size:11px;white-space:nowrap;line-height:1.1;`, sizeLabelTxt))
       const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
-      const sizeSelect = el('select', `background:${C.anthracite};border:1px solid ${C.border};border-radius:8px;color:${C.white};font-size:12px;padding:5px 10px;cursor:pointer;`, optsHtml)
+      const sizeSelect = el('select', `background:${C.anthracite};border:1px solid ${C.border};border-radius:6px;color:${C.white};font-size:11px;padding:1px 4px;line-height:1.1;height:auto;cursor:pointer;`, optsHtml)
       sizeSelect.value = state.size
       sizeSelect.onchange = e => { state.size = e.target.value; render() }
       sizeRow.appendChild(sizeSelect)
