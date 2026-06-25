@@ -25,11 +25,11 @@ OPENINGSTIJDEN:
 - Vrijdag & zaterdag: 12:00 - 02:00
 - Zondag: 12:00 - 01:00
 
-TARIEVEN:
-- Pool (American & English): €15,00/uur tot 19:00, €19,00/uur na 19:00
-- Biljart: €15,00/uur tot 19:00, €19,00/uur na 19:00
-- Darts: €8,50/uur (hele dag)
-- Shuffleboard: €14,50/uur tot 19:00, €18,50/uur na 19:00
+TARIEVEN (BELANGRIJK: alle speeltarieven gelden PER TAFEL/BAAN/BORD — de speelplek — NIET per persoon. De prijs is hetzelfde, of je nu met 1, 2, 3 of meer mensen speelt; bereken het tarief dus NOOIT per persoon en vermenigvuldig het NOOIT met het aantal spelers):
+- Pool (American & English): €15,00/uur per tafel tot 19:00, €19,00/uur per tafel na 19:00
+- Biljart: €15,00/uur per tafel tot 19:00, €19,00/uur per tafel na 19:00
+- Darts: €8,50/uur per bord (hele dag)
+- Shuffleboard: €14,50/uur per baan tot 19:00, €18,50/uur per baan na 19:00
 - Parkeren: €2,20 per uur bij minimale besteding van €15
 
 OPRICHTERS:
