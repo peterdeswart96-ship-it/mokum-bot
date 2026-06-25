@@ -1002,8 +1002,8 @@ app.http("gesprekken", {
         if (hash !== DASHBOARD_HASH) {
           return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
         }
-        if (!voor || !/^\d{4}-\d{2}-\d{2}$/.test(voor)) {
-          return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef 'voor' op als YYYY-MM-DD (gesprekken vóór deze datum worden verwijderd)" }) }
+        if (!voor || !/^\d{4}-\d{2}-\d{2}(T\d{2}-\d{2}(-\d{2})?)?$/.test(voor)) {
+          return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef 'voor' op als YYYY-MM-DD of YYYY-MM-DDThh-mm in UTC (gesprekken vóór dit moment worden verwijderd)" }) }
         }
         // Alle blobs listen (met paginatie via NextMarker)
         const namen = []
@@ -1021,7 +1021,7 @@ app.http("gesprekken", {
           marker = nm ? nm[1] : ""
         } while (marker)
         // Naam begint met de ISO-datum (YYYY-MM-DD); verwijder alles vóór 'voor'
-        const teVerwijderen = namen.filter((n) => n.slice(0, 10) < voor)
+        const teVerwijderen = namen.filter((n) => n.slice(0, voor.length) < voor)
         if (dryrun) {
           return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ dryrun: true, totaal: namen.length, zou_verwijderen: teVerwijderen.length, behoudt: namen.length - teVerwijderen.length, voorbeeld: teVerwijderen.slice(0, 5) }) }
         }
