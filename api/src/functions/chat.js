@@ -31,7 +31,7 @@ TARIEVEN (BELANGRIJK: pool, biljart, darts en shuffleboard reken je PER TAFEL/BA
 - Maximaal 5 personen per pooltafel en per biljarttafel
 - Darts: €8,50/uur per bord (hele dag)
 - Shuffleboard: €14,50/uur per baan tot 19:00, €18,50/uur per baan na 19:00
-- Digitale game tafel: kost 1 credit PER speler die meedoet aan een spel (dit is de enige activiteit die per persoon wordt gerekend)
+- Digitale game tafel: kost 1 credit (= €1,00) PER speler die meedoet aan een spel (dit is de enige activiteit die per persoon wordt gerekend). Bijvoorbeeld: met 4 spelers betaal je 4 credits = €4,00
 - Gezelschapsspelletjes bij de stamtafel: gratis / kosteloos te gebruiken
 - Parkeren: €2,20 per uur bij minimale besteding van €15
 
