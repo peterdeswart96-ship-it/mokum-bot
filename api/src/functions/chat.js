@@ -938,12 +938,12 @@ app.http("chat", {
 })
 
 app.http("gesprekken", {
-  methods: ["GET", "OPTIONS"],
+  methods: ["GET", "POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     }
     if (request.method === "OPTIONS") {
@@ -989,6 +989,55 @@ app.http("gesprekken", {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           body: result.body,
         }
+      }
+      // Opschonen — verwijdert gesprekken vóór een datum. Beveiligd met dashboard-wachtwoord.
+      if (action === "cleanup" && request.method === "POST") {
+        const crypto = require("crypto")
+        let cbody = {}
+        try { cbody = await request.json() } catch {}
+        const { wachtwoord, voor, dryrun } = cbody
+        const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+        const hash = wachtwoord ? crypto.createHash("sha256").update(wachtwoord).digest("hex") : ""
+        if (hash !== DASHBOARD_HASH) {
+          return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+        }
+        if (!voor || !/^\d{4}-\d{2}-\d{2}$/.test(voor)) {
+          return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef 'voor' op als YYYY-MM-DD (gesprekken vóór deze datum worden verwijderd)" }) }
+        }
+        // Alle blobs listen (met paginatie via NextMarker)
+        const namen = []
+        let marker = ""
+        do {
+          const listOpts = {
+            hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+            path: `/gesprekken?restype=container&comp=list&maxresults=5000${marker ? `&marker=${encodeURIComponent(marker)}` : ""}&${sasToken}`,
+            method: "GET",
+            headers: { "x-ms-version": "2020-04-08" },
+          }
+          const res = await httpsRequest(listOpts)
+          namen.push(...[...res.body.matchAll(/<Name>([^<]+)<\/Name>/g)].map(m => m[1]))
+          const nm = res.body.match(/<NextMarker>([^<]*)<\/NextMarker>/)
+          marker = nm ? nm[1] : ""
+        } while (marker)
+        // Naam begint met de ISO-datum (YYYY-MM-DD); verwijder alles vóór 'voor'
+        const teVerwijderen = namen.filter((n) => n.slice(0, 10) < voor)
+        if (dryrun) {
+          return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ dryrun: true, totaal: namen.length, zou_verwijderen: teVerwijderen.length, behoudt: namen.length - teVerwijderen.length, voorbeeld: teVerwijderen.slice(0, 5) }) }
+        }
+        let verwijderd = 0
+        let fouten = 0
+        for (const n of teVerwijderen) {
+          const delOpts = {
+            hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+            path: `/gesprekken/${encodeURIComponent(n)}?${sasToken}`,
+            method: "DELETE",
+            headers: { "x-ms-version": "2020-04-08" },
+          }
+          const r = await httpsRequest(delOpts)
+          if (r.status === 202) verwijderd++
+          else fouten++
+        }
+        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ verwijderd, fouten, behouden: namen.length - teVerwijderen.length }) }
       }
       return {
         status: 400,
