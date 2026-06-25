@@ -591,14 +591,10 @@ async function getResultatenContext(messages, sasToken) {
   const lower = normalizeText(lastMsg)
 
   // --- Leaderboard-intentie: beste spelers per reeks + periode ---------------
-  // Kijk naar de laatste paar user-berichten zodat verduidelijking over meerdere
-  // beurten werkt ("wie zijn de beste?" -> "Fluke, dit jaar"), zonder ver terug te lekken.
-  const recentUserText = messages
-    .filter((m) => m.role === "user")
-    .slice(-3)
-    .map((m) => m.content || "")
-    .join(" \n ")
-  const recentNorm = normalizeText(recentUserText)
+  // Anker op het laatste user-bericht met leaderboard-intentie en verzamel reeks
+  // + periode vanaf daar. Zo blijft een verduidelijking over willekeurig veel
+  // beurten werken (vraag -> periode -> type -> "allemaal"), zonder ver terug te lekken.
+  const userTexts = messages.filter((m) => m.role === "user").map((m) => m.content || "")
   const lbKeywords = [
     "beste speler", "beste spelers", "sterkste speler", "sterkste spelers",
     "top speler", "top spelers", "best presterend", "wie doet het goed",
@@ -606,16 +602,27 @@ async function getResultatenContext(messages, sasToken) {
     "wie zijn de beste", "spelers doen het goed", "goed bezig",
     "meeste titels", "meeste gewonnen", "wie wint het meest",
   ]
-  const leaderboardIntent =
-    lbKeywords.some((w) => recentNorm.includes(w)) ||
-    /top\s*\d+\s*speler/.test(recentNorm) ||
-    /per (toernooisoort|soort|type|reeks)/.test(recentNorm)
+  const isLbIntent = (n) =>
+    lbKeywords.some((w) => n.includes(w)) ||
+    /top\s*\d+\s*speler/.test(n) ||
+    /per (toernooisoort|soort|type|reeks)/.test(n)
+  let lbAnchor = -1
+  for (let i = userTexts.length - 1; i >= 0; i--) {
+    if (isLbIntent(normalizeText(userTexts[i]))) {
+      lbAnchor = i
+      break
+    }
+  }
+  // Alleen behandelen als de intentie recent is (binnen een lopende verduidelijking)
+  const leaderboardIntent = lbAnchor !== -1 && lbAnchor >= userTexts.length - 6
 
   if (leaderboardIntent) {
+    const flowText = userTexts.slice(lbAnchor).join(" \n ")
+    const flowNorm = normalizeText(flowText)
     const perSeries =
-      /per (toernooisoort|soort|type|reeks)|elke (toernooisoort|soort|reeks)|alle soorten|per categorie/.test(recentNorm)
-    const series = parseSeries(recentUserText)
-    const period = parsePeriod(recentUserText)
+      /per (toernooisoort|soort|type|reeks)|elke (toernooisoort|soort|reeks)|alle soorten|per categorie/.test(flowNorm)
+    const series = parseSeries(flowText)
+    const period = parsePeriod(flowText)
     const MAIN_SERIES = ["Fluke Ranking", "MEGA Ranking", "8/10ball Zaterdag"]
 
     // Modus: top 5 per toernooisoort
@@ -786,15 +793,21 @@ app.http("chat", {
       } catch (err) {
         console.log("Resultaten ophalen mislukt:", err.message)
       }
-      let systemPrompt = SYSTEM_PROMPT
-      if (kennisbronContext) systemPrompt += `\n\n${kennisbronContext}`
-      if (tournamentContext) systemPrompt += `\n\n${tournamentContext}`
-      if (resultatenContext) systemPrompt += `\n\n${resultatenContext}`
+      // Statische system prompt apart houden zodat hij gecachet kan worden;
+      // wisselende context (kennisbron, toernooidata) komt ná de cache-breakpoint.
+      const dynamicParts = []
+      if (kennisbronContext) dynamicParts.push(kennisbronContext)
+      if (tournamentContext) dynamicParts.push(tournamentContext)
+      if (resultatenContext) dynamicParts.push(resultatenContext)
+      const systemBlocks = [
+        { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+      ]
+      if (dynamicParts.length) systemBlocks.push({ type: "text", text: dynamicParts.join("\n\n") })
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
-        model: "claude-sonnet-4-6",
+        model: "claude-haiku-4-5",
         max_tokens: 1024,
-        system: systemPrompt,
+        system: systemBlocks,
         messages: messages,
       })
       const reply = response.content[0].text
