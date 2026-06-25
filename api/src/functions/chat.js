@@ -158,9 +158,16 @@ async function saveConversation(messages, reply) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
     if (!sasToken) return
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+    // Blobnaam in Amsterdam-tijd (sorteerbaar) zodat de naam in Azure de NL-tijd toont.
+    // sv-SE geeft "YYYY-MM-DD HH:MM:SS"; omzetten naar "YYYY-MM-DDTHH-MM-SS".
+    const amsTijd = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Amsterdam",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+    }).format(new Date()).replace(" ", "T").replace(/:/g, "-")
     const random = Math.random().toString(36).substring(2, 8)
-    const blobName = `${timestamp}-${random}.json`
+    const blobName = `${amsTijd}-${random}.json`
+    // timestamp-veld blijft UTC ISO — het dashboard rekent dat zelf om naar Amsterdam-tijd
     const content = JSON.stringify({ timestamp: new Date().toISOString(), messages, reply }, null, 2)
     const contentLength = Buffer.byteLength(content)
     const options = {
@@ -1003,7 +1010,7 @@ app.http("gesprekken", {
           return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
         }
         if (!voor || !/^\d{4}-\d{2}-\d{2}(T\d{2}-\d{2}(-\d{2})?)?$/.test(voor)) {
-          return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef 'voor' op als YYYY-MM-DD of YYYY-MM-DDThh-mm in UTC (gesprekken vóór dit moment worden verwijderd)" }) }
+          return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef 'voor' op als YYYY-MM-DD of YYYY-MM-DDThh-mm (zoals de tijd in de blobnaam staat; nieuwe gesprekken staan in Amsterdam-tijd)" }) }
         }
         // Alle blobs listen (met paginatie via NextMarker)
         const namen = []
