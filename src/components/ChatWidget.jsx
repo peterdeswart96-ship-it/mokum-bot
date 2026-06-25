@@ -625,19 +625,19 @@ export default function ChatWidget() {
 
           {/* Input + venster-formaat — altijd zichtbaar */}
           <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "10px 16px", display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") sendMessage() }}
                 placeholder={t.placeholder}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
+                style={{ flex: 1, boxSizing: "border-box", height: "44px", padding: "0 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
               />
               <button
                 onClick={() => sendMessage()}
                 disabled={loading}
-                style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
+                style={{ boxSizing: "border-box", height: "44px", padding: "0 18px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
               >→</button>
             </div>
             <div style={{ display: "flex", justifyContent: "center", marginTop: "2px" }}>

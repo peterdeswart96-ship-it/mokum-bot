@@ -536,12 +536,12 @@
 
       // Input — altijd zichtbaar
       const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:10px 16px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;`)
-      const inputRow = el('div', 'display:flex;gap:8px;')
-      const input = el('input', `flex:1;padding:10px 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
+      const inputRow = el('div', 'display:flex;gap:8px;align-items:stretch;')
+      const input = el('input', `flex:1;box-sizing:border-box;height:44px;padding:0 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
       input.value = state.input
       input.oninput = e => { state.input = e.target.value }
       input.onkeydown = e => { if (e.key === 'Enter') sendMessage() }
-      const sendBtnEl = btn('→', () => sendMessage(), `padding:10px 18px;border-radius:8px;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
+      const sendBtnEl = btn('→', () => sendMessage(), `box-sizing:border-box;height:44px;padding:0 18px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
       sendBtnEl.disabled = state.loading
       inputRow.append(input, sendBtnEl)
 
