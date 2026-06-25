@@ -188,7 +188,7 @@
     internPwd: '',
     internPwdError: false,
     bubbleTextIndex: 0,
-    expanded: false,
+    size: 'groot',
     examplesOpen: false,
   }
 
@@ -196,8 +196,17 @@
 
   function getWidth() {
     const mobile = window.innerWidth < 480
-    if (state.expanded) return 'min(80vw, 900px)'
-    return mobile ? (window.innerWidth - 16) + 'px' : WIDGET_CONFIG.width
+    if (mobile) return (window.innerWidth - 16) + 'px'
+    if (state.size === 'groot') return 'min(80vw, 900px)'
+    if (state.size === 'klein') return '380px'
+    return '460px' // middel
+  }
+
+  function getHeight() {
+    const mobile = window.innerWidth < 480
+    if (state.size === 'groot') return mobile ? 'calc(100dvh - 90px - 16px)' : '85dvh'
+    const cap = mobile ? (state.size === 'klein' ? 460 : 600) : (state.size === 'klein' ? 520 : 660)
+    return `min(${cap}px, calc(100dvh - 90px - 80px - 16px))`
   }
 
   function getRight() {
@@ -336,19 +345,19 @@
     const w = getWidth()
     const r = getRight()
     const isMobile = window.innerWidth < 480
-    const chatHeight = state.expanded ? '80dvh' : (isMobile ? 'calc(100dvh - 90px - 80px - 16px)' : 'min(580px, calc(100dvh - 90px - 80px - 16px))')
+    const chatHeight = getHeight()
 
     if (state.open) {
       const win = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`)
 
       // Header
       const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
-      const hdrL = el('div', `display:flex;align-items:center;gap:9px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:6px 12px;`)
+      const hdrL = el('div', `display:flex;align-items:center;gap:9px;min-width:0;flex-shrink:1;overflow:hidden;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:6px 12px;`)
       hdrL.innerHTML = eightBallSVG(34, false)
-      const hdrTitle = el('div', null, `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;">Pool & Darts Amsterdam</div>`)
+      const hdrTitle = el('div', 'min-width:0;overflow:hidden;', `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Pool & Darts Amsterdam</div>`)
       hdrL.appendChild(hdrTitle)
 
-      const hdrR = el('div', `display:flex;align-items:center;gap:6px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:6px 12px;`)
+      const hdrR = el('div', `display:flex;align-items:center;flex-shrink:0;gap:${isMobile ? '3px' : '6px'};background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:${isMobile ? '5px 8px' : '6px 12px'};`)
 
       // Home knop
       const homeBtn = btn('🏠', () => { resetChat(); render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:14px;padding:4px 8px;line-height:1.4;`)
@@ -365,13 +374,10 @@
         flagsWrap.appendChild(flagBtn)
       })
 
-      // Expand knop
-      const expBtn = btn(state.expanded ? '⊡' : '⊞', () => { state.expanded = !state.expanded; render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:12px;padding:4px 8px;`)
-
       // Sluit knop
       const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.gray};font-size:18px;font-weight:bold;padding:4px;line-height:1;`)
 
-      hdrR.append(homeBtn, flagsWrap, expBtn, closeBtn)
+      hdrR.append(homeBtn, flagsWrap, closeBtn)
       hdr.append(hdrL, hdrR)
 
       // Body
@@ -495,14 +501,30 @@
       setTimeout(() => { body.scrollTop = body.scrollHeight }, 50)
 
       // Input — altijd zichtbaar
-      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:12px 16px;display:flex;gap:8px;flex-shrink:0;`)
+      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:12px 16px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;`)
+      const inputRow = el('div', 'display:flex;gap:8px;')
       const input = el('input', `flex:1;padding:10px 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
       input.value = state.input
       input.oninput = e => { state.input = e.target.value }
       input.onkeydown = e => { if (e.key === 'Enter') sendMessage() }
       const sendBtnEl = btn('→', () => sendMessage(), `padding:10px 18px;border-radius:8px;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
       sendBtnEl.disabled = state.loading
-      inputArea.append(input, sendBtnEl)
+      inputRow.append(input, sendBtnEl)
+
+      // Venster formaat — dropdown onder het invoerveld
+      const sizeLabelTxt = state.lang === 'nl' ? 'Venster formaat' : 'Window size'
+      const sizeOpts = state.lang === 'nl'
+        ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot']]
+        : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large']]
+      const sizeRow = el('div', 'display:flex;align-items:center;gap:8px;')
+      sizeRow.appendChild(el('span', `color:${C.gray};font-size:12px;`, sizeLabelTxt))
+      const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
+      const sizeSelect = el('select', `background:${C.anthracite};border:1px solid ${C.border};border-radius:8px;color:${C.white};font-size:12px;padding:5px 10px;cursor:pointer;`, optsHtml)
+      sizeSelect.value = state.size
+      sizeSelect.onchange = e => { state.size = e.target.value; render() }
+      sizeRow.appendChild(sizeSelect)
+
+      inputArea.append(inputRow, sizeRow)
 
       win.append(hdr, body, inputArea)
       root.appendChild(win)
