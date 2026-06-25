@@ -36,7 +36,7 @@ REGELS:
 - Off-topic vragen beantwoord je met: "Daar kan ik je niet mee helpen, maar Google wel 👉 https://www.google.com/search?q=[zoekterm]"
 - Bij grote groepen of bedrijfsuitjes doorverwijzen naar info@pooleninmokum.com
 - Eerlijk zijn dat je een AI bent als ernaar gevraagd wordt
-- Gebruik maximaal 1 emoji per antwoord, alleen als het echt past. Geen emoji's in lijsten of tabellen.
+- Gebruik maximaal 1 emoji per antwoord, alleen als het echt past. Geen emoji's in lijsten of tabellen. UITZONDERING: bij ranglijsten/top-lijsten zet je vóór de top 3 een medaille: 🥇 voor plek 1, 🥈 voor plek 2, 🥉 voor plek 3 (de overige plekken zonder emoji).
 - Zet openingstijden altijd op aparte regels per dag/daggroep in een lijst
 - Zet tarieven altijd op aparte regels per activiteit in een lijst
 - Sluit antwoorden af met een natuurlijke vervolgvraag in volledige zinnen. Geen informele afkortingen.
@@ -56,11 +56,11 @@ Je hebt toegang tot de volledige uitslagen-database van Mokum: alle gespeelde to
 - Wie heeft een bepaald (recent) toernooi gewonnen?
 - Hoe heeft een specifieke speler het de laatste tijd gedaan?
 - Wie zijn de beste spelers — per toernooisoort (Fluke Ranking, MEGA Ranking, MEGA Summer Ranking, 8/10ball Zaterdag, OnePocket Monthly, 9 ball Sunday), per discipline (8-ball, 9-ball, 10-ball), of over alle toernooien gecombineerd?
-- Top 5 spelers per toernooisoort.
+- Top 10 spelers per toernooisoort.
 - Over een gekozen periode: dit jaar, afgelopen 3 maanden, een specifiek jaar, of aller tijden.
 - De top 20 op KNBB Pool Rating van Mokum-spelers.
 
-AANPAK bij vragen over speler- of toernooiresultaten: toon EERST kort bovenstaand overzicht van wat je kunt laten zien (zodat de gebruiker weet wat er mogelijk is), en stel DAARNA verduidelijkende filtervragen om het resultaat te verfijnen: welke speler, welke periode, welk type toernooi of discipline, of alles gecombineerd. Geef pas concrete cijfers/ranglijsten als die filters duidelijk zijn. UITZONDERING: als er al een concrete data-sectie is meegegeven (SPELER-RESULTATEN, RECENTE TOERNOOI-WINNAARS, BESTE SPELERS, TOP 5 ..., TOP 20 KNBB POOL RATING) of de gebruiker stelt al een volledige, specifieke vraag, beantwoord die dan direct met de data. Vraagt iemand "welke vragen kan ik stellen over resultaten?", noem dan bovenstaande voorbeelden.
+AANPAK bij vragen over speler- of toernooiresultaten: toon EERST kort bovenstaand overzicht van wat je kunt laten zien (zodat de gebruiker weet wat er mogelijk is), en stel DAARNA verduidelijkende filtervragen om het resultaat te verfijnen: welke speler, welke periode, welk type toernooi of discipline, of alles gecombineerd. Geef pas concrete cijfers/ranglijsten als die filters duidelijk zijn. UITZONDERING: als er al een concrete data-sectie is meegegeven (SPELER-RESULTATEN, RECENTE TOERNOOI-WINNAARS, BESTE SPELERS, TOP 10 ..., TOP 20 KNBB POOL RATING) of de gebruiker stelt al een volledige, specifieke vraag, beantwoord die dan direct met de data. Vraagt iemand "welke vragen kan ik stellen over resultaten?", noem dan bovenstaande voorbeelden.
 Zeg NOOIT dat je geen toegang hebt tot uitslagen, rankings of spelersstatistieken — die heb je wel. Is er voor een concrete vraag geen data meegegeven, vraag dan kort om verduidelijking (welke speler / toernooisoort / periode) in plaats van te weigeren of iets te verzinnen. Voor de allerlaatste live-standen mag je daarnaast naar Cuescore verwijzen.
 
 BELANGRIJK — afsluiting bij resultaten: heb je net een antwoord gegeven met toernooi-resultaten, spelersprestaties, winnaars of een ranglijst? Sluit dan ALTIJD af met de vraag of de gebruiker ook de top 20 op KNBB-rating van Mokum-spelers wil zien (ja/nee). Antwoordt de gebruiker bevestigend, dan krijg je een sectie TOP 20 KNBB POOL RATING aangeleverd om te tonen.
@@ -563,6 +563,11 @@ async function tableQueryPaged(table, filter, sasToken, cap = 8) {
 }
 
 // Aggregeert speler-resultaten tot een ranglijst op basis van toernooiprestaties.
+// Medaille-prefix voor de top 3 in ranglijsten.
+function medalPrefix(i) {
+  return i === 0 ? "🥇 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : ""
+}
+
 function buildLeaderboard(rows, key) {
   const isDiscipline = DISCIPLINES.includes(key)
   const agg = {}
@@ -665,9 +670,9 @@ async function getResultatenContext(messages, sasToken) {
       .filter((r) => r && r.rating)
       .sort((a, b) => b.rating - a.rating)
       .slice(0, 20)
-    const lines = top.map((r, i) => `  ${i + 1}. ${r.name} — ${r.rating}`).join("\n")
+    const lines = top.map((r, i) => `  ${medalPrefix(i)}${i + 1}. ${r.name} — ${r.rating}`).join("\n")
     return (
-      "---\nTOP 20 KNBB POOL RATING (Mokum-spelers, bron Cuescore; gebruik dit om te antwoorden):\n\n" +
+      "---\nTOP 20 KNBB POOL RATING (Mokum-spelers, bron Cuescore; gebruik dit om te antwoorden, met 🥇🥈🥉 voor de top 3):\n\n" +
       lines +
       "\n---"
     )
@@ -716,7 +721,7 @@ async function getResultatenContext(messages, sasToken) {
       "9 ball Sunday",
     ]
 
-    // Modus: top 5 per toernooisoort
+    // Modus: top 10 per toernooisoort
     if (perSeries) {
       if (!period) {
         return (
@@ -727,15 +732,18 @@ async function getResultatenContext(messages, sasToken) {
       const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
       const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
       const blocks = MAIN_SERIES.map((s) => {
-        const board = buildLeaderboard(rows, s).slice(0, 5)
+        const board = buildLeaderboard(rows, s).slice(0, 10)
         if (!board.length) return `${s}: (geen resultaten in deze periode)`
         const lines = board
-          .map((a, i) => `  ${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien`)
+          .map(
+            (a, i) =>
+              `  ${medalPrefix(i)}${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien`
+          )
           .join("\n")
         return `${s}:\n${lines}`
       }).join("\n\n")
       return (
-        `---\nTOP 5 SPELERS PER TOERNOOISOORT — ${period.label} (uit Mokum data; presenteer netjes per toernooisoort):\n\n` +
+        `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label} (uit Mokum data; presenteer netjes per toernooisoort, met 🥇🥈🥉 voor de top 3):\n\n` +
         blocks +
         "\n---"
       )
@@ -769,12 +777,12 @@ async function getResultatenContext(messages, sasToken) {
       .slice(0, 10)
       .map(
         (a, i) =>
-          `  ${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien, ${a.wins}W-${a.losses}V`
+          `  ${medalPrefix(i)}${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien, ${a.wins}W-${a.losses}V`
       )
       .join("\n")
     return (
-      `---\nBESTE SPELERS — ${filterLabel} — ${period.label} (gerangschikt op toernooiprestaties uit Mokum data; ` +
-      `gebruik dit om de vraag te beantwoorden, noem de top spelers met hun titels/finales):\n\n` +
+      `---\nBESTE SPELERS (top 10) — ${filterLabel} — ${period.label} (gerangschikt op toernooiprestaties uit Mokum data; ` +
+      `gebruik dit om de vraag te beantwoorden, noem de top spelers met hun titels/finales, met 🥇🥈🥉 voor de top 3):\n\n` +
       lines +
       "\n---"
     )
@@ -900,7 +908,7 @@ app.http("chat", {
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-haiku-4-5",
-        max_tokens: 1024,
+        max_tokens: 1600,
         system: systemBlocks,
         messages: messages,
       })
