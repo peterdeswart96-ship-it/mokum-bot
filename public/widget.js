@@ -199,7 +199,7 @@
     internPwd: '',
     internPwdError: false,
     bubbleTextIndex: 0,
-    size: 'klein',
+    size: 'middel',
     examplesOpen: false,
     sendTimes: [],
     lastSentQuestion: '',
@@ -210,7 +210,7 @@
 
   function getWidth() {
     const mobile = window.innerWidth < 480
-    if (mobile) return (window.innerWidth - 16) + 'px'
+    if (mobile) return (window.innerWidth - 12) + 'px'
     if (state.size === 'groot') return 'min(80vw, 900px)'
     if (state.size === 'klein') return '380px'
     return '460px' // middel
@@ -218,13 +218,33 @@
 
   function getHeight() {
     const mobile = window.innerWidth < 480
-    if (state.size === 'groot') return mobile ? 'calc(100dvh - 90px - 16px)' : '85dvh'
-    const cap = mobile ? (state.size === 'klein' ? 460 : 600) : (state.size === 'klein' ? 520 : 660)
+    // Mobiel: zo schermvullend mogelijk. Dit is de basiswaarde; fitMobileWindow()
+    // verfijnt hoogte/bottom via de visualViewport API zodra het toetsenbord opent.
+    if (mobile) return 'calc(100dvh - 16px)'
+    if (state.size === 'groot') return '85dvh'
+    const cap = state.size === 'klein' ? 520 : 660
     return `min(${cap}px, calc(100dvh - 90px - 80px - 16px))`
   }
 
+  function getBottom() {
+    return window.innerWidth < 480 ? '8px' : WIDGET_CONFIG.bottom
+  }
+
   function getRight() {
-    return window.innerWidth < 480 ? '8px' : WIDGET_CONFIG.right
+    return window.innerWidth < 480 ? '6px' : WIDGET_CONFIG.right
+  }
+
+  // Houdt het mobiele paneel binnen het zichtbare deel van het scherm en tilt het
+  // boven het toetsenbord (visualViewport krimpt wanneer het toetsenbord opent).
+  function fitMobileWindow() {
+    if (!state.open || window.innerWidth >= 480) return
+    const win = document.getElementById('mokum-chat-window')
+    if (!win) return
+    const vv = window.visualViewport
+    if (!vv) return
+    const keyboardInset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+    win.style.height = (vv.height - 16) + 'px'
+    win.style.bottom = (keyboardInset + 8) + 'px'
   }
 
   function injectStyles() {
@@ -362,7 +382,7 @@
     const chatHeight = getHeight()
 
     if (state.open) {
-      const win = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`)
+      const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`, undefined, { id: 'mokum-chat-window' })
 
       // Header
       const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
@@ -542,6 +562,7 @@
 
       win.append(hdr, body, inputArea)
       root.appendChild(win)
+      fitMobileWindow()
     }
 
     // Floating knop
@@ -689,6 +710,13 @@
     lastViewportWidth = window.innerWidth
     render()
   })
+
+  // Toetsenbord openen/sluiten op mobiel: paneel binnen het zichtbare deel houden
+  // zonder re-render (anders verdwijnt de focus en sluit het toetsenbord).
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitMobileWindow)
+    window.visualViewport.addEventListener('scroll', fitMobileWindow)
+  }
 
   function init() {
     injectStyles()
