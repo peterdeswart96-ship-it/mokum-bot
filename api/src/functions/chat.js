@@ -28,6 +28,7 @@ OPENINGSTIJDEN:
 TARIEVEN (BELANGRIJK: pool, biljart, darts en shuffleboard reken je PER TAFEL/BAAN/BORD — de speelplek — NIET per persoon. De prijs is hetzelfde, of je nu met 1, 2, 3 of meer mensen speelt; vermenigvuldig die tarieven dus NOOIT met het aantal spelers. De ENIGE uitzondering is de digitale game tafel — die is wél per speler):
 - Pool (American & English): €15,00/uur per tafel tot 19:00, €19,00/uur per tafel na 19:00
 - Biljart: €15,00/uur per tafel tot 19:00, €19,00/uur per tafel na 19:00
+- Maximaal 5 personen per pooltafel en per biljarttafel
 - Darts: €8,50/uur per bord (hele dag)
 - Shuffleboard: €14,50/uur per baan tot 19:00, €18,50/uur per baan na 19:00
 - Digitale game tafel: kost 1 credit PER speler die meedoet aan een spel (dit is de enige activiteit die per persoon wordt gerekend)
