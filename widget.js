@@ -551,9 +551,9 @@
         ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot']]
         : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large']]
       const sizeRow = el('div', 'display:flex;align-items:center;gap:6px;')
-      sizeRow.appendChild(el('span', `color:${C.gray};font-size:11px;white-space:nowrap;line-height:1.1;`, sizeLabelTxt))
+      sizeRow.appendChild(el('span', `display:flex;align-items:center;height:24px;color:${C.gray};font-size:11px;white-space:nowrap;`, sizeLabelTxt))
       const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
-      const sizeSelect = el('select', `background:${C.anthracite};border:1px solid ${C.border};border-radius:6px;color:${C.white};font-size:11px;padding:1px 4px;line-height:1.1;height:auto;cursor:pointer;`, optsHtml)
+      const sizeSelect = el('select', `box-sizing:border-box;height:24px;line-height:normal;background:${C.anthracite};border:1px solid ${C.border};border-radius:6px;color:${C.white};font-size:11px;padding:0 6px;cursor:pointer;`, optsHtml)
       sizeSelect.value = state.size
       sizeSelect.onchange = e => { state.size = e.target.value; render() }
       sizeRow.appendChild(sizeSelect)
