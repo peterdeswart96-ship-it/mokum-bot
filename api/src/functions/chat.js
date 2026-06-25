@@ -695,7 +695,8 @@ async function getResultatenContext(messages, sasToken) {
       .slice(0, 20)
     const lines = top.map((r, i) => `  ${medalPrefix(i)}${i + 1}. ${r.name} — ${r.rating}`).join("\n")
     return (
-      "---\nTOP 20 KNBB POOL RATING (Mokum-spelers, bron Cuescore; gebruik dit om te antwoorden, met 🥇🥈🥉 voor de top 3):\n\n" +
+      '---\nTOP 20 KNBB POOL RATING (bron Cuescore; gebruik dit om te antwoorden, met 🥇🥈🥉 voor de top 3). ' +
+      'Gebruik EXACT deze titel boven de lijst: "Top 20 KNBB Pool Rating — Mokum (toernooi) Spelers".\n\n' +
       lines +
       "\n---"
     )
