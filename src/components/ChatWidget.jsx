@@ -277,7 +277,7 @@ export default function ChatWidget() {
   const [internUnlocked, setInternUnlocked] = useState(false)
   const [internPwd, setInternPwd] = useState("")
   const [internPwdError, setInternPwdError] = useState(false)
-  const [size, setSize] = useState("groot")
+  const [size, setSize] = useState("klein")
   const [examplesOpen, setExamplesOpen] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
   const [lang, setLang] = useState(DEFAULT_LANG)
