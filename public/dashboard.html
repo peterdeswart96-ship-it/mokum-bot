@@ -465,6 +465,7 @@
           <div style="display:flex;gap:8px;">
             <div style="flex:1;"><input type="date" id="zoek-van" /></div>
             <div style="flex:1;"><input type="date" id="zoek-tot" /></div>
+            <button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()" title="Toon alleen gesprekken waar de bot mogelijk geen antwoord wist">⚠️ Onbeantwoord</button>
             <button class="btn" onclick="resetZoek()">Reset</button>
           </div>
         </div>
@@ -715,6 +716,7 @@ const API = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.
 
 let alleGesprekken = []
 let gefilterd = []
+let alleenOnbeantwoord = false
 
 // Login — verificatie via backend, hash staat niet meer in de frontend
 async function login() {
@@ -1051,10 +1053,19 @@ function zoekGesprekken() {
     if (van && new Date(g.timestamp) < new Date(van)) return false
     if (tot && new Date(g.timestamp) > new Date(tot + "T23:59:59")) return false
     if (zoek && !g.messages?.some(m => m.content?.toLowerCase().includes(zoek)) && !g.reply?.toLowerCase().includes(zoek)) return false
+    if (alleenOnbeantwoord && !botKonNietAntwoorden(g)) return false
     return true
   })
-  document.getElementById("zoek-status").textContent = zoek || van || tot ? `${gefilterd.length} resultaten` : ""
+  document.getElementById("zoek-status").textContent = zoek || van || tot || alleenOnbeantwoord ? `${gefilterd.length} resultaten` : ""
   renderGesprekken()
+}
+
+function toggleOnbeantwoord() {
+  alleenOnbeantwoord = !alleenOnbeantwoord
+  const b = document.getElementById("filter-onbeantwoord")
+  if (alleenOnbeantwoord) { b.style.background = "#cc0000"; b.style.color = "#fff"; b.style.borderColor = "#cc0000" }
+  else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
+  zoekGesprekken()
 }
 
 function resetZoek() {
@@ -1062,6 +1073,9 @@ function resetZoek() {
   document.getElementById("zoek-van").value = ""
   document.getElementById("zoek-tot").value = ""
   document.getElementById("zoek-status").textContent = ""
+  alleenOnbeantwoord = false
+  const b = document.getElementById("filter-onbeantwoord")
+  if (b) { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
   gefilterd = [...alleGesprekken]
   renderGesprekken()
 }
