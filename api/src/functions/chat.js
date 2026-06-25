@@ -732,81 +732,71 @@ async function getResultatenContext(messages, sasToken) {
     const perSeries =
       /per (toernooisoort|soort|type|reeks)|elke (toernooisoort|soort|reeks)|alle soorten|per categorie/.test(flowNorm)
     const series = parseSeries(flowText)
-    const period = parsePeriod(flowText)
     const discipline = parseDiscipline(flowText)
-    const MAIN_SERIES = [
-      "Fluke Ranking",
-      "MEGA Ranking",
-      "MEGA Summer Ranking",
-      "8/10ball Zaterdag",
-      "OnePocket Monthly",
-      "9 ball Sunday",
-    ]
-
-    // Modus: top 10 per toernooisoort
-    if (perSeries) {
-      if (!period) {
-        return (
-          "---\nINSTRUCTIE: De gebruiker wil de beste spelers per toernooisoort, maar de periode ontbreekt nog. " +
-          "Stel EERST kort de vraag over welke periode het gaat (bijv. dit jaar 2026, afgelopen 3 maanden, een specifiek jaar, of aller tijden). Verzin geen resultaten.\n---"
-        )
-      }
-      const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
-      const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
-      const blocks = MAIN_SERIES.map((s) => {
-        const board = buildLeaderboard(rows, s).slice(0, 10)
-        if (!board.length) return `${s}: (geen resultaten in deze periode)`
-        const lines = board
-          .map(
-            (a, i) =>
-              `  ${medalPrefix(i)}${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien`
-          )
-          .join("\n")
-        return `${s}:\n${lines}`
-      }).join("\n\n")
-      return (
-        `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label} (uit Mokum data; presenteer netjes per toernooisoort, met 🥇🥈🥉 voor de top 3):\n\n` +
-        blocks +
-        "\n---"
-      )
-    }
-
-    // Modus: één reeks of discipline (of alle gecombineerd)
-    const filterKey = series ? (series === "all" ? "all" : series) : discipline
-    const filterLabel = series === "all" ? "Alle toernooien" : series || discipline
-    if (!filterKey || !period) {
-      const missing = []
-      if (!filterKey)
-        missing.push(
-          `het type toernooi of discipline (opties: ${SERIES_OPTIONS.join(", ")}, of 8-ball / 9-ball / 10-ball)`
-        )
-      if (!period)
-        missing.push("de periode (bijv. dit jaar 2026, afgelopen 3 maanden, een specifiek jaar, of aller tijden)")
-      return (
-        "---\nINSTRUCTIE: De gebruiker vraagt naar de beste/best presterende spelers, maar deze info ontbreekt nog: " +
-        missing.join(" en ") +
-        ". Stel EERST een korte, vriendelijke verduidelijkende vraag waarin je deze opties als keuzes aanbiedt, vóór je een ranglijst geeft. Verzin zelf geen resultaten.\n---"
-      )
-    }
-
+    // GEEN wedervragen: ontbreekt de periode, dan default 'aller tijden'
+    const period = parsePeriod(flowText) || { all: true, label: "aller tijden" }
     const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
     const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
-    const board = buildLeaderboard(rows, filterKey)
-    if (!board.length) {
-      return `---\nGEEN DATA: er zijn geen resultaten voor ${filterLabel} in periode ${period.label}. Meld dit eerlijk en stel eventueel een andere periode of ander type voor.\n---`
-    }
-    const lines = board
-      .slice(0, 10)
-      .map(
-        (a, i) =>
-          `  ${medalPrefix(i)}${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien, ${a.wins}W-${a.losses}V`
+
+    const MAIN_SERIES = [
+      "Fluke Ranking", "MEGA Ranking", "MEGA Summer Ranking",
+      "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday",
+    ]
+    const DISCIPLINES_LBL = ["8-Ball", "9-Ball", "10-Ball"]
+    const lijnen = (board, metWL) =>
+      board
+        .map(
+          (a, i) =>
+            `  ${medalPrefix(i)}${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien${metWL ? `, ${a.wins}W-${a.losses}V` : ""}`
+        )
+        .join("\n")
+    const KNBB_OFFER =
+      " Sluit AF met de vraag of de gebruiker ook de top 20 op KNBB-rating van Mokum-spelers wil zien."
+
+    // 1) Specifieke reeks of discipline gevraagd -> alleen die ranglijst (top 10)
+    const specifiek = series && series !== "all" ? series : perSeries ? null : discipline
+    if (specifiek) {
+      const board = buildLeaderboard(rows, specifiek)
+      if (!board.length) return `---\nGEEN DATA: geen resultaten voor ${specifiek} in periode ${period.label}.\n---`
+      return (
+        `---\nBESTE SPELERS (top 10) — ${specifiek} — ${period.label} (🥇🥈🥉 voor de top 3).${KNBB_OFFER}\n\n` +
+        lijnen(board.slice(0, 10), true) + "\n---"
       )
-      .join("\n")
+    }
+
+    // 2) 'Alle toernooien gecombineerd' expliciet -> overall top 10
+    if (series === "all") {
+      const board = buildLeaderboard(rows, "all")
+      return (
+        `---\nBESTE SPELERS (top 10) — Alle toernooien — ${period.label} (🥇🥈🥉 voor de top 3).${KNBB_OFFER}\n\n` +
+        lijnen(board.slice(0, 10), true) + "\n---"
+      )
+    }
+
+    // 3) Expliciet 'per toernooisoort' -> top 10 per reeks
+    if (perSeries) {
+      const blocks = MAIN_SERIES.map((s) => {
+        const b = buildLeaderboard(rows, s).slice(0, 10)
+        return b.length ? `${s}:\n${lijnen(b)}` : `${s}: (geen resultaten)`
+      }).join("\n\n")
+      return `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label} (presenteer per soort, 🥇🥈🥉 voor de top 3).${KNBB_OFFER}\n\n${blocks}\n---`
+    }
+
+    // 4) Algemeen ('wie zijn de beste spelers?') -> VOLLEDIG overzicht, geen wedervragen
+    const perSoort = MAIN_SERIES.map((s) => {
+      const b = buildLeaderboard(rows, s).slice(0, 5)
+      return b.length ? `${s}:\n${lijnen(b)}` : `${s}: (geen resultaten)`
+    }).join("\n\n")
+    const perDisc = DISCIPLINES_LBL.map((d) => {
+      const b = buildLeaderboard(rows, d).slice(0, 5)
+      return b.length ? `${d}:\n${lijnen(b)}` : `${d}: (geen resultaten)`
+    }).join("\n\n")
+    const overall = buildLeaderboard(rows, "all").slice(0, 10)
     return (
-      `---\nBESTE SPELERS (top 10) — ${filterLabel} — ${period.label} (gerangschikt op toernooiprestaties uit Mokum data; ` +
-      `gebruik dit om de vraag te beantwoorden, noem de top spelers met hun titels/finales, met 🥇🥈🥉 voor de top 3):\n\n` +
-      lines +
-      "\n---"
+      `---\nBESTE SPELERS — VOLLEDIG OVERZICHT — ${period.label} (presenteer in 3 delen met duidelijke kopjes, 🥇🥈🥉 voor de top 3 binnen elke lijst; stel GEEN wedervragen).${KNBB_OFFER}\n\n` +
+      `== TOP 5 PER TOERNOOISOORT ==\n${perSoort}\n\n` +
+      `== TOP 5 PER SPELSOORT (discipline) ==\n${perDisc}\n\n` +
+      `== OVERALL TOP 10 (alle toernooien) ==\n${lijnen(overall, true)}\n---`
     )
   }
 
@@ -937,7 +927,7 @@ app.http("chat", {
       const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
       const response = await client.messages.create({
         model: "claude-haiku-4-5",
-        max_tokens: 1600,
+        max_tokens: 2200,
         system: systemBlocks,
         messages: messages,
       })
