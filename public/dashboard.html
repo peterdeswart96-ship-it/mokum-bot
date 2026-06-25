@@ -986,6 +986,25 @@ function resetFilter() {
   updateAlles()
 }
 
+// Detecteert of de bot een vraag NIET heeft kunnen beantwoorden (verbeterpunt)
+function botKonNietAntwoorden(g) {
+  const indicatoren = [
+    "geen informatie over", "niet veel informatie", "weinig informatie",
+    "niet in mijn systeem", "niet in mijn gegevens", "niet in mijn database",
+    "kan ik je niet mee helpen", "kan ik je niet helpen", "kan ik je helaas niet",
+    "kan ik niet volledig", "geen toegang tot", "heb ik helaas niet",
+    "heb ik daar niet", "heb ik niet alle", "weet ik helaas niet", "dat weet ik niet",
+    "daar kan ik je niet", "daar heb ik geen", "kan ik niets vertellen",
+    "i don't have", "i do not have", "no information", "can't help you with that",
+    "cannot help you with that", "i'm not able to", "don't have access",
+  ]
+  const teksten = []
+  if (g.reply) teksten.push(g.reply)
+  ;(g.messages || []).forEach(m => { if (m.role === "assistant") teksten.push(m.content || "") })
+  const alles = teksten.join(" ").toLowerCase()
+  return indicatoren.some(i => alles.includes(i))
+}
+
 // Gesprekken tab
 function renderGesprekken() {
   const lijst = document.getElementById("gesprekken-lijst")
@@ -1000,11 +1019,12 @@ function renderGesprekken() {
     const aantalBerichten = g.messages?.length || 0
     const taal = detecteerTaal(g)
     const onderwerp = detecteerOnderwerp(g)
+    const geenAntwoord = botKonNietAntwoorden(g)
 
     return `<div class="convo-item" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div style="flex:1;">
-          <div class="convo-title">${kort}</div>
+          <div class="convo-title">${geenAntwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${kort}</div>
           <div class="convo-meta">${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span></div>
         </div>
         <span style="color:#555;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
