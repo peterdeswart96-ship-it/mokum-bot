@@ -17,6 +17,10 @@
 
  const WIDGET_CONFIG = { bottom: '70px', right: '10px', width: '440px' }
 
+  // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
+  const RATE_MAX = 6
+  const RATE_WINDOW = 30000 // 30 seconden
+
   // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
   const CATEGORIES = [
     { id: 'toernooien', emoji: '🏆', topics: ['toernooien', 'resultaten', 'amsterdam-open'], newTopics: ['resultaten'], starTopics: ['amsterdam-open'] },
@@ -40,6 +44,8 @@
       typing: 'Aan het typen...',
       placeholder: 'Stel een vraag...',
       error: 'Oeps, er ging iets mis. Probeer het nog eens! 🎱',
+      duplicateMsg: 'Die vraag heb je net al gesteld 🙂 Probeer gerust iets anders te vragen!',
+      rateLimitMsg: 'Rustig aan! 😅 Je stelt veel vragen achter elkaar. Wacht nog even ({s}s) en probeer het dan opnieuw.',
       backToTopics: '← Terug naar onderwerpen',
       backButton: '← Terug',
       askOther: '✏️ Ik wil een andere vraag stellen',
@@ -109,6 +115,8 @@
       typing: 'Typing...',
       placeholder: 'Ask a question...',
       error: 'Oops, something went wrong. Please try again! 🎱',
+      duplicateMsg: 'You just asked that one 🙂 Feel free to ask something else!',
+      rateLimitMsg: "Easy there! 😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.",
       backToTopics: '← Back to topics',
       backButton: '← Back',
       askOther: '✏️ I want to ask a different question',
@@ -190,6 +198,8 @@
     bubbleTextIndex: 0,
     size: 'groot',
     examplesOpen: false,
+    sendTimes: [],
+    lastSentQuestion: '',
   }
 
   function tr() { return TRANSLATIONS[state.lang] }
@@ -599,6 +609,34 @@
   async function sendMessage(text) {
     const msg = text || state.input
     if (!msg.trim()) return
+    // Blokkeer terwijl er al een antwoord wordt opgehaald (geen 5x dezelfde request bij snel klikken)
+    if (state.loading) return
+
+    const genormaliseerd = msg.trim().toLowerCase()
+
+    // Dezelfde vraag mag niet direct opnieuw
+    if (genormaliseerd === state.lastSentQuestion) {
+      state.input = ''; state.stage = 'chat'
+      state.messages.push({ role: 'user', content: msg })
+      state.messages.push({ role: 'assistant', content: tr().duplicateMsg })
+      render()
+      return
+    }
+
+    // Rate-limit: te veel vragen achter elkaar -> timeout-bericht
+    const now = Date.now()
+    state.sendTimes = (state.sendTimes || []).filter(tijd => now - tijd < RATE_WINDOW)
+    if (state.sendTimes.length >= RATE_MAX) {
+      const wacht = Math.ceil((RATE_WINDOW - (now - state.sendTimes[0])) / 1000)
+      state.input = ''; state.stage = 'chat'
+      state.messages.push({ role: 'user', content: msg })
+      state.messages.push({ role: 'assistant', content: tr().rateLimitMsg.replace('{s}', wacht) })
+      render()
+      return
+    }
+    state.sendTimes.push(now)
+    state.lastSentQuestion = genormaliseerd
+
     state.messages.push({ role: 'user', content: msg })
     state.input = ''; state.loading = true; state.stage = 'chat'
     render()
