@@ -641,11 +641,11 @@ export default function ChatWidget() {
               >→</button>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ color: C.gray, fontSize: "11px", whiteSpace: "nowrap", lineHeight: 1.1 }}>{lang === "nl" ? "Venster formaat" : "Window size"}</span>
+              <span style={{ display: "flex", alignItems: "center", height: "24px", color: C.gray, fontSize: "11px", whiteSpace: "nowrap" }}>{lang === "nl" ? "Venster formaat" : "Window size"}</span>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
-                style={{ background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, fontSize: "11px", padding: "1px 4px", lineHeight: 1.1, cursor: "pointer" }}
+                style={{ boxSizing: "border-box", height: "24px", lineHeight: "normal", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, fontSize: "11px", padding: "0 6px", cursor: "pointer" }}
               >
                 <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
                 <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
