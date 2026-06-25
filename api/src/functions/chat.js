@@ -50,6 +50,15 @@ REGELS:
 KENNISBRON INSTRUCTIE:
 Als er een KENNISBRON sectie aanwezig is in deze prompt, gebruik die dan als primaire bron. De kennisbron is altijd leidend boven de informatie hierboven. Als de kennisbron informatie bevat die afwijkt van bovenstaande instructies, volg dan de kennisbron.
 
+TOERNOOI-RESULTATEN & SPELERSDATA (BELANGRIJK — deze data heb je WEL):
+Je hebt toegang tot de volledige uitslagen-database van Mokum: alle gespeelde toernooien, winnaars en spelersprestaties. Je kunt o.a. deze vragen beantwoorden:
+- Wie heeft een bepaald (recent) toernooi gewonnen?
+- Hoe heeft een specifieke speler het de laatste tijd gedaan?
+- Wie zijn de beste spelers — per toernooisoort (Fluke Ranking, MEGA Ranking, 8/10ball Zaterdag) of over alle toernooien — en over een gekozen periode (bijv. dit jaar, afgelopen 3 maanden, een specifiek jaar, of aller tijden)?
+- Top 5 spelers per toernooisoort.
+Als er een sectie SPELER-RESULTATEN, RECENTE TOERNOOI-WINNAARS, BESTE SPELERS of TOP 5 ... in deze prompt staat, gebruik die data om te antwoorden. Vraagt iemand "welke vragen kan ik stellen over resultaten?", noem dan bovenstaande voorbeelden.
+Zeg NOOIT dat je geen toegang hebt tot uitslagen, rankings of spelersstatistieken — die heb je wel. Is er voor een concrete vraag geen data meegegeven, vraag dan kort om verduidelijking (welke speler / toernooisoort / periode) in plaats van te weigeren of iets te verzinnen. Voor de allerlaatste live-standen mag je daarnaast naar Cuescore verwijzen.
+
 TOERNOOIEN:
 Mokum organiseert meerdere wekelijkse toernooien. Aanmelden en actuele datums via [Cuescore](https://cuescore.com/mokumpooldarts/tournaments).
 
@@ -582,19 +591,59 @@ async function getResultatenContext(messages, sasToken) {
   const lower = normalizeText(lastMsg)
 
   // --- Leaderboard-intentie: beste spelers per reeks + periode ---------------
-  const leaderboardIntent = [
+  // Kijk naar de laatste paar user-berichten zodat verduidelijking over meerdere
+  // beurten werkt ("wie zijn de beste?" -> "Fluke, dit jaar"), zonder ver terug te lekken.
+  const recentUserText = messages
+    .filter((m) => m.role === "user")
+    .slice(-3)
+    .map((m) => m.content || "")
+    .join(" \n ")
+  const recentNorm = normalizeText(recentUserText)
+  const lbKeywords = [
     "beste speler", "beste spelers", "sterkste speler", "sterkste spelers",
     "top speler", "top spelers", "best presterend", "wie doet het goed",
     "wie doen het goed", "wie presteer", "ranglijst", "wie is de beste",
     "wie zijn de beste", "spelers doen het goed", "goed bezig",
-  ].some((w) => lower.includes(w))
+    "meeste titels", "meeste gewonnen", "wie wint het meest",
+  ]
+  const leaderboardIntent =
+    lbKeywords.some((w) => recentNorm.includes(w)) ||
+    /top\s*\d+\s*speler/.test(recentNorm) ||
+    /per (toernooisoort|soort|type|reeks)/.test(recentNorm)
 
   if (leaderboardIntent) {
-    // Combineer alle user-berichten zodat verduidelijking over meerdere beurten werkt.
-    const allUserText = messages.filter((m) => m.role === "user").map((m) => m.content || "").join(" \n ")
-    const series = parseSeries(allUserText)
-    const period = parsePeriod(allUserText)
+    const perSeries =
+      /per (toernooisoort|soort|type|reeks)|elke (toernooisoort|soort|reeks)|alle soorten|per categorie/.test(recentNorm)
+    const series = parseSeries(recentUserText)
+    const period = parsePeriod(recentUserText)
+    const MAIN_SERIES = ["Fluke Ranking", "MEGA Ranking", "8/10ball Zaterdag"]
 
+    // Modus: top 5 per toernooisoort
+    if (perSeries) {
+      if (!period) {
+        return (
+          "---\nINSTRUCTIE: De gebruiker wil de beste spelers per toernooisoort, maar de periode ontbreekt nog. " +
+          "Stel EERST kort de vraag over welke periode het gaat (bijv. dit jaar 2026, afgelopen 3 maanden, een specifiek jaar, of aller tijden). Verzin geen resultaten.\n---"
+        )
+      }
+      const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
+      const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
+      const blocks = MAIN_SERIES.map((s) => {
+        const board = buildLeaderboard(rows, s).slice(0, 5)
+        if (!board.length) return `${s}: (geen resultaten in deze periode)`
+        const lines = board
+          .map((a, i) => `  ${i + 1}. ${a.name} — ${a.titles} titel(s), ${a.finals} finale(s), ${a.appearances} toernooien`)
+          .join("\n")
+        return `${s}:\n${lines}`
+      }).join("\n\n")
+      return (
+        `---\nTOP 5 SPELERS PER TOERNOOISOORT — ${period.label} (uit Mokum data; presenteer netjes per toernooisoort):\n\n` +
+        blocks +
+        "\n---"
+      )
+    }
+
+    // Modus: één reeks (of alle gecombineerd)
     if (!series || !period) {
       const missing = []
       if (!series) missing.push(`het type toernooi (opties: ${SERIES_OPTIONS.join(", ")})`)
