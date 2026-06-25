@@ -425,7 +425,11 @@ function parseSeries(text) {
   if (/\bfluke\b/.test(n)) return "Fluke Ranking"
   if (/\bmega\b/.test(n)) return "MEGA Ranking"
   if (/zaterdag|8 10ball|10ball|8ball|8 ball|10 ball|8 10\b/.test(n)) return "8/10ball Zaterdag"
-  if (/\balle\b|\balles\b|all toernooi|alle toernooien|iedereen|overall|in totaal|elk toernooi/.test(n))
+  if (
+    /\ballemaal\b|\balle\b|\balles\b|all toernooi|alle toernooien|gecombineerd|alle drie|iedereen|overall|in totaal|elk toernooi/.test(
+      n
+    )
+  )
     return "all"
   return null
 }
