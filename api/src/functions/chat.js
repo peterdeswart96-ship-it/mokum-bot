@@ -784,19 +784,20 @@ async function getResultatenContext(messages, sasToken) {
 
     // 4) Algemeen ('wie zijn de beste spelers?') -> VOLLEDIG overzicht, geen wedervragen
     const perSoort = MAIN_SERIES.map((s) => {
-      const b = buildLeaderboard(rows, s).slice(0, 5)
+      const b = buildLeaderboard(rows, s).slice(0, 3)
       return b.length ? `${s}:\n${lijnen(b)}` : `${s}: (geen resultaten)`
     }).join("\n\n")
     const perDisc = DISCIPLINES_LBL.map((d) => {
-      const b = buildLeaderboard(rows, d).slice(0, 5)
+      const b = buildLeaderboard(rows, d).slice(0, 3)
       return b.length ? `${d}:\n${lijnen(b)}` : `${d}: (geen resultaten)`
     }).join("\n\n")
-    const overall = buildLeaderboard(rows, "all").slice(0, 10)
+    const overall = buildLeaderboard(rows, "all").slice(0, 5)
     return (
-      `---\nBESTE SPELERS — VOLLEDIG OVERZICHT — ${period.label} (presenteer in 3 delen met duidelijke kopjes, 🥇🥈🥉 voor de top 3 binnen elke lijst; stel GEEN wedervragen).${KNBB_OFFER}\n\n` +
-      `== TOP 5 PER TOERNOOISOORT ==\n${perSoort}\n\n` +
-      `== TOP 5 PER SPELSOORT (discipline) ==\n${perDisc}\n\n` +
-      `== OVERALL TOP 10 (alle toernooien) ==\n${lijnen(overall, true)}\n---`
+      `---\nBESTE SPELERS — VOLLEDIG OVERZICHT — ${period.label}.\n` +
+      `BELANGRIJK: toon ALLE DRIE de onderstaande delen VOLLEDIG, elk met een eigen kopje en 🥇🥈🥉 voor de top 3. Laat GEEN deel weg — óók de spelsoort-sectie (8/9/10-ball) en alle 6 toernooisoorten moeten erin. Stel GEEN wedervragen.${KNBB_OFFER}\n\n` +
+      `== DEEL 1 — OVERALL TOP 5 (alle toernooien) ==\n${lijnen(overall, true)}\n\n` +
+      `== DEEL 2 — TOP 3 PER TOERNOOISOORT (alle 6 tonen) ==\n${perSoort}\n\n` +
+      `== DEEL 3 — TOP 3 PER SPELSOORT / DISCIPLINE (8-ball, 9-ball, 10-ball) ==\n${perDisc}\n---`
     )
   }
 
