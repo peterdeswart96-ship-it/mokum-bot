@@ -25,7 +25,7 @@ const WIDGET_CONFIG = {
 
 // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
 const CATEGORIES = [
-  { id: "toernooien", emoji: "🏆", topics: ["toernooien", "resultaten"], newTopics: ["resultaten"] },
+  { id: "toernooien", emoji: "🏆", topics: ["toernooien", "resultaten", "amsterdam-open"], newTopics: ["resultaten"], starTopics: ["amsterdam-open"] },
   { id: "spelen",     emoji: "🎱", topics: ["pool", "darts", "spelregels", "gaming"] },
   { id: "praktisch",  emoji: "ℹ️", topics: ["openingstijden", "tarieven", "locatie", "eten-drinken", "sport"] },
   { id: "service",    emoji: "🛠️", topics: ["keu-reparatie", "keu-shop", "clinics"] },
@@ -251,7 +251,7 @@ function ChipButton({ onClick, children, accent = false }) {
   const [hov, setHov] = useState(false)
   return (
     <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
-      fontSize: "13px", padding: "8px 14px", borderRadius: "20px",
+      fontSize: "13px", fontWeight: 400, padding: "8px 14px", borderRadius: "20px",
       backgroundColor: accent ? (hov ? C.redDark : C.red) : (hov ? "#2a2a2a" : "transparent"),
       color: C.white, border: accent ? "none" : `1px solid ${hov ? "#444" : C.border}`,
       cursor: "pointer", transition: "all 0.15s ease", textAlign: "left", lineHeight: "1.4",
@@ -498,11 +498,15 @@ export default function ChatWidget() {
                       {cat.topics.map((tid) => {
                         const topic = t.topics.find((tp) => tp.id === tid)
                         if (!topic) return null
+                        const isStar = cat.starTopics && cat.starTopics.indexOf(tid) !== -1
                         const isNew = cat.newTopics && cat.newTopics.indexOf(tid) !== -1
                         return (
                           <ChipButton key={tid} onClick={() => selectTopic(topic)}>
                             {topic.emoji} {topic.label}
-                            {isNew && (
+                            {isStar && (
+                              <span style={{ background: "#e0a93b", color: "#1a1a1a", fontSize: "9px", fontWeight: 800, padding: "1px 5px", borderRadius: "5px", marginLeft: "5px", verticalAlign: "middle" }}>★</span>
+                            )}
+                            {!isStar && isNew && (
                               <span style={{ background: C.red, color: "#fff", fontSize: "8px", fontWeight: 800, padding: "1px 4px", borderRadius: "4px", marginLeft: "5px", verticalAlign: "middle" }}>NEW</span>
                             )}
                           </ChipButton>

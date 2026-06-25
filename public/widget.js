@@ -19,7 +19,7 @@
 
   // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
   const CATEGORIES = [
-    { id: 'toernooien', emoji: '🏆', topics: ['toernooien', 'resultaten'], newTopics: ['resultaten'] },
+    { id: 'toernooien', emoji: '🏆', topics: ['toernooien', 'resultaten', 'amsterdam-open'], newTopics: ['resultaten'], starTopics: ['amsterdam-open'] },
     { id: 'spelen', emoji: '🎱', topics: ['pool', 'darts', 'spelregels', 'gaming'] },
     { id: 'praktisch', emoji: 'ℹ️', topics: ['openingstijden', 'tarieven', 'locatie', 'eten-drinken', 'sport'] },
     { id: 'service', emoji: '🛠️', topics: ['keu-reparatie', 'keu-shop', 'clinics'] },
@@ -60,6 +60,7 @@
         { id: 'tarieven', emoji: '💶', label: 'Tarieven' },
         { id: 'toernooien', emoji: '🏆', label: 'Toernooien' },
         { id: 'resultaten', emoji: '📊', label: 'Toernooi resultaten' },
+        { id: 'amsterdam-open', emoji: '🏆', label: 'Amsterdam Open' },
         { id: 'spelregels', emoji: '📖', label: 'Spelregels' },
         { id: 'eten-drinken', emoji: '🍺', label: 'Eten & Drinken' },
         { id: 'sport', emoji: '📺', label: 'Sport kijken' },
@@ -78,6 +79,7 @@
         tarieven: ['Wat kost een uur poolen?', 'Zijn er dagprijzen of avondprijzen?', 'Kan ik pinnen?', 'Zijn er groepstarieven?'],
         toernooien: ['Wanneer is het volgende toernooi?', 'Welke toernooien zijn er aankomende week?', 'Zijn er ook toernooien voor beginnende spelers?', 'Wat kost deelname?'],
         resultaten: ['Wie won het laatste 8-ball toernooi?', 'Wie zijn de beste spelers van 2026?', 'Top 5 spelers per toernooisoort aller tijden', 'Wie zijn de beste 9-ball spelers dit jaar?', 'Laat de top 20 KNBB-rating zien'],
+        'amsterdam-open': ['Wanneer is het Go Customs Amsterdam Open?', 'Hoe schrijf ik me in voor een qualifier?', 'Wat is het prijzengeld van het Amsterdam Open?', 'Wanneer zijn de qualifiers en de finaledag?', 'Wat is het format van het Amsterdam Open?'],
         'eten-drinken': ['Wat staat er op het menu?', 'Hebben jullie vegetarische opties?', 'Wat kosten de bieren?', 'Kunnen jullie pizzas bestellen?'],
         sport: ['Welke sportwedstrijden kijken jullie vanavond?', 'Tonen jullie Champions League / Eredivisie?', 'Op hoeveel schermen wordt sport getoond?', 'Hoe vroeg moet ik er zijn voor een grote wedstrijd?'],
         'keu-reparatie': ['Kunnen jullie mijn keu repareren?', 'Wat kost een keu reparatie?', 'Hoe lang duurt een reparatie?', 'Welke reparaties doen jullie?'],
@@ -127,6 +129,7 @@
         { id: 'tarieven', emoji: '💶', label: 'Rates' },
         { id: 'toernooien', emoji: '🏆', label: 'Tournaments' },
         { id: 'resultaten', emoji: '📊', label: 'Tournament results' },
+        { id: 'amsterdam-open', emoji: '🏆', label: 'Amsterdam Open' },
         { id: 'spelregels', emoji: '📖', label: 'Game Rules' },
         { id: 'eten-drinken', emoji: '🍺', label: 'Food & Drinks' },
         { id: 'sport', emoji: '📺', label: 'Watch Sports' },
@@ -145,6 +148,7 @@
         tarieven: ['How much does an hour of pool cost?', 'Are there day rates and evening rates?', 'Can I pay by card?', 'Are there group rates?'],
         toernooien: ['When is the next tournament?', 'Which tournaments are coming up next week?', 'Are there tournaments for beginners?', 'How much does it cost to participate?'],
         resultaten: ['Who won the last 8-ball tournament?', 'Who are the best players of 2026?', 'Top 5 players per tournament type all-time', 'Who are the best 9-ball players this year?', 'Show the top 20 KNBB rating'],
+        'amsterdam-open': ['When is the Go Customs Amsterdam Open?', 'How do I sign up for a qualifier?', 'What is the prize money of the Amsterdam Open?', 'When are the qualifiers and the final day?', 'What is the format of the Amsterdam Open?'],
         'eten-drinken': ["What's on the menu?", 'Do you have vegetarian options?', 'How much are the beers?', 'Can we order pizzas?'],
         sport: ['Which sports are you showing tonight?', 'Do you show Champions League / Eredivisie?', 'How many screens do you have for sports?', 'How early should I arrive for a big match?'],
         'keu-reparatie': ['Can you repair my cue?', 'How much does a cue repair cost?', 'How long does a repair take?', 'What kind of repairs do you do?'],
@@ -221,7 +225,7 @@
       .mokum-msg-bot ul, .mokum-msg-bot ol { margin: 4px 0; padding-left: 16px; }
       .mokum-msg-bot li { margin: 2px 0; line-height: 1.6; }
       .mokum-msg-user { max-width: 85%; padding: 10px 14px; border-radius: 12px 12px 2px 12px; font-size: 14px; line-height: 1.55; background: #cc0000; color: #fff; }
-      .mokum-chip { font-size: 13px; padding: 8px 14px; border-radius: 20px; background: transparent; color: #fff; border: 1px solid #2a2a2a; transition: all 0.15s ease; text-align: left; line-height: 1.4; display: block; width: 100%; }
+      .mokum-chip { font-size: 13px; font-weight: 400 !important; padding: 8px 14px; border-radius: 20px; background: transparent; color: #fff; border: 1px solid #2a2a2a; transition: all 0.15s ease; text-align: left; line-height: 1.4; display: block; width: 100%; }
       .mokum-chip:hover { background: #2a2a2a; border-color: #444; }
       .mokum-chip-accent { background: #cc0000; border: none; }
       .mokum-chip-accent:hover { background: #990000; }
@@ -423,11 +427,12 @@
             cat.topics.forEach(tid => {
               const topic = t.topics.find(tp => tp.id === tid)
               if (!topic) return
+              const isStar = cat.starTopics && cat.starTopics.indexOf(tid) !== -1
               const isNew = cat.newTopics && cat.newTopics.indexOf(tid) !== -1
-              const label = `${topic.emoji} ${topic.label}` + (isNew
-                ? ` <span style="background:${C.red};color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;vertical-align:middle;">NEW</span>`
-                : '')
-              chips.appendChild(chip(label, () => selectTopic(topic), false, true))
+              let badge = ''
+              if (isStar) badge = ` <span style="background:#e0a93b;color:#1a1a1a;font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;vertical-align:middle;">★</span>`
+              else if (isNew) badge = ` <span style="background:${C.red};color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:4px;vertical-align:middle;">NEW</span>`
+              chips.appendChild(chip(`${topic.emoji} ${topic.label}${badge}`, () => selectTopic(topic), false, true))
             })
             catWrap.appendChild(chips)
             container.appendChild(catWrap)

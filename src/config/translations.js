@@ -26,6 +26,7 @@ const translations = {
       { id: "tarieven",        emoji: "💶", label: "Tarieven" },
       { id: "toernooien",      emoji: "🏆", label: "Toernooien" },
       { id: "resultaten",      emoji: "📊", label: "Toernooi resultaten" },
+      { id: "amsterdam-open",  emoji: "🏆", label: "Amsterdam Open" },
       { id: "spelregels",      emoji: "📖", label: "Spelregels" },
       { id: "eten-drinken",    emoji: "🍺", label: "Eten & Drinken" },
       { id: "sport",           emoji: "📺", label: "Sport kijken" },
@@ -74,6 +75,13 @@ const translations = {
         "Top 5 spelers per toernooisoort aller tijden",
         "Wie zijn de beste 9-ball spelers dit jaar?",
         "Laat de top 20 KNBB-rating zien",
+      ],
+      "amsterdam-open": [
+        "Wanneer is het Go Customs Amsterdam Open?",
+        "Hoe schrijf ik me in voor een qualifier?",
+        "Wat is het prijzengeld van het Amsterdam Open?",
+        "Wanneer zijn de qualifiers en de finaledag?",
+        "Wat is het format van het Amsterdam Open?",
       ],
       "eten-drinken": [
         "Wat staat er op het menu?",
@@ -194,6 +202,7 @@ const translations = {
       { id: "tarieven",        emoji: "💶", label: "Rates" },
       { id: "toernooien",      emoji: "🏆", label: "Tournaments" },
       { id: "resultaten",      emoji: "📊", label: "Tournament results" },
+      { id: "amsterdam-open",  emoji: "🏆", label: "Amsterdam Open" },
       { id: "spelregels",      emoji: "📖", label: "Game Rules" },
       { id: "eten-drinken",    emoji: "🍺", label: "Food & Drinks" },
       { id: "sport",           emoji: "📺", label: "Watch Sports" },
@@ -242,6 +251,13 @@ const translations = {
         "Top 5 players per tournament type all-time",
         "Who are the best 9-ball players this year?",
         "Show the top 20 KNBB rating",
+      ],
+      "amsterdam-open": [
+        "When is the Go Customs Amsterdam Open?",
+        "How do I sign up for a qualifier?",
+        "What is the prize money of the Amsterdam Open?",
+        "When are the qualifiers and the final day?",
+        "What is the format of the Amsterdam Open?",
       ],
       "eten-drinken": [
         "What's on the menu?",
