@@ -545,18 +545,20 @@
       sendBtnEl.disabled = state.loading
       inputRow.append(input, sendBtnEl)
 
-      // Venster formaat — dropdown onder het invoerveld
-      const sizeLabelTxt = state.lang === 'nl' ? 'Venster formaat' : 'Window size'
+      // Venster — label + dropdown samen in één antraciet afgerond kader, gecentreerd
+      const sizeLabelTxt = state.lang === 'nl' ? 'Venster' : 'Window'
       const sizeOpts = state.lang === 'nl'
         ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot']]
         : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large']]
-      const sizeRow = el('div', 'display:flex;align-items:center;gap:6px;')
-      sizeRow.appendChild(el('span', `display:flex;align-items:center;height:24px;color:${C.gray};font-size:11px;white-space:nowrap;`, sizeLabelTxt))
+      const sizeRow = el('div', 'display:flex;justify-content:center;margin-top:2px;')
+      const sizeBox = el('div', `display:inline-flex;align-items:center;gap:8px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:4px 10px;`)
+      sizeBox.appendChild(el('span', `display:flex;align-items:center;color:${C.gray};font-size:11px;line-height:1;white-space:nowrap;`, sizeLabelTxt))
       const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
-      const sizeSelect = el('select', `box-sizing:border-box;height:24px;line-height:normal;background:${C.anthracite};border:1px solid ${C.border};border-radius:6px;color:${C.white};font-size:11px;padding:0 6px;cursor:pointer;`, optsHtml)
+      const sizeSelect = el('select', `box-sizing:border-box;height:20px;line-height:normal;background:${C.blackInput};border:1px solid ${C.border};border-radius:8px;color:${C.white};font-size:10px;padding:0 4px;cursor:pointer;`, optsHtml)
       sizeSelect.value = state.size
       sizeSelect.onchange = e => { state.size = e.target.value; render() }
-      sizeRow.appendChild(sizeSelect)
+      sizeBox.appendChild(sizeSelect)
+      sizeRow.appendChild(sizeBox)
 
       inputArea.append(inputRow, sizeRow)
 
