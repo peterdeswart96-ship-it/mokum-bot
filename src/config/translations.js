@@ -187,7 +187,7 @@ const translations = {
     placeholder: "Ask a question...",
     error: "Oops, something went wrong. Please try again! 🎱",
     duplicateMsg: "You just asked that one 🙂 Feel free to ask something else!",
-    rateLimitMsg: "Easy tiger! 😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.",
+    rateLimitMsg: "Easy tiger! 🐯😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.",
     backToTopics: "← Back to topics",
     backButton: "← Back",
     askOther: "✏️ I want to ask a different question",
