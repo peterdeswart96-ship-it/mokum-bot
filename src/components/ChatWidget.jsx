@@ -640,17 +640,19 @@ export default function ChatWidget() {
                 style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
               >→</button>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ display: "flex", alignItems: "center", height: "24px", color: C.gray, fontSize: "11px", whiteSpace: "nowrap" }}>{lang === "nl" ? "Venster formaat" : "Window size"}</span>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "2px" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "4px 10px" }}>
+              <span style={{ display: "flex", alignItems: "center", color: C.gray, fontSize: "11px", lineHeight: 1, whiteSpace: "nowrap" }}>{lang === "nl" ? "Venster" : "Window"}</span>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
-                style={{ boxSizing: "border-box", height: "24px", lineHeight: "normal", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, fontSize: "11px", padding: "0 6px", cursor: "pointer" }}
+                style={{ boxSizing: "border-box", height: "20px", lineHeight: "normal", background: C.blackInput, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "10px", padding: "0 4px", cursor: "pointer" }}
               >
                 <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
                 <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
                 <option value="groot">{lang === "nl" ? "Groot" : "Large"}</option>
               </select>
+              </div>
             </div>
           </div>
         </div>
