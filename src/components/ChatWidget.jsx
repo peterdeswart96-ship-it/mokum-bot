@@ -417,15 +417,15 @@ export default function ChatWidget() {
         }}>
 
           {/* Header */}
-          <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "9px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "5px 12px 5px 8px" }}>
+          <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "10px 16px", display: "flex", alignItems: "stretch", justifyContent: "space-between", gap: "8px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "6px 12px" }}>
               <EightBallIcon size={34} />
               <div>
                 <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>MOKUM MAGIC 8 BALL</div>
                 <div style={{ color: C.red, fontSize: "11px", marginTop: "1px" }}>Pool & Darts Amsterdam</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "4px 8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "6px 12px" }}>
               <button
                 onClick={resetChat}
                 title={lang === "nl" ? "Terug naar home" : "Back to home"}
