@@ -270,7 +270,7 @@ export default function ChatWidget() {
   const [internUnlocked, setInternUnlocked] = useState(false)
   const [internPwd, setInternPwd] = useState("")
   const [internPwdError, setInternPwdError] = useState(false)
-  const [expanded, setExpanded] = useState(false)
+  const [size, setSize] = useState("groot")
   const [examplesOpen, setExamplesOpen] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
   const [lang, setLang] = useState(DEFAULT_LANG)
@@ -396,7 +396,12 @@ export default function ChatWidget() {
   }
 
   const isMobile = windowWidth < 480
-  const chatWidth = expanded ? "min(80vw, 900px)" : (isMobile ? `${windowWidth - 16}px` : WIDGET_CONFIG.width)
+  const chatWidth = isMobile
+    ? `${windowWidth - 16}px`
+    : (size === "groot" ? "min(80vw, 900px)" : size === "klein" ? "380px" : "460px")
+  const chatHeight = size === "groot"
+    ? (isMobile ? "calc(100dvh - 90px - 16px)" : "85dvh")
+    : `min(${isMobile ? (size === "klein" ? 460 : 600) : (size === "klein" ? 520 : 660)}px, calc(100dvh - 90px - 80px - 16px))`
   const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
 
   return (
@@ -408,7 +413,7 @@ export default function ChatWidget() {
           width: chatWidth,
           // Hoogte: dvh houdt rekening met Safari adresbalk op iPhone
           // 90px = bottom widget, 80px = sluitknop + marge, 16px = adembreedte bovenkant
-          height: expanded ? "80dvh" : (isMobile ? "calc(100dvh - 90px - 80px - 16px)" : "min(580px, calc(100dvh - 90px - 80px - 16px))"),
+          height: chatHeight,
           borderRadius: "16px", overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
           display: "flex", flexDirection: "column",
@@ -418,14 +423,14 @@ export default function ChatWidget() {
 
           {/* Header */}
           <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "10px 16px", display: "flex", alignItems: "stretch", justifyContent: "space-between", gap: "8px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "9px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "6px 12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", minWidth: 0, flexShrink: 1, overflow: "hidden", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "6px 12px" }}>
               <EightBallIcon size={34} />
-              <div>
-                <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>MOKUM MAGIC 8 BALL</div>
-                <div style={{ color: C.red, fontSize: "11px", marginTop: "1px" }}>Pool & Darts Amsterdam</div>
+              <div style={{ minWidth: 0, overflow: "hidden" }}>
+                <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>MOKUM MAGIC 8 BALL</div>
+                <div style={{ color: C.red, fontSize: "11px", marginTop: "1px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Pool & Darts Amsterdam</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "6px 12px" }}>
+            <div style={{ display: "flex", alignItems: "center", flexShrink: 0, gap: isMobile ? "3px" : "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: isMobile ? "5px 8px" : "6px 12px" }}>
               <button
                 onClick={resetChat}
                 title={lang === "nl" ? "Terug naar home" : "Back to home"}
@@ -433,12 +438,6 @@ export default function ChatWidget() {
               >🏠</button>
 
               <LanguageSwitcher lang={lang} onSwitch={switchLanguage} />
-
-              <button
-                onClick={() => setExpanded(!expanded)}
-                title={expanded ? "Verkleinen" : "Maximaliseren"}
-                style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "12px", padding: "4px 8px" }}
-              >{expanded ? "⊡" : "⊞"}</button>
 
               <button
                 onClick={() => setOpen(false)}
@@ -579,21 +578,35 @@ export default function ChatWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input — altijd zichtbaar */}
-          <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "12px 16px", display: "flex", gap: "8px", flexShrink: 0 }}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") sendMessage() }}
-              placeholder={t.placeholder}
-              style={{ flex: 1, padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
-            />
-            <button
-              onClick={() => sendMessage()}
-              disabled={loading}
-              style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
-            >→</button>
+          {/* Input + venster-formaat — altijd zichtbaar */}
+          <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") sendMessage() }}
+                placeholder={t.placeholder}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
+              />
+              <button
+                onClick={() => sendMessage()}
+                disabled={loading}
+                style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
+              >→</button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ color: C.gray, fontSize: "12px" }}>{lang === "nl" ? "Venster formaat" : "Window size"}</span>
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                style={{ background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "12px", padding: "5px 10px", cursor: "pointer" }}
+              >
+                <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
+                <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
+                <option value="groot">{lang === "nl" ? "Groot" : "Large"}</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
