@@ -672,10 +672,56 @@ function resultLabel(r) {
   return `poule positie ${r.groupPosition}`
 }
 
+// --- 14.1 Summer League (straight pool poule-competitie) --------------------
+const SUMMER_LEAGUE_ID = 83049058
+const SUMMER_LEAGUE_URL = "https://cuescore.com/tournament/Mokum+14.1+Summer+league/83049058"
+
+function fetchWithTimeout(url, ms) {
+  return Promise.race([
+    fetchUrl(url).catch(() => null),
+    new Promise((resolve) => setTimeout(() => resolve(null), ms)),
+  ])
+}
+
+async function getSummerLeagueContext() {
+  const raw = await fetchWithTimeout(`https://api.cuescore.com/tournament/?id=${SUMMER_LEAGUE_ID}`, 5000)
+  if (!raw) {
+    return `---\nGEEN DATA: de 14.1 Summer League-stand is nu even niet op te halen. Verwijs de gebruiker naar ${SUMMER_LEAGUE_URL}\n---`
+  }
+  let d
+  try { d = JSON.parse(raw) } catch { return null }
+  const labels = { "1": "Poule A", "2": "Poule B", "3": "Poule C", "4": "Poule D", "5": "Poule E", "6": "Poule F" }
+  const st = d.standings || {}
+  const blocks = Object.keys(st).sort().map((k) => {
+    const rows = Array.isArray(st[k]) ? st[k] : []
+    const lines = rows.map((r) => {
+      const nm = r.player && r.player.name ? r.player.name : "?"
+      const gesp = r.played || 0, w = r.wins || 0, l = r.losses || 0, pts = r.points || 0
+      const avg = typeof r.frameAvg === "number" && r.frameAvg ? `, gem. ${r.frameAvg.toFixed(2)}` : ""
+      const hb = r.highBreak ? `, hoogste reeks ${r.highBreak}` : ""
+      return `  ${r.position}. ${nm} — ${pts} pt, ${w}-${l} (${gesp} gesp.)${avg}${hb}`
+    }).join("\n")
+    return `${labels[k] || `Poule ${k}`}:\n${lines || "  (geen spelers)"}`
+  }).join("\n\n")
+  return (
+    `---\n14.1 SUMMER LEAGUE — LIVE DATA van Cuescore.\n` +
+    `TOERNOOI-INFO (gebruik dit bij info-vragen zoals "wat is het / wanneer / hoe werkt het"): Mokum Summer 14.1 League — discipline straight pool (14.1), groepsfase met 6 poules (A t/m F). Loopt ${d.displayDate || "16 juni – 31 augustus 2026"}, locatie Mokum, organisatie Max Anholt (league oorspronkelijk van Anthony). Race to: poule A & B naar 100, poule C & D naar 75, poule E & F naar 50. Geen handicap in de poules (uitzondering: Nick geeft 50 punten voorsprong in zijn poule). De top 4 van elke poule gaat door naar een gehandicapte single-KO play-off. Inschrijven/details: ${SUMMER_LEAGUE_URL} .\n` +
+    `STAND (toon deze NET ZOALS op Cuescore: per poule A t/m F als aparte lijst, met de "Gegevens bijgewerkt op"-datum van vandaag bovenaan; toon ALLE poules waar naar gevraagd wordt, anders alle zes):\n\n` +
+    blocks +
+    "\n---"
+  )
+}
+
 async function getResultatenContext(messages, sasToken) {
   if (!sasToken) return null
   const lastMsg = messages[messages.length - 1]?.content || ""
   const lower = normalizeText(lastMsg)
+
+  // --- 14.1 Summer League (live van Cuescore) --------------------------------
+  if (/14\s*[.,]?\s*1|summer\s*league|summerleague|straight\s*pool|straightpool|\bpoule\s*[a-f]\b/.test(lower)) {
+    const slCtx = await getSummerLeagueContext()
+    if (slCtx) return slCtx
+  }
 
   // --- KNBB Pool Rating top 20 -----------------------------------------------
   // Expliciet gevraagd, of "ja" na een aanbod om de KNBB top 20 te tonen.
