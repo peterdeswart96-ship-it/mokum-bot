@@ -344,7 +344,7 @@
       const hdrTitle = el('div', null, `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;">Pool & Darts Amsterdam</div>`)
       hdrL.appendChild(hdrTitle)
 
-      const hdrR = el('div', 'display:flex;align-items:center;gap:6px;')
+      const hdrR = el('div', `display:flex;align-items:center;gap:6px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:4px 8px;`)
 
       // Home knop
       const homeBtn = btn('🏠', () => { resetChat(); render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:14px;padding:4px 8px;line-height:1.4;`)
@@ -407,7 +407,7 @@
              </span>
            </span>`,
           () => { state.examplesOpen = !state.examplesOpen; render() },
-          `width:100%;text-align:left;background:${C.blackCard};border:1px solid ${C.border};border-radius:10px;color:${C.white};font-size:13px;font-weight:700;padding:11px 14px;`
+          `width:100%;text-align:left;background:${C.anthracite};border:1px solid #3d3d44;border-left:3px solid ${C.red};border-radius:10px;color:${C.white};font-size:13px;font-weight:700;padding:11px 14px;`
         )
         container.appendChild(toggle)
 
@@ -416,11 +416,9 @@
           CATEGORIES.forEach(cat => {
             const catWrap = el('div', 'display:flex;flex-direction:column;gap:6px;')
             const catTitle = (t.catTitles && t.catTitles[cat.id]) || cat.id
-            const newBadge = cat.newTopics
-              ? ` <span style="background:${C.red};color:#fff;font-size:8px;font-weight:800;padding:1px 5px;border-radius:5px;vertical-align:middle;">NEW</span>`
-              : ''
-            catWrap.appendChild(el('div', 'margin-top:4px;',
-              `<span style="font-size:11px;font-weight:800;color:${C.gray};letter-spacing:0.06em;text-transform:uppercase;">${cat.emoji} ${catTitle}</span>${newBadge}`))
+            catWrap.appendChild(el('div',
+              `margin-top:6px;background:${C.anthracite};border-left:3px solid ${C.red};border-radius:6px;padding:6px 10px;`,
+              `<span style="font-size:12px;font-weight:800;color:${C.white};letter-spacing:0.07em;text-transform:uppercase;">${cat.emoji} ${catTitle}</span>`))
             const chips = el('div', 'display:flex;flex-wrap:wrap;gap:6px;')
             cat.topics.forEach(tid => {
               const topic = t.topics.find(tp => tp.id === tid)
