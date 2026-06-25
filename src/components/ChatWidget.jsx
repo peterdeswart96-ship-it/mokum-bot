@@ -314,14 +314,27 @@ export default function ChatWidget() {
     setInput("")
     setLoading(true)
     setStage("chat")
-    try {
+    const callChat = async () => {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessages }),
       })
+      if (!response.ok) throw new Error("http " + response.status)
       const data = await response.json()
-      setMessages([...newMessages, { role: "assistant", content: data.reply }])
+      if (!data || typeof data.reply !== "string") throw new Error("geen antwoord")
+      return data.reply
+    }
+    try {
+      let reply
+      try {
+        reply = await callChat()
+      } catch {
+        // Eén retry — vangt cold starts / tijdelijke hikken op
+        await new Promise((r) => setTimeout(r, 1500))
+        reply = await callChat()
+      }
+      setMessages([...newMessages, { role: "assistant", content: reply }])
     } catch (err) {
       setMessages([...newMessages, { role: "assistant", content: t.error }])
     } finally {
