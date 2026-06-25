@@ -23,6 +23,10 @@ const WIDGET_CONFIG = {
   width:  "440px",
 }
 
+// Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
+const RATE_MAX = 6
+const RATE_WINDOW = 30000 // 30 seconden
+
 // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
 const CATEGORIES = [
   { id: "toernooien", emoji: "🏆", topics: ["toernooien", "resultaten", "amsterdam-open"], newTopics: ["resultaten"], starTopics: ["amsterdam-open"] },
@@ -293,6 +297,8 @@ export default function ChatWidget() {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef(null)
+  const sendTimesRef = useRef([])
+  const lastSentQuestionRef = useRef("")
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -320,6 +326,32 @@ export default function ChatWidget() {
   async function sendMessage(text) {
     const userMessage = text || input
     if (!userMessage.trim()) return
+    // Blokkeer terwijl er al een antwoord wordt opgehaald (geen 5x dezelfde request bij snel klikken)
+    if (loading) return
+
+    const genormaliseerd = userMessage.trim().toLowerCase()
+
+    // Dezelfde vraag mag niet direct opnieuw
+    if (genormaliseerd === lastSentQuestionRef.current) {
+      setMessages([...messages, { role: "user", content: userMessage }, { role: "assistant", content: t.duplicateMsg }])
+      setInput("")
+      setStage("chat")
+      return
+    }
+
+    // Rate-limit: te veel vragen achter elkaar -> timeout-bericht
+    const now = Date.now()
+    sendTimesRef.current = sendTimesRef.current.filter((tijd) => now - tijd < RATE_WINDOW)
+    if (sendTimesRef.current.length >= RATE_MAX) {
+      const wacht = Math.ceil((RATE_WINDOW - (now - sendTimesRef.current[0])) / 1000)
+      setMessages([...messages, { role: "user", content: userMessage }, { role: "assistant", content: t.rateLimitMsg.replace("{s}", wacht) }])
+      setInput("")
+      setStage("chat")
+      return
+    }
+    sendTimesRef.current.push(now)
+    lastSentQuestionRef.current = genormaliseerd
+
     const newMessages = [...messages, { role: "user", content: userMessage }]
     setMessages(newMessages)
     setInput("")
