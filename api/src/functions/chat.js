@@ -916,6 +916,13 @@ app.http("chat", {
       // Statische system prompt apart houden zodat hij gecachet kan worden;
       // wisselende context (kennisbron, toernooidata) komt ná de cache-breakpoint.
       const dynamicParts = []
+      // Datum-bewustzijn: zodat de bot "vandaag/gisteren/deze week" snapt
+      const vandaagStr = new Intl.DateTimeFormat("nl-NL", {
+        timeZone: "Europe/Amsterdam", weekday: "long", day: "numeric", month: "long", year: "numeric",
+      }).format(new Date())
+      dynamicParts.push(
+        `HUIDIGE DATUM: vandaag is ${vandaagStr} (Amsterdam-tijd). Gebruik dit om vragen over "vandaag", "gisteren", "morgen", "deze week", "afgelopen weekend" enzovoort correct te beantwoorden — "gisteren" is de dag ervoor, enzovoort. Bij vragen over uitslagen van een relatieve dag (bijv. "wie won gisteren?"): bepaal zelf de exacte datum en zoek die in de meegegeven toernooi-/winnaarsdata.`
+      )
       if (kennisbronContext) dynamicParts.push(kennisbronContext)
       if (tournamentContext) dynamicParts.push(tournamentContext)
       if (resultatenContext) dynamicParts.push(resultatenContext)
