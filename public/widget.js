@@ -20,6 +20,9 @@
   // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
   const RATE_MAX = 2
   const RATE_WINDOW = 30000 // 30 seconden
+  // Herhaalde identieke vraag: vanaf de 2e herhaling (3e keer) binnen het venster -> Easy tiger
+  const DUP_MAX = 2
+  const DUP_WINDOW = 60000 // 60 seconden
 
   // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
   const CATEGORIES = [
@@ -200,6 +203,7 @@
     examplesOpen: false,
     sendTimes: [],
     lastSentQuestion: '',
+    dupTimes: [],
   }
 
   function tr() { return TRANSLATIONS[state.lang] }
@@ -614,11 +618,19 @@
 
     const genormaliseerd = msg.trim().toLowerCase()
 
-    // Dezelfde vraag mag niet direct opnieuw
+    // Dezelfde vraag mag niet direct opnieuw; bij volhardend herhalen -> Easy tiger
     if (genormaliseerd === state.lastSentQuestion) {
+      const nu = Date.now()
+      state.dupTimes = (state.dupTimes || []).filter(tijd => nu - tijd < DUP_WINDOW)
+      state.dupTimes.push(nu)
       state.input = ''; state.stage = 'chat'
       state.messages.push({ role: 'user', content: msg })
-      state.messages.push({ role: 'assistant', content: tr().duplicateMsg })
+      if (state.dupTimes.length >= DUP_MAX) {
+        const wacht = Math.ceil((DUP_WINDOW - (nu - state.dupTimes[0])) / 1000)
+        state.messages.push({ role: 'assistant', content: tr().rateLimitMsg.replace('{s}', wacht) })
+      } else {
+        state.messages.push({ role: 'assistant', content: tr().duplicateMsg })
+      }
       render()
       return
     }
@@ -636,6 +648,7 @@
     }
     state.sendTimes.push(now)
     state.lastSentQuestion = genormaliseerd
+    state.dupTimes = []
 
     state.messages.push({ role: 'user', content: msg })
     state.input = ''; state.loading = true; state.stage = 'chat'

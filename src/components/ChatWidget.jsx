@@ -26,6 +26,9 @@ const WIDGET_CONFIG = {
 // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
 const RATE_MAX = 2
 const RATE_WINDOW = 30000 // 30 seconden
+// Herhaalde identieke vraag: vanaf de 2e herhaling (3e keer) binnen het venster -> Easy tiger
+const DUP_MAX = 2
+const DUP_WINDOW = 60000 // 60 seconden
 
 // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
 const CATEGORIES = [
@@ -299,6 +302,7 @@ export default function ChatWidget() {
   const bottomRef = useRef(null)
   const sendTimesRef = useRef([])
   const lastSentQuestionRef = useRef("")
+  const dupTimesRef = useRef([])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -331,9 +335,17 @@ export default function ChatWidget() {
 
     const genormaliseerd = userMessage.trim().toLowerCase()
 
-    // Dezelfde vraag mag niet direct opnieuw
+    // Dezelfde vraag mag niet direct opnieuw; bij volhardend herhalen -> Easy tiger
     if (genormaliseerd === lastSentQuestionRef.current) {
-      setMessages([...messages, { role: "user", content: userMessage }, { role: "assistant", content: t.duplicateMsg }])
+      const nu = Date.now()
+      dupTimesRef.current = dupTimesRef.current.filter((tijd) => nu - tijd < DUP_WINDOW)
+      dupTimesRef.current.push(nu)
+      let melding = t.duplicateMsg
+      if (dupTimesRef.current.length >= DUP_MAX) {
+        const wacht = Math.ceil((DUP_WINDOW - (nu - dupTimesRef.current[0])) / 1000)
+        melding = t.rateLimitMsg.replace("{s}", wacht)
+      }
+      setMessages([...messages, { role: "user", content: userMessage }, { role: "assistant", content: melding }])
       setInput("")
       setStage("chat")
       return
@@ -351,6 +363,7 @@ export default function ChatWidget() {
     }
     sendTimesRef.current.push(now)
     lastSentQuestionRef.current = genormaliseerd
+    dupTimesRef.current = []
 
     const newMessages = [...messages, { role: "user", content: userMessage }]
     setMessages(newMessages)
