@@ -794,8 +794,10 @@ async function getResultatenContext(messages, sasToken) {
     }).join("\n\n")
     const overall = buildLeaderboard(rows, "all").slice(0, 5)
     return (
-      `---\nBESTE SPELERS — VOLLEDIG OVERZICHT — ${period.label}.\n` +
-      `BELANGRIJK: toon ALLE DRIE de onderstaande delen VOLLEDIG, elk met een eigen kopje en 🥇🥈🥉 voor de top 3. Laat GEEN deel weg — óók de spelsoort-sectie (8/9/10-ball) en alle 6 toernooisoorten moeten erin. Stel GEEN wedervragen.${KNBB_OFFER}\n\n` +
+      `---\nINSTRUCTIE (VERPLICHT): De gebruiker heeft GEVRAAGD wie de beste spelers zijn. Hieronder staat het complete antwoord met ECHTE data. ` +
+      `Toon deze drie ranglijsten NU direct, letterlijk en volledig in je antwoord, met nette opmaak (een kopje per deel, 🥇🥈🥉 voor de top 3). ` +
+      `Verboden: een keuzemenu tonen, vragen "wat wil je zien?", of één van de delen weglaten. De gebruiker heeft het al gevraagd — geef gewoon het overzicht. ` +
+      `Eindig met precies één korte ja/nee-vraag: of de gebruiker ook de top 20 op KNBB-rating van Mokum-spelers wil zien.\n\n` +
       `== DEEL 1 — OVERALL TOP 5 (alle toernooien) ==\n${lijnen(overall, true)}\n\n` +
       `== DEEL 2 — TOP 3 PER TOERNOOISOORT (alle 6 tonen) ==\n${perSoort}\n\n` +
       `== DEEL 3 — TOP 3 PER SPELSOORT / DISCIPLINE (8-ball, 9-ball, 10-ball) ==\n${perDisc}\n---`
