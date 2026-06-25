@@ -641,8 +641,7 @@ export default function ChatWidget() {
               >→</button>
             </div>
             <div style={{ display: "flex", justifyContent: "center", marginTop: "2px" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "4px 10px" }}>
-              <span style={{ display: "flex", alignItems: "center", color: C.gray, fontSize: "11px", lineHeight: 1, whiteSpace: "nowrap" }}>{lang === "nl" ? "Venster" : "Window"}</span>
+              <div style={{ display: "inline-flex", alignItems: "center", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "3px 5px" }}>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
