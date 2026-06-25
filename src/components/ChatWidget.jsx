@@ -579,7 +579,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input + venster-formaat — altijd zichtbaar */}
-          <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
+          <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "10px 16px", display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
                 type="text"
@@ -595,12 +595,12 @@ export default function ChatWidget() {
                 style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
               >→</button>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ color: C.gray, fontSize: "12px" }}>{lang === "nl" ? "Venster formaat" : "Window size"}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ color: C.gray, fontSize: "11px", whiteSpace: "nowrap", lineHeight: 1.1 }}>{lang === "nl" ? "Venster formaat" : "Window size"}</span>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
-                style={{ background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "12px", padding: "5px 10px", cursor: "pointer" }}
+                style={{ background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "6px", color: C.white, fontSize: "11px", padding: "1px 4px", lineHeight: 1.1, cursor: "pointer" }}
               >
                 <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
                 <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
