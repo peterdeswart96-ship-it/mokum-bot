@@ -624,7 +624,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Input + venster-formaat — altijd zichtbaar */}
-          <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "10px 16px", display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
+          <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "8px 16px 6px", display: "flex", flexDirection: "column", gap: "5px", flexShrink: 0 }}>
             <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
               <input
                 type="text"
@@ -640,12 +640,12 @@ export default function ChatWidget() {
                 style={{ boxSizing: "border-box", height: "44px", padding: "0 18px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
               >→</button>
             </div>
-            <div style={{ display: "flex", justifyContent: "center", marginTop: "2px" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "3px 5px" }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "9px", padding: "2px 4px" }}>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
-                style={{ boxSizing: "border-box", height: "20px", lineHeight: "normal", background: C.blackInput, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "10px", padding: "0 4px", cursor: "pointer" }}
+                style={{ display: "block", lineHeight: "normal", background: C.blackInput, border: `1px solid ${C.border}`, borderRadius: "7px", color: C.white, fontSize: "10px", padding: "2px 6px", cursor: "pointer" }}
               >
                 <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
                 <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
