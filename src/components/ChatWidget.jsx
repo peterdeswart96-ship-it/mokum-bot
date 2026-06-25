@@ -14,6 +14,7 @@ const C = {
   border:     "#2a2a2a",
   white:      "#ffffff",
   gray:       "#888888",
+  anthracite: "#26262b",
 }
 
 const WIDGET_CONFIG = {
@@ -21,6 +22,15 @@ const WIDGET_CONFIG = {
   right:  "10px",
   width:  "440px",
 }
+
+// Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
+const CATEGORIES = [
+  { id: "toernooien", emoji: "🏆", topics: ["toernooien", "resultaten"], newTopics: ["resultaten"] },
+  { id: "spelen",     emoji: "🎱", topics: ["pool", "darts", "spelregels", "gaming"] },
+  { id: "praktisch",  emoji: "ℹ️", topics: ["openingstijden", "tarieven", "locatie", "eten-drinken", "sport"] },
+  { id: "service",    emoji: "🛠️", topics: ["keu-reparatie", "keu-shop", "clinics"] },
+  { id: "overig",     emoji: "📋", topics: ["intern", "anders"] },
+]
 
 // Responsive breedte: op mobiel (< 480px) bijna volledige schermbreedte
 function getWidgetWidth(expanded) {
@@ -261,6 +271,7 @@ export default function ChatWidget() {
   const [internPwd, setInternPwd] = useState("")
   const [internPwdError, setInternPwdError] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [examplesOpen, setExamplesOpen] = useState(false)
   const [bubbleTextIndex, setBubbleTextIndex] = useState(0)
   const [lang, setLang] = useState(DEFAULT_LANG)
   const [windowWidth, setWindowWidth] = useState(
@@ -381,6 +392,7 @@ export default function ChatWidget() {
     setInternPwdError(false)
     setMessages([{ role: "assistant", content: t.welcome }])
     setInput("")
+    setExamplesOpen(false)
   }
 
   const isMobile = windowWidth < 480
@@ -406,7 +418,7 @@ export default function ChatWidget() {
 
           {/* Header */}
           <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "5px 12px 5px 8px" }}>
               <EightBallIcon size={34} />
               <div>
                 <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>MOKUM MAGIC 8 BALL</div>
@@ -455,11 +467,52 @@ export default function ChatWidget() {
             )}
 
             {stage === "topics" && !loading && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "4px" }}>
-                {t.topics.map((topic) => (
-                  <ChipButton key={topic.id} onClick={() => selectTopic(topic)}>
-                    {topic.emoji} {topic.label}
-                  </ChipButton>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+                {/* Beginner-uitleg */}
+                <div style={{ fontSize: "13px", color: "#bbb", lineHeight: 1.5, background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "10px 12px" }}>
+                  {t.beginnerInfo}
+                </div>
+
+                {/* Inklapbare knop "Voorbeeldvragen per rubriek" */}
+                <button onClick={() => setExamplesOpen((o) => !o)} style={{
+                  width: "100%", textAlign: "left", background: C.blackCard, border: `1px solid ${C.border}`,
+                  borderRadius: "10px", color: C.white, fontSize: "13px", fontWeight: 700, padding: "11px 14px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px",
+                }}>
+                  <span>📋 {t.examplesBtn}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                    <span style={{ background: C.red, color: "#fff", fontSize: "9px", fontWeight: 800, padding: "2px 6px", borderRadius: "6px", letterSpacing: "0.05em" }}>NEW</span>
+                    <span style={{ fontSize: "11px" }}>{examplesOpen ? "▲" : "▼"}</span>
+                  </span>
+                </button>
+
+                {/* Categorie-overzicht (alleen bij uitklappen) */}
+                {examplesOpen && CATEGORIES.map((cat) => (
+                  <div key={cat.id} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div style={{ marginTop: "4px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 800, color: C.gray, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                        {cat.emoji} {(t.catTitles && t.catTitles[cat.id]) || cat.id}
+                      </span>
+                      {cat.newTopics && (
+                        <span style={{ background: C.red, color: "#fff", fontSize: "8px", fontWeight: 800, padding: "1px 5px", borderRadius: "5px", marginLeft: "6px", verticalAlign: "middle" }}>NEW</span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {cat.topics.map((tid) => {
+                        const topic = t.topics.find((tp) => tp.id === tid)
+                        if (!topic) return null
+                        const isNew = cat.newTopics && cat.newTopics.indexOf(tid) !== -1
+                        return (
+                          <ChipButton key={tid} onClick={() => selectTopic(topic)}>
+                            {topic.emoji} {topic.label}
+                            {isNew && (
+                              <span style={{ background: C.red, color: "#fff", fontSize: "8px", fontWeight: 800, padding: "1px 4px", borderRadius: "4px", marginLeft: "5px", verticalAlign: "middle" }}>NEW</span>
+                            )}
+                          </ChipButton>
+                        )
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
