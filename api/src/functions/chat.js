@@ -42,6 +42,7 @@ REGELS:
 - Sluit antwoorden af met een natuurlijke vervolgvraag in volledige zinnen. Geen informele afkortingen.
 - Zet links altijd als klikbare markdown: [tekst](url). Nooit als platte URL.
 - Voor toernooi-info: geef altijd de aanmeldlink als [Inschrijven via Cuescore](https://cuescore.com/mokumpooldarts/tournaments)
+- Bij elke vraag over het Amsterdam Open (of de Go Customs Amsterdam Open / Qualifier Amsterdam Open): vermeld altijd de link [Go Customs Amsterdam Open](https://cuescore.com/KNBB/posts/Go+Customs+Amsterdam+Open/84039961)
 - Na elk antwoord over toernooien: vraag of de gebruiker uitgebreidere info wil over een specifiek toernooi. Vraag dan welk toernooi en geef daarna alle beschikbare details (format, kosten, handicap, prijzengeld, tijden, contact etc.)
 - Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
 - Bij vragen over eten, drinken, het menu, vegetarische opties, allergenen of specifieke gerechten: geef altijd de link naar de menukaart mee via [Bekijk de menukaart (PDF)](https://poolen-amsterdam.nl/wp-content/uploads/Mokum-menu-3.pdf) en beantwoord de vraag op basis van de beschikbare menu-informatie.
@@ -402,12 +403,23 @@ async function tableQuery(table, filter, sasToken) {
 
 // --- Series-leaderboards (beste spelers per reeks + periode) ------------------
 
-const SERIES_OPTIONS = ["Fluke Ranking", "MEGA Ranking", "8/10ball Zaterdag", "Alle toernooien"]
+const SERIES_OPTIONS = [
+  "Fluke Ranking",
+  "MEGA Ranking",
+  "MEGA Summer Ranking",
+  "8/10ball Zaterdag",
+  "OnePocket Monthly",
+  "9 ball Sunday",
+  "Alle toernooien",
+]
+
+const DISCIPLINES = ["8-Ball", "9-Ball", "10-Ball"]
 
 // Classificeert een toernooinaam naar een terugkerende reeks.
 function classifySeries(name) {
   const n = (name || "").toLowerCase()
   if (n.includes("fluke")) return "Fluke Ranking"
+  if (n.includes("mega") && n.includes("summer")) return "MEGA Summer Ranking"
   if (n.includes("mega")) return "MEGA Ranking"
   if (
     n.includes("8 & 10") ||
@@ -416,15 +428,29 @@ function classifySeries(name) {
     n.includes("10ball ranking")
   )
     return "8/10ball Zaterdag"
+  if (n.includes("onepocket") || n.includes("one pocket")) return "OnePocket Monthly"
+  if (n.includes("sunday")) return "9 ball Sunday"
   return "Overig"
+}
+
+// Leidt een discipline af uit de vraag (8/9/10-ball), of null.
+function parseDiscipline(text) {
+  const n = normalizeText(text)
+  if (/\b10\s*ball\b|\b10ball\b/.test(n)) return "10-Ball"
+  if (/\b9\s*ball\b|\b9ball\b/.test(n)) return "9-Ball"
+  if (/\b8\s*ball\b|\b8ball\b/.test(n)) return "8-Ball"
+  return null
 }
 
 // Leidt de gevraagde reeks af uit (genormaliseerde) vraagtekst, of null.
 function parseSeries(text) {
   const n = normalizeText(text)
   if (/\bfluke\b/.test(n)) return "Fluke Ranking"
+  if (/\bmega\b/.test(n) && /summer|zomer/.test(n)) return "MEGA Summer Ranking"
   if (/\bmega\b/.test(n)) return "MEGA Ranking"
-  if (/zaterdag|8 10ball|10ball|8ball|8 ball|10 ball|8 10\b/.test(n)) return "8/10ball Zaterdag"
+  if (/onepocket|one pocket|one-pocket/.test(n)) return "OnePocket Monthly"
+  if (/sunday|zondag/.test(n)) return "9 ball Sunday"
+  if (/zaterdag|8 10ball|8 en 10|8 & 10/.test(n)) return "8/10ball Zaterdag"
   if (
     /\ballemaal\b|\balle\b|\balles\b|all toernooi|alle toernooien|gecombineerd|alle drie|iedereen|overall|in totaal|elk toernooi/.test(
       n
@@ -515,10 +541,15 @@ async function tableQueryPaged(table, filter, sasToken, cap = 8) {
 }
 
 // Aggregeert speler-resultaten tot een ranglijst op basis van toernooiprestaties.
-function buildLeaderboard(rows, seriesKey) {
+function buildLeaderboard(rows, key) {
+  const isDiscipline = DISCIPLINES.includes(key)
   const agg = {}
   for (const r of rows) {
-    if (seriesKey !== "all" && classifySeries(r.tournamentName) !== seriesKey) continue
+    if (key !== "all") {
+      if (isDiscipline) {
+        if ((r.discipline || "") !== key) continue
+      } else if (classifySeries(r.tournamentName) !== key) continue
+    }
     const pid = r.playerId
     if (!agg[pid]) agg[pid] = { name: r.playerName, score: 0, titles: 0, finals: 0, appearances: 0, wins: 0, losses: 0 }
     const a = agg[pid]
@@ -627,7 +658,15 @@ async function getResultatenContext(messages, sasToken) {
       /per (toernooisoort|soort|type|reeks)|elke (toernooisoort|soort|reeks)|alle soorten|per categorie/.test(flowNorm)
     const series = parseSeries(flowText)
     const period = parsePeriod(flowText)
-    const MAIN_SERIES = ["Fluke Ranking", "MEGA Ranking", "8/10ball Zaterdag"]
+    const discipline = parseDiscipline(flowText)
+    const MAIN_SERIES = [
+      "Fluke Ranking",
+      "MEGA Ranking",
+      "MEGA Summer Ranking",
+      "8/10ball Zaterdag",
+      "OnePocket Monthly",
+      "9 ball Sunday",
+    ]
 
     // Modus: top 5 per toernooisoort
     if (perSeries) {
@@ -654,10 +693,15 @@ async function getResultatenContext(messages, sasToken) {
       )
     }
 
-    // Modus: één reeks (of alle gecombineerd)
-    if (!series || !period) {
+    // Modus: één reeks of discipline (of alle gecombineerd)
+    const filterKey = series ? (series === "all" ? "all" : series) : discipline
+    const filterLabel = series === "all" ? "Alle toernooien" : series || discipline
+    if (!filterKey || !period) {
       const missing = []
-      if (!series) missing.push(`het type toernooi (opties: ${SERIES_OPTIONS.join(", ")})`)
+      if (!filterKey)
+        missing.push(
+          `het type toernooi of discipline (opties: ${SERIES_OPTIONS.join(", ")}, of 8-ball / 9-ball / 10-ball)`
+        )
       if (!period)
         missing.push("de periode (bijv. dit jaar 2026, afgelopen 3 maanden, een specifiek jaar, of aller tijden)")
       return (
@@ -667,13 +711,11 @@ async function getResultatenContext(messages, sasToken) {
       )
     }
 
-    const seriesKey = series === "all" ? "all" : series
-    const seriesLabel = series === "all" ? "Alle toernooien" : series
     const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
     const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
-    const board = buildLeaderboard(rows, seriesKey)
+    const board = buildLeaderboard(rows, filterKey)
     if (!board.length) {
-      return `---\nGEEN DATA: er zijn geen resultaten voor ${seriesLabel} in periode ${period.label}. Meld dit eerlijk en stel eventueel een andere periode of ander type toernooi voor.\n---`
+      return `---\nGEEN DATA: er zijn geen resultaten voor ${filterLabel} in periode ${period.label}. Meld dit eerlijk en stel eventueel een andere periode of ander type voor.\n---`
     }
     const lines = board
       .slice(0, 10)
@@ -683,7 +725,7 @@ async function getResultatenContext(messages, sasToken) {
       )
       .join("\n")
     return (
-      `---\nBESTE SPELERS — ${seriesLabel} — ${period.label} (gerangschikt op toernooiprestaties uit Mokum data; ` +
+      `---\nBESTE SPELERS — ${filterLabel} — ${period.label} (gerangschikt op toernooiprestaties uit Mokum data; ` +
       `gebruik dit om de vraag te beantwoorden, noem de top spelers met hun titels/finales):\n\n` +
       lines +
       "\n---"
