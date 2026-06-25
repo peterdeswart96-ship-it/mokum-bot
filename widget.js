@@ -199,7 +199,7 @@
     internPwd: '',
     internPwdError: false,
     bubbleTextIndex: 0,
-    size: 'groot',
+    size: 'klein',
     examplesOpen: false,
     sendTimes: [],
     lastSentQuestion: '',
@@ -678,7 +678,17 @@
     if (!state.open) { state.bubbleTextIndex = (state.bubbleTextIndex + 1) % BUBBLE_TEXTS.length; render() }
   }, 15000)
 
-  window.addEventListener('resize', () => { if (state.open) render() })
+  // Alleen opnieuw renderen als de BREEDTE wijzigt (oriëntatie/desktop-resize).
+  // Op mobiel verandert het openende toetsenbord alleen de hoogte; een volledige
+  // re-render zou de input opnieuw opbouwen en het toetsenbord direct sluiten.
+  // De hoogte/breedte zijn dvh/vw-gebaseerd en passen zich zonder re-render aan.
+  let lastViewportWidth = window.innerWidth
+  window.addEventListener('resize', () => {
+    if (!state.open) return
+    if (window.innerWidth === lastViewportWidth) return
+    lastViewportWidth = window.innerWidth
+    render()
+  })
 
   function init() {
     injectStyles()
