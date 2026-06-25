@@ -338,13 +338,13 @@
       const win = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`)
 
       // Header
-      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;`)
-      const hdrL = el('div', `display:flex;align-items:center;gap:9px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:5px 12px 5px 8px;`)
+      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
+      const hdrL = el('div', `display:flex;align-items:center;gap:9px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:6px 12px;`)
       hdrL.innerHTML = eightBallSVG(34, false)
       const hdrTitle = el('div', null, `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;">Pool & Darts Amsterdam</div>`)
       hdrL.appendChild(hdrTitle)
 
-      const hdrR = el('div', `display:flex;align-items:center;gap:6px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:4px 8px;`)
+      const hdrR = el('div', `display:flex;align-items:center;gap:6px;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:6px 12px;`)
 
       // Home knop
       const homeBtn = btn('🏠', () => { resetChat(); render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:14px;padding:4px 8px;line-height:1.4;`)
