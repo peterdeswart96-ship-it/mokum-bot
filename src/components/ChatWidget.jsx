@@ -425,7 +425,7 @@ export default function ChatWidget() {
                 <div style={{ color: C.red, fontSize: "11px", marginTop: "1px" }}>Pool & Darts Amsterdam</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "4px 8px" }}>
               <button
                 onClick={resetChat}
                 title={lang === "nl" ? "Terug naar home" : "Back to home"}
@@ -475,7 +475,7 @@ export default function ChatWidget() {
 
                 {/* Inklapbare knop "Voorbeeldvragen per rubriek" */}
                 <button onClick={() => setExamplesOpen((o) => !o)} style={{
-                  width: "100%", textAlign: "left", background: C.blackCard, border: `1px solid ${C.border}`,
+                  width: "100%", textAlign: "left", background: C.anthracite, border: "1px solid #3d3d44", borderLeft: `3px solid ${C.red}`,
                   borderRadius: "10px", color: C.white, fontSize: "13px", fontWeight: 700, padding: "11px 14px", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px",
                 }}>
@@ -489,13 +489,10 @@ export default function ChatWidget() {
                 {/* Categorie-overzicht (alleen bij uitklappen) */}
                 {examplesOpen && CATEGORIES.map((cat) => (
                   <div key={cat.id} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <div style={{ marginTop: "4px" }}>
-                      <span style={{ fontSize: "11px", fontWeight: 800, color: C.gray, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                    <div style={{ marginTop: "6px", background: C.anthracite, borderLeft: `3px solid ${C.red}`, borderRadius: "6px", padding: "6px 10px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 800, color: C.white, letterSpacing: "0.07em", textTransform: "uppercase" }}>
                         {cat.emoji} {(t.catTitles && t.catTitles[cat.id]) || cat.id}
                       </span>
-                      {cat.newTopics && (
-                        <span style={{ background: C.red, color: "#fff", fontSize: "8px", fontWeight: 800, padding: "1px 5px", borderRadius: "5px", marginLeft: "6px", verticalAlign: "middle" }}>NEW</span>
-                      )}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                       {cat.topics.map((tid) => {
