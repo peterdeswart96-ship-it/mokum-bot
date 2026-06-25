@@ -217,6 +217,7 @@ function transformTournament(data) {
 
   // Spelers verzamelen uit de poule-standings (één entry per speler)
   const players = new Map() // playerId -> result
+  const urls = {} // playerId -> profiel-URL (voor rating-scrape)
   const st = data.standings || {}
   for (const groep of Object.keys(st)) {
     for (const row of st[groep]) {
@@ -224,6 +225,7 @@ function transformTournament(data) {
       if (!p || p.playerId == null) continue
       const pid = String(p.playerId)
       const naamSp = safeName(p)
+      if (p.url) urls[pid] = p.url
       const r = reached[naamSp]
       players.set(pid, {
         PartitionKey: pid,
@@ -265,7 +267,7 @@ function transformTournament(data) {
     url: data.url || "",
   }
 
-  return { tournament, playerResults: [...players.values()] }
+  return { tournament, playerResults: [...players.values()], playerUrls: urls }
 }
 
 // --- Kern --------------------------------------------------------------------
@@ -282,6 +284,7 @@ async function transformAll(context) {
 
   const result = { blobs: blobs.length, tournaments: 0, skipped: 0, playerResults: 0, errors: [] }
   const playersIndex = {} // playerId -> naam
+  const playersMeta = {} // playerId -> { name, url }   (voor rating-scrape)
 
   let i = 0
   async function worker() {
@@ -300,6 +303,9 @@ async function transformAll(context) {
         for (const pr of out.playerResults) {
           await upsertEntity("PlayerResults", pr, sasToken)
           playersIndex[pr.playerId] = pr.playerName
+          if (!playersMeta[pr.playerId]) {
+            playersMeta[pr.playerId] = { name: pr.playerName, url: out.playerUrls[pr.playerId] || "" }
+          }
           result.playerResults++
         }
         result.tournaments++
@@ -311,11 +317,17 @@ async function transformAll(context) {
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker))
 
-  // players-index wegschrijven
+  // players-index + players-meta wegschrijven
   await putBlob(
     INDEX_CONTAINER,
     "players-index.json",
     JSON.stringify({ updated: new Date().toISOString(), count: Object.keys(playersIndex).length, players: playersIndex }, null, 2),
+    sasToken
+  )
+  await putBlob(
+    INDEX_CONTAINER,
+    "players-meta.json",
+    JSON.stringify({ updated: new Date().toISOString(), count: Object.keys(playersMeta).length, players: playersMeta }, null, 2),
     sasToken
   )
   result.uniquePlayers = Object.keys(playersIndex).length

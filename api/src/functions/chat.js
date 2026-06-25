@@ -60,6 +60,8 @@ Je hebt toegang tot de volledige uitslagen-database van Mokum: alle gespeelde to
 Als er een sectie SPELER-RESULTATEN, RECENTE TOERNOOI-WINNAARS, BESTE SPELERS of TOP 5 ... in deze prompt staat, gebruik die data om te antwoorden. Vraagt iemand "welke vragen kan ik stellen over resultaten?", noem dan bovenstaande voorbeelden.
 Zeg NOOIT dat je geen toegang hebt tot uitslagen, rankings of spelersstatistieken — die heb je wel. Is er voor een concrete vraag geen data meegegeven, vraag dan kort om verduidelijking (welke speler / toernooisoort / periode) in plaats van te weigeren of iets te verzinnen. Voor de allerlaatste live-standen mag je daarnaast naar Cuescore verwijzen.
 
+BELANGRIJK — afsluiting bij resultaten: heb je net een antwoord gegeven met toernooi-resultaten, spelersprestaties, winnaars of een ranglijst? Sluit dan ALTIJD af met de vraag of de gebruiker ook de top 20 op KNBB-rating van Mokum-spelers wil zien (ja/nee). Antwoordt de gebruiker bevestigend, dan krijg je een sectie TOP 20 KNBB POOL RATING aangeleverd om te tonen.
+
 TOERNOOIEN:
 Mokum organiseert meerdere wekelijkse toernooien. Aanmelden en actuele datums via [Cuescore](https://cuescore.com/mokumpooldarts/tournaments).
 
@@ -381,6 +383,23 @@ async function fetchPlayersIndex(sasToken) {
   }
 }
 
+// players-rating.json: playerId -> { name, rating } (KNBB Pool Rating, gescraped)
+async function fetchRatings(sasToken) {
+  const options = {
+    hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+    path: `/toernooien-raw/players-rating.json?${sasToken}`,
+    method: "GET",
+    headers: { "x-ms-version": "2020-04-08" },
+  }
+  const r = await httpsRequest(options)
+  if (r.status !== 200) return null
+  try {
+    return JSON.parse(r.body).players || null
+  } catch {
+    return null
+  }
+}
+
 async function tableQuery(table, filter, sasToken) {
   const q = filter ? `$filter=${encodeURIComponent(filter)}&` : ""
   const options = {
@@ -624,6 +643,32 @@ async function getResultatenContext(messages, sasToken) {
   if (!sasToken) return null
   const lastMsg = messages[messages.length - 1]?.content || ""
   const lower = normalizeText(lastMsg)
+
+  // --- KNBB Pool Rating top 20 -----------------------------------------------
+  // Expliciet gevraagd, of "ja" na een aanbod om de KNBB top 20 te tonen.
+  const prevAssistant =
+    [...messages].reverse().find((m) => m.role === "assistant")?.content || ""
+  const affirmative = /^(ja|jawel|jazeker|graag|zeker|doe maar|yes|prima|ok|oke|okay|ja graag)\b/.test(
+    lower.trim()
+  )
+  const offeredKnbb = /knbb|top 20/.test(normalizeText(prevAssistant))
+  const knbbExplicit = /knbb/.test(lower) || (/rating/.test(lower) && /top|20|hoogste|beste/.test(lower))
+  if (knbbExplicit || (affirmative && offeredKnbb)) {
+    const ratings = await fetchRatings(sasToken)
+    if (!ratings || !Object.keys(ratings).length) {
+      return "---\nGEEN DATA: de KNBB-ratings zijn nog niet beschikbaar (worden nog opgehaald). Meld dit eerlijk en verwijs eventueel naar Cuescore.\n---"
+    }
+    const top = Object.values(ratings)
+      .filter((r) => r && r.rating)
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 20)
+    const lines = top.map((r, i) => `  ${i + 1}. ${r.name} — ${r.rating}`).join("\n")
+    return (
+      "---\nTOP 20 KNBB POOL RATING (Mokum-spelers, bron Cuescore; gebruik dit om te antwoorden):\n\n" +
+      lines +
+      "\n---"
+    )
+  }
 
   // --- Leaderboard-intentie: beste spelers per reeks + periode ---------------
   // Anker op het laatste user-bericht met leaderboard-intentie en verzamel reeks
