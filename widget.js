@@ -512,10 +512,23 @@
     state.messages.push({ role: 'user', content: msg })
     state.input = ''; state.loading = true; state.stage = 'chat'
     render()
-    try {
+    async function callChat() {
       const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: state.messages }) })
+      if (!res.ok) throw new Error('http ' + res.status)
       const data = await res.json()
-      state.messages.push({ role: 'assistant', content: data.reply })
+      if (!data || typeof data.reply !== 'string') throw new Error('geen antwoord')
+      return data.reply
+    }
+    try {
+      let reply
+      try {
+        reply = await callChat()
+      } catch {
+        // Eén retry — vangt cold starts / tijdelijke hikken op
+        await new Promise((r) => setTimeout(r, 1500))
+        reply = await callChat()
+      }
+      state.messages.push({ role: 'assistant', content: reply })
     } catch { state.messages.push({ role: 'assistant', content: tr().error }) }
     finally { state.loading = false; render() }
   }
