@@ -442,25 +442,31 @@ export default function ChatWidget() {
   }
 
   const isMobile = windowWidth < 480
-  const chatWidth = isMobile
+  const isMax = size === "max"
+  const chatWidth = isMax
+    ? "100dvw"  // volledig scherm (desktop + mobiel)
+    : isMobile
     ? `${windowWidth - 16}px`
     : (size === "groot" ? "min(80vw, 900px)" : size === "klein" ? "380px" : "460px")
-  const chatHeight = size === "groot"
+  const chatHeight = isMax
+    ? "100dvh"  // volledig scherm (desktop + mobiel)
+    : size === "groot"
     ? (isMobile ? "calc(100dvh - 90px - 16px)" : "85dvh")
     : `min(${isMobile ? (size === "klein" ? 460 : 600) : (size === "klein" ? 520 : 660)}px, calc(100dvh - 90px - 80px - 16px))`
-  const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
+  const chatRight = isMax ? "0px" : isMobile ? "8px" : WIDGET_CONFIG.right
+  const chatBottom = isMax ? "0px" : WIDGET_CONFIG.bottom
 
   return (
-    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: chatRight, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
+    <div style={{ position: "fixed", bottom: chatBottom, right: chatRight, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
 
       {open && (
         <div style={{
-          marginBottom: "16px",
+          marginBottom: isMax ? "0" : "16px",
           width: chatWidth,
           // Hoogte: dvh houdt rekening met Safari adresbalk op iPhone
           // 90px = bottom widget, 80px = sluitknop + marge, 16px = adembreedte bovenkant
           height: chatHeight,
-          borderRadius: "16px", overflow: "hidden",
+          borderRadius: isMax ? "0" : "16px", overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
           display: "flex", flexDirection: "column",
           backgroundColor: C.black,
@@ -651,6 +657,7 @@ export default function ChatWidget() {
                 <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
                 <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
                 <option value="groot">{lang === "nl" ? "Groot" : "Large"}</option>
+                <option value="max">{lang === "nl" ? "Max (volledig scherm)" : "Max (full screen)"}</option>
               </select>
               </div>
             </div>
