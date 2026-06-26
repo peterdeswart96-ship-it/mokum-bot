@@ -713,6 +713,36 @@ async function getSummerLeagueContext() {
   )
 }
 
+// Foto-catalogus: toon relevante foto's (inline of in apart venster) o.b.v. trigger words
+async function getFotoContext(message) {
+  const raw = await fetchWithTimeout(`https://${STORAGE_ACCOUNT}.blob.core.windows.net/${"fotos"}/_catalog.json`, 3500)
+  if (!raw) return null
+  let catalog
+  try { catalog = JSON.parse(raw) } catch { return null }
+  if (!Array.isArray(catalog) || !catalog.length) return null
+  const q = normalizeText(message || "")
+  const matches = catalog.filter(
+    (f) =>
+      f && f.actief !== false && Array.isArray(f.triggerWords) &&
+      f.triggerWords.some((t) => t && q.includes(normalizeText(String(t))))
+  )
+  if (!matches.length) return null
+  const lines = matches.map((f) => {
+    const cap = f.onderschrift || "Bekijk"
+    if (f.weergave === "venster") {
+      return `- APART VENSTER (grote afbeelding/PDF): toon als link/knop [${cap}](${f.url}) en vermeld kort dat het in een nieuw venster opent.`
+    }
+    return `- INLINE (klein, in de chat): toon exact als markdown-afbeelding ![${cap}](${f.url})`
+  })
+  return (
+    `---\nRELEVANTE FOTO('S) bij deze vraag — verwerk ze in je antwoord zoals hieronder aangegeven. ` +
+    `Voor INLINE gebruik je EXACT de markdown ![onderschrift](url) zodat de afbeelding in de chat verschijnt. ` +
+    `Verzin zelf NOOIT andere afbeeldings-URL's.\n` +
+    lines.join("\n") +
+    "\n---"
+  )
+}
+
 async function getResultatenContext(messages, sasToken) {
   if (!sasToken) return null
   const lastMsg = messages[messages.length - 1]?.content || ""
@@ -961,6 +991,13 @@ app.http("chat", {
       } catch (err) {
         console.log("Resultaten ophalen mislukt:", err.message)
       }
+      let fotoContext = null
+      try {
+        fotoContext = await getFotoContext(messages[messages.length - 1]?.content || "")
+        if (fotoContext) console.log("Foto-context toegevoegd")
+      } catch (err) {
+        console.log("Foto ophalen mislukt:", err.message)
+      }
       // Statische system prompt apart houden zodat hij gecachet kan worden;
       // wisselende context (kennisbron, toernooidata) komt ná de cache-breakpoint.
       const dynamicParts = []
@@ -974,6 +1011,7 @@ app.http("chat", {
       if (kennisbronContext) dynamicParts.push(kennisbronContext)
       if (tournamentContext) dynamicParts.push(tournamentContext)
       if (resultatenContext) dynamicParts.push(resultatenContext)
+      if (fotoContext) dynamicParts.push(fotoContext)
       const systemBlocks = [
         { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       ]
