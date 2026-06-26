@@ -562,6 +562,7 @@
         <button class="btn" id="htab-btn-overzicht" onclick="showHTab('overzicht')" style="border-radius:0;border-bottom:2px solid #cc0000;color:#fff;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🏠 Overzicht</button>
         <button class="btn" id="htab-btn-talen" onclick="showHTab('talen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🌐 Talen</button>
         <button class="btn" id="htab-btn-kennisbronnen" onclick="showHTab('kennisbronnen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📁 Kennisbronnen</button>
+        <button class="btn" id="htab-btn-fotos" onclick="showHTab('fotos')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📷 Foto's</button>
         <button class="btn" id="htab-btn-kosten" onclick="showHTab('kosten')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">💶 API kosten</button>
         <button class="btn" id="htab-btn-rubrieken" onclick="showHTab('rubrieken')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📋 Rubrieken</button>
         <button class="btn" id="htab-btn-problemen" onclick="showHTab('problemen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🔧 Problemen</button>
@@ -575,13 +576,14 @@
           <div class="row"><span class="row-label">🌐 WordPress site</span><span class="row-val" style="font-size:13px;">Bot laadt automatisch via één script tag</span></div>
           <div class="row"><span class="row-label">🤖 Claude AI</span><span class="row-val" style="font-size:13px;">Beantwoordt vragen op basis van jullie informatie</span></div>
           <div class="row"><span class="row-label">📁 Kennisbronnen</span><span class="row-val" style="font-size:13px;">Bestanden die jullie zelf uploaden via de wizard</span></div>
+          <div class="row"><span class="row-label">📷 Foto's</span><span class="row-val" style="font-size:13px;">Bot toont foto's/menukaarten bij passende vragen</span></div>
           <div class="row"><span class="row-label">🔄 Updates</span><span class="row-val"><span class="badge badge-green">Automatisch</span></span></div>
         </div>
         <div class="card-title" style="margin-top:20px;">Wat kan de bot?</div>
         <div class="grid-2">
           <div class="card" style="padding:.875rem 1rem;">
             <div style="font-size:13px;color:#888;margin-bottom:8px;">Voor bezoekers</div>
-            <div style="font-size:13px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren</div>
+            <div style="font-size:13px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren<br>📷 Foto's & Menukaarten</div>
           </div>
           <div class="card" style="padding:.875rem 1rem;">
             <div style="font-size:13px;color:#888;margin-bottom:8px;">Intern (met wachtwoord)</div>
@@ -595,6 +597,7 @@
         <div class="card-title" style="margin-top:20px;">Handige links</div>
         <div class="card">
           <div class="row"><span class="row-label">🤖 De bot</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl" style="color:#cc4444;" target="_blank">mokum-bot.pdscloud.nl</a></span></div>
+          <div class="row"><span class="row-label">📷 Fotolijst (afvinkbaar)</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/foto-checklist.html" style="color:#cc4444;" target="_blank">foto-checklist</a></span></div>
           <div class="row"><span class="row-label">🏆 Toernooien</span><span class="row-val"><a href="https://cuescore.com/mokumpooldarts/tournaments" style="color:#cc4444;" target="_blank">cuescore.com</a></span></div>
           <div class="row"><span class="row-label">🎓 Clinics</span><span class="row-val"><a href="https://nickvandenberg.com" style="color:#cc4444;" target="_blank">nickvandenberg.com</a></span></div>
         </div>
@@ -676,6 +679,57 @@
 
       </div>
 
+      <!-- SUBTAB: FOTO'S -->
+      <div id="htab-fotos" style="display:none;">
+        <div class="insight-box" style="margin-bottom:16px;">📷 De bot kan <strong>foto's en menukaarten</strong> tonen bij een antwoord. Je beheert ze in de tab <button onclick="showTab('fotos', document.querySelector('.tab[onclick*=fotos]'))" style="background:none;border:none;color:#cc4444;cursor:pointer;font-size:13px;text-decoration:underline;padding:0;">📷 Foto's</button>. Per foto kies je <b>wanneer</b> hij verschijnt (trigger words) en <b>hoe</b> hij verschijnt (inline of apart venster).</div>
+
+        <div class="card-title">Hoe werkt het?</div>
+        <div class="card">
+          <div class="row"><span class="row-label">📤 Uploaden</span><span class="row-val" style="font-size:13px;">Eén foto, of meerdere tegelijk via bulk upload</span></div>
+          <div class="row"><span class="row-label">🤖 Labelen</span><span class="row-val" style="font-size:13px;">Claude bedenkt categorie, onderschrift en trigger words</span></div>
+          <div class="row"><span class="row-label">🔑 Trigger words</span><span class="row-val" style="font-size:13px;">De woorden waarbij de bot de foto toont</span></div>
+          <div class="row"><span class="row-label">🖼️ Weergave</span><span class="row-val" style="font-size:13px;">Inline (klein in chat) of apart venster (groot/PDF)</span></div>
+          <div class="row"><span class="row-label">🙂 Privacy (AVG)</span><span class="row-val" style="font-size:13px;">Gezichten worden automatisch met smilies afgedekt</span></div>
+          <div class="row"><span class="row-label">🔄 Effect</span><span class="row-val"><span class="badge badge-green">Direct actief</span></span></div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">Stap-voor-stap</div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 1 — Foto kiezen en uploaden</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Kies in de tab <b>📷 Foto's</b> een afbeelding of PDF (bijv. een menukaart) en klik op <b>Uploaden</b>. Grote foto's worden automatisch verkleind, ook HEIC-foto's van de iPhone. Heb je er veel? Gebruik <b>Bulk uploaden</b> om in één keer meerdere te selecteren.</div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 2 — Door Claude laten labelen (aanbevolen)</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Laat het vinkje <b>🤖 Door Claude laten labelen</b> aanstaan. De foto komt dan binnen onder <b>"Te labelen"</b> en is nog niet zichtbaar voor bezoekers. Vraag daarna Claude (via Peter) om hem te categoriseren en van trigger words te voorzien — of vul de velden zelf in. Zet je het vinkje uit, dan vul je categorie, onderschrift en trigger words meteen zelf in.</div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 3 — Trigger words en weergave instellen</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">In het <b>Foto-overzicht</b> pas je per foto de <b>trigger words</b> aan (komma-gescheiden, bijv. <i>menu, eten, drinken, kaart</i>) en kies je de <b>weergave</b>: inline (klein in de chat) of apart venster (een grote foto/PDF die in een nieuw tabblad opent — handig voor menukaarten). Klik op <b>💾 Opslaan</b>. Een "Te labelen"-foto gaat automatisch live zodra je hem labelt en opslaat.</div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 4 — Beheren</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Per foto kun je: <b>↔ weergave wisselen</b>, <b>⏸ deactiveren</b> (tijdelijk verbergen zonder te verwijderen) of <b>✓ activeren</b>, en <b>🗑 verwijderen</b>. Twijfel je over een knop? Houd je muis op het <b>ℹ️</b> naast de knop voor uitleg.</div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">🙂 Privacy — gezichten (AVG)</div>
+        <div class="card">
+          <div style="font-size:13px;color:#888;line-height:1.7;margin-bottom:10px;">Bij het uploaden worden herkende gezichten automatisch afgedekt met een smiley. Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet. De smiley-optie staat standaard aan (bovenaan de Foto's-tab).</div>
+          <div class="row"><span class="row-label">Standaard</span><span class="row-val"><span class="badge badge-green">🙂 Smilies aan</span></span></div>
+          <div class="row"><span class="row-label">Echte gezichten tonen</span><span class="row-val" style="font-size:13px;">Alleen met toestemming (bijv. eigen medewerkers)</span></div>
+          <div class="row"><span class="row-label">Lukt anonimiseren niet?</span><span class="row-val" style="font-size:13px;">Dan wordt de foto niet geüpload</span></div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">📋 Welke foto's maken?</div>
+        <div class="card">
+          <div style="font-size:13px;color:#888;line-height:1.7;">Er is een handige afvinkbare fotolijst die laat zien welke foto's leuk zijn om te maken voor de bot. Open hem op je telefoon — je vinkjes blijven bewaard.</div>
+          <div class="row" style="margin-top:8px;"><span class="row-label">📷 Fotolijst</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/foto-checklist.html" style="color:#cc4444;" target="_blank">foto-checklist</a></span></div>
+        </div>
+      </div>
+
       <!-- SUBTAB: API KOSTEN -->
       <div id="htab-kosten" style="display:none;">
         <div style="background:#0d1a2e;border:1px solid #1a3a5a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4d9de0;">💡 De bot gebruikt Claude AI van Anthropic. Je betaalt per bericht (token). Hieronder kun je berekenen wat het kost bij jouw verwachte gebruik.</div>
@@ -755,6 +809,10 @@
         <div class="card" style="margin-bottom:10px;">
           <div style="font-size:13px;color:#ccc;margin-bottom:6px;">❓ De bot zegt dat hij iets niet weet</div>
           <div style="font-size:13px;color:#888;line-height:1.7;">Er is nog geen kennisbron bestand voor dat onderwerp. Maak één aan via de wizard.</div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">📷 De bot toont een foto niet (of de verkeerde)</div>
+          <div style="font-size:13px;color:#888;line-height:1.7;">Controleer in de tab <strong style="color:#fff;">📷 Foto's</strong> of de foto <strong style="color:#fff;">actief</strong> staat en de juiste <strong style="color:#fff;">trigger words</strong> heeft. Staat de foto nog onder <em>"Te labelen"</em>, dan is hij nog niet zichtbaar — label en sla op om hem live te zetten.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
           <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🌐 De bot is niet zichtbaar op de website</div>
@@ -1788,7 +1846,7 @@ function wizardReset() {
 }
 
 function showHTab(naam) {
-  ["overzicht","talen","kennisbronnen","kosten","rubrieken","problemen"].forEach(t => {
+  ["overzicht","talen","kennisbronnen","fotos","kosten","rubrieken","problemen"].forEach(t => {
     const el = document.getElementById(`htab-${t}`)
     const btn = document.getElementById(`htab-btn-${t}`)
     if (el) el.style.display = t === naam ? "block" : "none"
