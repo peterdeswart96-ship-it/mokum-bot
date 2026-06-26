@@ -737,14 +737,17 @@ async function getFotoContext(message, sasToken) {
     }
     return `- INLINE: voeg ALTIJD deze afbeelding toe op een eigen regel, exact als markdown: ![${cap}](${f.url})`
   })
-  return (
+  const text =
     `---\nRELEVANTE FOTO('S) bij deze vraag. Dit is GEEN optie: je MOET de hieronder opgegeven foto('s) in je antwoord opnemen, ` +
     `OOK bij indirecte of brede vragen (bijv. "vertel me over...", "is er een bbq...") en ongeacht hoeveel tekst je verder geeft. ` +
     `Gebruik UITSLUITEND de hier opgegeven URL('s); ken je elders (bijv. in een kennisbron) een andere URL voor hetzelfde onderwerp, NEGEER die en gebruik deze. ` +
     `Verzin zelf NOOIT andere afbeeldings-URL's. Laat de afbeelding/link NOOIT weg als deze sectie aanwezig is.\n` +
     lines.join("\n") +
     "\n---"
-  )
+  return {
+    text,
+    fotos: matches.map((f) => ({ url: f.url, weergave: f.weergave, onderschrift: f.onderschrift || "Bekijk" })),
+  }
 }
 
 async function getResultatenContext(messages, sasToken) {
@@ -1015,7 +1018,7 @@ app.http("chat", {
       if (kennisbronContext) dynamicParts.push(kennisbronContext)
       if (tournamentContext) dynamicParts.push(tournamentContext)
       if (resultatenContext) dynamicParts.push(resultatenContext)
-      if (fotoContext) dynamicParts.push(fotoContext)
+      if (fotoContext) dynamicParts.push(fotoContext.text)
       const systemBlocks = [
         { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       ]
@@ -1027,7 +1030,15 @@ app.http("chat", {
         system: systemBlocks,
         messages: messages,
       })
-      const reply = response.content[0].text
+      let reply = response.content[0].text
+      // Vangnet: matchte er een relevante foto maar liet de bot 'm weg? Voeg 'm alsnog toe.
+      if (fotoContext && Array.isArray(fotoContext.fotos)) {
+        for (const f of fotoContext.fotos) {
+          if (!f.url || reply.includes(f.url)) continue
+          const cap = f.onderschrift || "Bekijk"
+          reply += f.weergave === "venster" ? `\n\n[${cap}](${f.url})` : `\n\n![${cap}](${f.url})`
+        }
+      }
       saveConversation(messages, reply)
       return {
         status: 200,
