@@ -21,6 +21,10 @@ const STORAGE_ACCOUNT = "mokumbotrg904a"
 const FOTOS_CONTAINER = "fotos"
 const CATALOG_BLOB = "_catalog.json"
 const API_VERSION = "2020-04-08"
+// Foto's worden via de Functie geserveerd (proxy met server-side SAS) — de
+// container is niet publiek toegankelijk. Absolute URL zodat de afbeelding ook
+// vanaf de klant-website (embed-widget) laadt.
+const FUNC_BASE = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
 // sha256("mkm!") — zelfde dashboard-wachtwoord als de auth/cleanup endpoints
 const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
 
@@ -55,33 +59,42 @@ function host() {
   return `${STORAGE_ACCOUNT}.blob.core.windows.net`
 }
 
-function publicUrl(name) {
-  return `https://${host()}/${FOTOS_CONTAINER}/${encodeURIComponent(name)}`
+// Foto's worden geserveerd via de proxy-route /api/foto/<bestand> (SAS server-side).
+function proxyUrl(name) {
+  return `${FUNC_BASE}/api/foto/${encodeURIComponent(name)}`
 }
 
-// Maakt de container aan met publieke blob-toegang; bestaat-ie al, dan de ACL
-// borgen op "blob" (alleen-lezen via directe URL, geen listing).
-async function ensurePublicContainer(sasToken) {
-  const createOpts = {
+// Borgt dat de container bestaat (privé; toegang loopt via de proxy-Functie).
+async function ensureContainer(sasToken) {
+  const res = await httpsRequest({
     hostname: host(),
     path: `/${FOTOS_CONTAINER}?restype=container&${sasToken}`,
     method: "PUT",
-    headers: { "Content-Length": 0, "x-ms-version": API_VERSION, "x-ms-blob-public-access": "blob" },
+    headers: { "Content-Length": 0, "x-ms-version": API_VERSION },
+  })
+  // 201 = aangemaakt, 409 = bestaat al — beide prima
+  if (res.status !== 201 && res.status !== 409) {
+    throw new Error(`Container borgen status ${res.status}: ${res.body.slice(0, 200)}`)
   }
-  const res = await httpsRequest(createOpts)
-  if (res.status === 201) return { created: true, public: true }
-  if (res.status === 409) {
-    // bestaat al -> ACL op publiek-blob zetten
-    const aclOpts = {
-      hostname: host(),
-      path: `/${FOTOS_CONTAINER}?restype=container&comp=acl&${sasToken}`,
-      method: "PUT",
-      headers: { "Content-Length": 0, "x-ms-version": API_VERSION, "x-ms-blob-public-access": "blob" },
-    }
-    const aclRes = await httpsRequest(aclOpts)
-    return { created: false, public: aclRes.status === 200, aclStatus: aclRes.status }
-  }
-  throw new Error(`Container aanmaken status ${res.status}: ${res.body.slice(0, 200)}`)
+  return { ok: true }
+}
+
+// Haalt de ruwe bytes van een blob op (voor de proxy-route).
+function getBlobBytes(name, sasToken) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(
+        { hostname: host(), path: `/${FOTOS_CONTAINER}/${encodeURIComponent(name)}?${sasToken}`, headers: { "x-ms-version": API_VERSION } },
+        (res) => {
+          const chunks = []
+          res.on("data", (c) => chunks.push(c))
+          res.on("end", () =>
+            resolve({ status: res.statusCode, buffer: Buffer.concat(chunks), contentType: res.headers["content-type"] || "application/octet-stream" })
+          )
+        }
+      )
+      .on("error", reject)
+  })
 }
 
 async function getCatalog(sasToken) {
@@ -145,7 +158,7 @@ app.http("fotos", {
       }
 
       if (action === "ensure") {
-        const r = await ensurePublicContainer(sasToken)
+        const r = await ensureContainer(sasToken)
         return json(200, { success: true, container: r })
       }
 
@@ -159,7 +172,7 @@ app.http("fotos", {
         const veilig = bestandsnaam.replace(/[^a-zA-Z0-9\-_.]/g, "-").toLowerCase()
         const bytes = Buffer.from(body.contentBase64, "base64")
 
-        await ensurePublicContainer(sasToken)
+        await ensureContainer(sasToken)
 
         const putRes = await httpsRequest({
           hostname: host(),
@@ -177,7 +190,7 @@ app.http("fotos", {
         const catalog = await getCatalog(sasToken)
         const entry = {
           bestand: veilig,
-          url: publicUrl(veilig),
+          url: proxyUrl(veilig),
           categorie: categorie || "Overig",
           onderschrift: onderschrift || "",
           triggerWords,
@@ -227,6 +240,38 @@ app.http("fotos", {
     } catch (error) {
       context.log("Fotos endpoint fout:", error)
       return json(500, { error: error.message })
+    }
+  },
+})
+
+// Proxy-route: serveert een foto/PDF uit de privé-container met de server-side SAS.
+app.http("foto-file", {
+  methods: ["GET", "OPTIONS"],
+  authLevel: "anonymous",
+  route: "foto/{name}",
+  handler: async (request, context) => {
+    if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
+    const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+    if (!sasToken) return { status: 500, body: "Geen SAS token" }
+    try {
+      const name = request.params.name
+      const blob = await getBlobBytes(name, sasToken)
+      if (blob.status !== 200) {
+        return { status: blob.status === 404 ? 404 : 502, headers: corsHeaders, body: "Foto niet gevonden" }
+      }
+      return {
+        status: 200,
+        headers: {
+          "Content-Type": blob.contentType,
+          "Content-Length": blob.buffer.length,
+          "Cache-Control": "public, max-age=86400",
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: blob.buffer,
+      }
+    } catch (error) {
+      context.log("Foto-proxy fout:", error)
+      return { status: 500, headers: corsHeaders, body: "Fout bij ophalen foto" }
     }
   },
 })
