@@ -143,10 +143,11 @@ app.http("fotos", {
     if (!sasToken) return json(500, { error: "Geen SAS token geconfigureerd" })
 
     try {
-      // GET -> catalogus teruggeven
+      // GET -> catalogus teruggeven (zonder de verborgen 'echte gezichten'-bestandsnaam)
       if (request.method === "GET") {
         const catalog = await getCatalog(sasToken)
-        return json(200, { fotos: catalog })
+        const veilig = catalog.map(({ bestandEcht, ...rest }) => rest)
+        return json(200, { fotos: veilig })
       }
 
       const body = await request.json()
@@ -170,40 +171,58 @@ app.http("fotos", {
           return json(400, { error: "bestandsnaam en contentBase64 zijn verplicht" })
         }
         const veilig = bestandsnaam.replace(/[^a-zA-Z0-9\-_.]/g, "-").toLowerCase()
-        const bytes = Buffer.from(body.contentBase64, "base64")
-
+        const ct = contentType || "application/octet-stream"
         await ensureContainer(sasToken)
 
-        const putRes = await httpsRequest({
-          hostname: host(),
-          path: `/${FOTOS_CONTAINER}/${encodeURIComponent(veilig)}?${sasToken}`,
-          method: "PUT",
-          headers: {
-            "Content-Type": contentType || "application/octet-stream",
-            "Content-Length": bytes.length,
-            "x-ms-blob-type": "BlockBlob",
-            "x-ms-version": API_VERSION,
-          },
-        }, bytes)
-        if (putRes.status !== 201) return json(500, { error: `Upload mislukt: HTTP ${putRes.status}` })
-
-        const catalog = await getCatalog(sasToken)
-        const entry = {
-          bestand: veilig,
-          url: proxyUrl(veilig),
-          categorie: categorie || "Overig",
-          onderschrift: onderschrift || "",
-          triggerWords,
-          weergave,
-          actief: body.actief === undefined ? true : !!body.actief,
+        async function putBlob(naam, b64) {
+          const bytes = Buffer.from(b64, "base64")
+          const res = await httpsRequest({
+            hostname: host(),
+            path: `/${FOTOS_CONTAINER}/${encodeURIComponent(naam)}?${sasToken}`,
+            method: "PUT",
+            headers: { "Content-Type": ct, "Content-Length": bytes.length, "x-ms-blob-type": "BlockBlob", "x-ms-version": API_VERSION },
+          }, bytes)
+          return res.status === 201
         }
+
+        // Bevat de foto gezichten én is er een smiley-versie meegestuurd? Dan bewaren
+        // we beide: smiley = standaard getoond (publieke naam), origineel = verborgen
+        // (willekeurige naam, alleen getoond als de beheerder 'echte gezichten' aanzet).
+        const heeftGezichten = !!body.heeftGezichten && !!body.contentBase64Smiley
+        let entry
+        if (heeftGezichten) {
+          const dot = veilig.lastIndexOf(".")
+          const base = dot > 0 ? veilig.slice(0, dot) : veilig
+          const ext = dot > 0 ? veilig.slice(dot) : ".jpg"
+          const echtNaam = `${base}-echt-${crypto.randomBytes(4).toString("hex")}${ext}`
+          const okSmiley = await putBlob(veilig, body.contentBase64Smiley)
+          const okEcht = await putBlob(echtNaam, body.contentBase64)
+          if (!okSmiley || !okEcht) return json(500, { error: "Upload mislukt" })
+          entry = {
+            bestand: veilig, url: proxyUrl(veilig), bestandEcht: echtNaam,
+            heeftGezichten: true, toonEcht: false,
+            categorie: categorie || "Overig", onderschrift: onderschrift || "", triggerWords, weergave,
+            actief: body.actief === undefined ? true : !!body.actief,
+          }
+        } else {
+          const ok = await putBlob(veilig, body.contentBase64)
+          if (!ok) return json(500, { error: "Upload mislukt" })
+          entry = {
+            bestand: veilig, url: proxyUrl(veilig),
+            heeftGezichten: false, toonEcht: true,
+            categorie: categorie || "Overig", onderschrift: onderschrift || "", triggerWords, weergave,
+            actief: body.actief === undefined ? true : !!body.actief,
+          }
+        }
+        const catalog = await getCatalog(sasToken)
         const idx = catalog.findIndex((f) => f.bestand === veilig)
         if (idx >= 0) catalog[idx] = { ...catalog[idx], ...entry }
         else catalog.push(entry)
         await putCatalog(catalog, sasToken)
 
-        context.log(`Foto geupload: ${veilig} (${weergave})`)
-        return json(200, { success: true, foto: entry })
+        context.log(`Foto geupload: ${veilig} (${weergave}, gezichten=${heeftGezichten})`)
+        const { bestandEcht, ...veiligEntry } = entry
+        return json(200, { success: true, foto: veiligEntry })
       }
 
       if (action === "update") {
@@ -217,20 +236,32 @@ app.http("fotos", {
         if (body.triggerWords !== undefined) catalog[idx].triggerWords = normTriggers(body.triggerWords)
         if (body.weergave !== undefined) catalog[idx].weergave = body.weergave === "venster" ? "venster" : "inline"
         if (body.actief !== undefined) catalog[idx].actief = !!body.actief
+        // Echte gezichten tonen i.p.v. smilies (alleen mogelijk als er een verborgen origineel is)
+        if (body.toonEcht !== undefined && catalog[idx].bestandEcht) {
+          catalog[idx].toonEcht = !!body.toonEcht
+          catalog[idx].url = catalog[idx].toonEcht ? proxyUrl(catalog[idx].bestandEcht) : proxyUrl(catalog[idx].bestand)
+        }
         await putCatalog(catalog, sasToken)
-        return json(200, { success: true, foto: catalog[idx] })
+        const { bestandEcht, ...veiligEntry } = catalog[idx]
+        return json(200, { success: true, foto: veiligEntry })
       }
 
       if (action === "delete") {
         const { bestand } = body
         if (!bestand) return json(400, { error: "bestand is verplicht" })
-        await httpsRequest({
-          hostname: host(),
-          path: `/${FOTOS_CONTAINER}/${encodeURIComponent(bestand)}?${sasToken}`,
-          method: "DELETE",
-          headers: { "x-ms-version": API_VERSION },
-        })
         const catalog = await getCatalog(sasToken)
+        const entry = catalog.find((f) => f.bestand === bestand)
+        async function delBlob(naam) {
+          if (!naam) return
+          await httpsRequest({
+            hostname: host(),
+            path: `/${FOTOS_CONTAINER}/${encodeURIComponent(naam)}?${sasToken}`,
+            method: "DELETE",
+            headers: { "x-ms-version": API_VERSION },
+          })
+        }
+        await delBlob(bestand)
+        if (entry && entry.bestandEcht) await delBlob(entry.bestandEcht) // ook het verborgen origineel
         const next = catalog.filter((f) => f.bestand !== bestand)
         await putCatalog(next, sasToken)
         return json(200, { success: true })
@@ -255,6 +286,8 @@ app.http("foto-file", {
     if (!sasToken) return { status: 500, body: "Geen SAS token" }
     try {
       const name = request.params.name
+      // Interne bestanden (catalogus e.d.) nooit publiek serveren
+      if (!name || name.startsWith("_")) return { status: 404, headers: corsHeaders, body: "Niet gevonden" }
       const blob = await getBlobBytes(name, sasToken)
       if (blob.status !== 200) {
         return { status: blob.status === 404 ? 404 : 502, headers: corsHeaders, body: "Foto niet gevonden" }

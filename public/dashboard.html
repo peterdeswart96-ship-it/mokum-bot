@@ -134,6 +134,21 @@
     .grid-3 { grid-template-columns: 1fr; }
     .tab { padding: 10px 12px; font-size: 12px; }
   }
+  /* Foto-knoppen: opvallende kleuren per actie */
+  .fbtn { font-size: 11px; padding: 4px 9px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; transition: filter .12s; }
+  .fbtn:hover { filter: brightness(1.28); }
+  .fbtn-save { background: #14324a; border-color: #1f567d; color: #9ecbff; }
+  .fbtn-view { background: #3a2f12; border-color: #6b5320; color: #f0c674; }
+  .fbtn-active { background: #143020; border-color: #2f5a36; color: #7bd88f; }
+  .fbtn-off { background: #2b2b2b; border-color: #4a4a4a; color: #cfcfcf; }
+  .fbtn-del { background: #3a1414; border-color: #6b2626; color: #ff8a8a; }
+  /* Info-tooltip bij de knoppen */
+  .tip { position: relative; display: inline-flex; align-items: center; }
+  .tip .ic { cursor: help; font-style: normal; opacity: .75; font-size: 12px; }
+  .tip .tipbox { visibility: hidden; opacity: 0; position: absolute; bottom: 145%; left: 50%; transform: translateX(-50%); background: #000; color: #eee; border: 1px solid #444; border-radius: 8px; padding: 7px 9px; font-size: 11px; width: 190px; z-index: 200; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.7); pointer-events: none; font-weight: 400; white-space: normal; }
+  .tip:hover .tipbox { visibility: visible; opacity: 1; }
+  .gezicht-switch { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: #ddd; background: #1f1f1f; border: 1px solid #3a3a3a; border-radius: 7px; padding: 3px 9px; cursor: pointer; }
+  .gezicht-switch input { accent-color: #cc0000; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -837,55 +852,53 @@ function ensureFaceApi(){
   return _faceApiPromise
 }
 function _loadImg(file){ return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file) }) }
-// Verkleint de foto (max 1600px, JPEG — handelt ook HEIC af) en vervangt indien
-// ingeschakeld gezichten door smilies. Returnt { file, faces }.
-// faces = -1 betekent: anonimiseren mislukt (NIET uploaden).
-async function anonymizeFaces(file){
-  if (!file.type || !file.type.startsWith("image/")) return { file, faces: 0 } // PDF e.d. overslaan
+function _readB64(file){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file) }) }
+function _canvasB64(canvas){ return new Promise((res) => canvas.toBlob(b => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.readAsDataURL(b) }, "image/jpeg", 0.85)) }
+
+// Verkleint de foto (max 1600px, JPEG — handelt ook HEIC af) en maakt indien er
+// gezichten zijn én anonimisatie aan staat een tweede 'smiley'-versie.
+// Returnt { name, type, origB64, smileyB64, faces }. faces = -1 = anonimiseren mislukt (NIET uploaden).
+async function prepareUpload(file){
+  if (!file.type || !file.type.startsWith("image/")) {
+    return { name: file.name, type: file.type || "application/octet-stream", origB64: await _readB64(file), smileyB64: null, faces: 0 }
+  }
   let img
-  try { img = await _loadImg(file) } catch (e) { return { file, faces: 0 } }
+  try { img = await _loadImg(file) } catch (e) { return { name: file.name, type: file.type, origB64: await _readB64(file), smileyB64: null, faces: 0 } }
   const MAXDIM = 1600
   const scale = Math.min(1, MAXDIM / Math.max(img.naturalWidth, img.naturalHeight))
   const w = Math.max(1, Math.round(img.naturalWidth * scale))
   const h = Math.max(1, Math.round(img.naturalHeight * scale))
-  const canvas = document.createElement("canvas")
-  canvas.width = w; canvas.height = h
-  const ctx = canvas.getContext("2d")
+  const c = document.createElement("canvas"); c.width = w; c.height = h
+  const ctx = c.getContext("2d")
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high"
   ctx.drawImage(img, 0, 0, w, h)
-  let faces = 0
+  const name = (file.name.replace(/\.[^.]+$/, "") || file.name) + ".jpg"
+  const origB64 = await _canvasB64(c) // verkleind origineel (met gezichten)
+  let smileyB64 = null, faces = 0
   if (faceAnonAan()) {
     try {
       await ensureFaceApi()
-      const dets = await faceapi.detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.35 }))
+      const dets = await faceapi.detectAllFaces(c, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.35 }))
       faces = dets.length
-      ctx.textAlign = "center"; ctx.textBaseline = "middle"
-      dets.forEach(d => {
-        const b = d.box
-        const cx = b.x + b.width / 2, cy = b.y + b.height / 2
-        const size = Math.max(b.width, b.height) * 1.7
-        // Eerst een dekkende cirkel (AVG-zekerheid), dan de smiley erop op gezichtsgrootte
-        ctx.fillStyle = "#FCD34D"
-        ctx.beginPath(); ctx.arc(cx, cy, size * 0.42, 0, Math.PI * 2); ctx.fill()
-        ctx.font = `${Math.round(size)}px serif`
-        ctx.fillText("🙂", cx, cy)
-      })
+      if (faces > 0) {
+        const c2 = document.createElement("canvas"); c2.width = w; c2.height = h
+        const ctx2 = c2.getContext("2d"); ctx2.drawImage(c, 0, 0)
+        ctx2.textAlign = "center"; ctx2.textBaseline = "middle"
+        dets.forEach(d => {
+          const b = d.box, cx = b.x + b.width / 2, cy = b.y + b.height / 2, size = Math.max(b.width, b.height) * 1.7
+          ctx2.fillStyle = "#FCD34D"; ctx2.beginPath(); ctx2.arc(cx, cy, size * 0.42, 0, Math.PI * 2); ctx2.fill()
+          ctx2.font = `${Math.round(size)}px serif`; ctx2.fillText("🙂", cx, cy)
+        })
+        smileyB64 = await _canvasB64(c2)
+      }
     } catch (e) {
-      console.warn("Anonimiseren mislukt:", e)
-      URL.revokeObjectURL(img.src)
-      return { file, faces: -1 }
+      console.warn("Anonimiseren mislukt:", e); URL.revokeObjectURL(img.src)
+      return { name, type: "image/jpeg", origB64, smileyB64: null, faces: -1 }
     }
   }
   URL.revokeObjectURL(img.src)
-  try {
-    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.85))
-    const finalName = (file.name.replace(/\.[^.]+$/, "") || file.name) + ".jpg"
-    return { file: new File([blob], finalName, { type: "image/jpeg" }), faces }
-  } catch (e) {
-    return { file, faces }
-  }
+  return { name, type: "image/jpeg", origB64, smileyB64, faces }
 }
-function _readB64(file){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file) }) }
 
 async function laadFotos() {
   const anonCb = document.getElementById("foto-anon-toggle")
@@ -918,18 +931,29 @@ function renderFotos() {
         : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid #2a2a2a;flex-shrink:0;" loading="lazy"></a>`
       const weergaveLabel = f.weergave === "venster" ? "🪟 Apart venster" : "🖼️ Inline"
       const statusLabel = f.actief === false ? "<span style='color:#ff6b6b;'>uit</span>" : "<span style='color:#7bd88f;'>actief</span>"
+      const gezichtLabel = f.heeftGezichten ? (f.toonEcht ? " · <span style='color:#ffae6b;'>😶 echte gezichten</span>" : " · <span style='color:#7bd88f;'>🙂 smilies</span>") : ""
       const triggers = (f.triggerWords || []).join(", ")
+      const b = fJs(f.bestand)
+      const btn = (cls, onclick, label, tip) =>
+        `<span style="display:inline-flex;align-items:center;gap:3px;"><button class="fbtn ${cls}" onclick="${onclick}">${label}</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">${fEsc(tip)}</span></span></span>`
+      const gezichtSwitch = f.heeftGezichten
+        ? `<div style="margin-top:7px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+             <label class="gezicht-switch"><input type="checkbox" ${f.toonEcht ? "checked" : ""} onchange="toggleEchteGezichten('${b}', this)"> Echte gezichten tonen</label>
+             <span class="tip"><span class="ic">ℹ️</span><span class="tipbox">AVG: standaard worden gezichten door smilies vervangen. Zet dit alleen aan als de afgebeelde personen toestemming hebben gegeven (bijv. eigen medewerkers).</span></span>
+           </div>`
+        : ""
       html += `<div style="display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;background:#161616;">
         ${preview}
         <div style="flex:1;min-width:0;">
           <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
-          <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}</div>
+          <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
           <input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="trigger words, komma-gescheiden" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:12px;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:6px;color:#fff;margin-top:2px;">
-          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="saveFotoTriggers('${fJs(f.bestand)}')">💾 Trigger words opslaan</button>
-            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="toggleFotoWeergave('${fJs(f.bestand)}','${f.weergave === "venster" ? "inline" : "venster"}')">↔ Maak ${f.weergave === "venster" ? "inline" : "apart venster"}</button>
-            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="toggleFotoActief('${fJs(f.bestand)}',${f.actief === false})">${f.actief === false ? "✓ Activeren" : "⏸ Deactiveren"}</button>
-            <button class="btn" style="font-size:11px;padding:3px 8px;color:#ff6b6b;border-color:#5a2a2a;" onclick="deleteFoto('${fJs(f.bestand)}')">🗑 Verwijderen</button>
+          ${gezichtSwitch}
+          <div style="display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;align-items:center;">
+            ${btn("fbtn-save", `saveFotoTriggers('${b}')`, "💾 Trigger words opslaan", "Slaat de trigger words op: de woorden waarbij de bot deze foto toont.")}
+            ${btn("fbtn-view", `toggleFotoWeergave('${b}','${f.weergave === "venster" ? "inline" : "venster"}')`, `↔ Maak ${f.weergave === "venster" ? "inline" : "apart venster"}`, "Wissel weergave: inline (klein in de chat) of apart venster (grote foto/PDF die in een nieuw tabblad opent).")}
+            ${btn(f.actief === false ? "fbtn-active" : "fbtn-off", `toggleFotoActief('${b}',${f.actief === false})`, f.actief === false ? "✓ Activeren" : "⏸ Deactiveren", "Actief = zichtbaar voor bezoekers in de chat. Gedeactiveerd = de bot toont deze foto niet.")}
+            ${btn("fbtn-del", `deleteFoto('${b}')`, "🗑 Verwijderen", "Verwijdert de foto definitief uit de catalogus (inclusief een eventueel verborgen origineel).")}
           </div>
         </div>
       </div>`
@@ -951,23 +975,24 @@ async function uploadFoto() {
   if (!file) { status.textContent = "Kies eerst een bestand."; return }
   status.style.color = "#888"; status.textContent = file.type.startsWith("image/") ? "Foto verwerken..." : "Uploaden..."
   try {
-    const { file: anon, faces } = await anonymizeFaces(file)
-    if (faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de smiley-optie uit en probeer opnieuw)."; return }
+    const p = await prepareUpload(file)
+    if (p.faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de smiley-optie uit en probeer opnieuw)."; return }
     status.textContent = "Uploaden..."
-    const b64 = await _readB64(anon)
     const weergave = document.querySelector('input[name="foto-weergave"]:checked').value
     const r = await fotoActie({
       action: "upload",
-      bestandsnaam: anon.name,
-      contentType: anon.type || "application/octet-stream",
+      bestandsnaam: p.name,
+      contentType: p.type,
       categorie: document.getElementById("foto-categorie").value || "Overig",
       onderschrift: document.getElementById("foto-onderschrift").value || "",
       triggerWords: document.getElementById("foto-triggers").value || "",
       weergave,
-      contentBase64: b64,
+      contentBase64: p.origB64,
+      contentBase64Smiley: p.smileyB64,
+      heeftGezichten: p.faces > 0 && !!p.smileyB64,
     })
     if (r.success) {
-      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (faces > 0 ? ` (${faces} gezicht(en) vervangen door smiley)` : "")
+      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (p.faces > 0 ? ` (${p.faces} gezicht(en) → smiley; origineel verborgen bewaard)` : "")
       fileEl.value = ""
       document.getElementById("foto-categorie").value = ""
       document.getElementById("foto-onderschrift").value = ""
@@ -994,13 +1019,13 @@ async function bulkUploadFotos() {
     status.style.color = "#888"
     status.textContent = `${file.type.startsWith("image/") ? "Verwerken + uploaden" : "Uploaden"} ${i + 1}/${files.length}: ${file.name}...`
     try {
-      const { file: anon, faces } = await anonymizeFaces(file)
-      if (faces === -1) { anonFout++; fout++; continue } // anonimisatie mislukt -> niet uploaden (AVG)
-      if (faces > 0) totFaces += faces
-      const b64 = await _readB64(anon)
+      const p = await prepareUpload(file)
+      if (p.faces === -1) { anonFout++; fout++; continue } // anonimisatie mislukt -> niet uploaden (AVG)
+      if (p.faces > 0) totFaces += p.faces
       const r = await fotoActie({
-        action: "upload", bestandsnaam: anon.name, contentType: anon.type || "application/octet-stream",
-        categorie: "Te labelen", onderschrift: "", triggerWords: "", weergave: "inline", actief: false, contentBase64: b64,
+        action: "upload", bestandsnaam: p.name, contentType: p.type,
+        categorie: "Te labelen", onderschrift: "", triggerWords: "", weergave: "inline", actief: false,
+        contentBase64: p.origB64, contentBase64Smiley: p.smileyB64, heeftGezichten: p.faces > 0 && !!p.smileyB64,
       })
       if (r.success) ok++; else fout++
     } catch (e) { fout++ }
@@ -1027,6 +1052,15 @@ async function toggleFotoActief(bestand, actief) {
   const r = await fotoActie({ action: "update", bestand, actief })
   if (r.success) laadFotos()
   else alert("Mislukt: " + (r.error || "onbekend"))
+}
+async function toggleEchteGezichten(bestand, el) {
+  if (el.checked) {
+    const ok = confirm("⚠️ AVG-waarschuwing\n\nHiermee toon je de ECHTE gezichten (geen smilies) aan álle bezoekers van de chatbot.\n\nDoe dit alleen als de afgebeelde personen hiervoor toestemming hebben gegeven (bijv. eigen medewerkers).\n\nDoorgaan?")
+    if (!ok) { el.checked = false; return }
+  }
+  const r = await fotoActie({ action: "update", bestand, toonEcht: el.checked })
+  if (r.success) laadFotos()
+  else { el.checked = !el.checked; alert("Mislukt: " + (r.error || "onbekend")) }
 }
 async function deleteFoto(bestand) {
   if (!confirm("Foto '" + bestand + "' verwijderen?")) return
