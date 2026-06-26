@@ -880,7 +880,7 @@ async function prepareUpload(file){
   if (faceAnonAan()) {
     try {
       await ensureFaceApi()
-      const dets = await faceapi.detectAllFaces(c, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.35 }))
+      const dets = await faceapi.detectAllFaces(c, new faceapi.TinyFaceDetectorOptions({ inputSize: 1024, scoreThreshold: 0.3 }))
       faces = dets.length
       if (faces > 0) {
         const c2 = document.createElement("canvas"); c2.width = w; c2.height = h
