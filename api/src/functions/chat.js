@@ -714,8 +714,9 @@ async function getSummerLeagueContext() {
 }
 
 // Foto-catalogus: toon relevante foto's (inline of in apart venster) o.b.v. trigger words
-async function getFotoContext(message) {
-  const raw = await fetchWithTimeout(`https://${STORAGE_ACCOUNT}.blob.core.windows.net/${"fotos"}/_catalog.json`, 3500)
+async function getFotoContext(message, sasToken) {
+  if (!sasToken) return null
+  const raw = await fetchWithTimeout(`https://${STORAGE_ACCOUNT}.blob.core.windows.net/fotos/_catalog.json?${sasToken}`, 3500)
   if (!raw) return null
   let catalog
   try { catalog = JSON.parse(raw) } catch { return null }
@@ -993,7 +994,7 @@ app.http("chat", {
       }
       let fotoContext = null
       try {
-        fotoContext = await getFotoContext(messages[messages.length - 1]?.content || "")
+        fotoContext = await getFotoContext(messages[messages.length - 1]?.content || "", sasToken)
         if (fotoContext) console.log("Foto-context toegevoegd")
       } catch (err) {
         console.log("Foto ophalen mislukt:", err.message)
