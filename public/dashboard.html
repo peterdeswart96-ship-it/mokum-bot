@@ -164,6 +164,7 @@
     <button class="tab active" onclick="showTab('mark', this)">🎱 Analyse</button>
     <button class="tab" onclick="showTab('sander', this)">🌐 Website tips</button>
     <button class="tab" onclick="showTab('upload', this)">📁 Kennisbronnen uploaden</button>
+    <button class="tab" onclick="showTab('fotos', this)">📷 Foto's</button>
     <button class="tab" onclick="showTab('gesprekken', this)">💬 Gesprekken</button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
@@ -454,6 +455,37 @@
     </main>
   </div>
 
+  <!-- TAB: FOTO'S -->
+  <div id="tab-fotos" class="tab-content">
+    <main>
+      <div style="max-width:780px;margin:0 auto;">
+        <div class="insight-box" style="margin-bottom:16px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Foto uploaden</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <input type="file" id="foto-file" accept="image/*,application/pdf" style="color:#ccc;" />
+            <input type="text" id="foto-categorie" placeholder="Categorie (bijv. Eten & drinken, Pool, Darts)" />
+            <input type="text" id="foto-onderschrift" placeholder="Onderschrift (bijv. Menukaart Mokum)" />
+            <input type="text" id="foto-triggers" placeholder="Trigger words, komma-gescheiden (menu, eten, drinken, kaart)" />
+            <div style="display:flex;gap:18px;align-items:center;font-size:13px;color:#ccc;flex-wrap:wrap;">
+              <span>Weergave:</span>
+              <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="inline" checked /> Inline (klein in chat)</label>
+              <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="venster" /> Apart venster (groot/PDF)</label>
+            </div>
+            <button class="btn-red" onclick="uploadFoto()" id="foto-upload-btn">Uploaden</button>
+            <div id="foto-status" style="font-size:13px;color:#888;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Foto-overzicht</div>
+          <div id="foto-overzicht" style="font-size:13px;color:#888;">Laden...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
   <!-- TAB: GESPREKKEN -->
   <div id="tab-gesprekken" class="tab-content">
     <main>
@@ -735,6 +767,7 @@ async function login() {
     if (data.success) {
       sessionStorage.setItem("mkm-auth", data.token)
       sessionStorage.setItem("mkm-expiry", data.expiry)
+      sessionStorage.setItem("mkm-pwd", pwd) // nodig voor beheer-acties (foto-upload e.d.)
       document.getElementById("login-screen").style.display = "none"
       document.getElementById("dashboard").style.display = "block"
       laadGesprekken()
@@ -764,6 +797,125 @@ function showTab(name, btn) {
   document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"))
   document.getElementById("tab-" + name).classList.add("active")
   if (btn) btn.classList.add("active")
+  if (name === "fotos") laadFotos()
+}
+
+// ---- Foto's beheer ----
+let alleFotos = []
+function fEsc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function fAttr(s){return String(s==null?"":s).replace(/"/g,"&quot;")}
+function fJs(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+
+async function laadFotos() {
+  const el = document.getElementById("foto-overzicht")
+  if (el) el.textContent = "Laden..."
+  try {
+    const resp = await fetch(`${API}/fotos`)
+    const data = await resp.json()
+    alleFotos = data.fotos || []
+    renderFotos()
+  } catch (e) {
+    if (el) el.textContent = "Kon foto's niet laden."
+  }
+}
+
+function renderFotos() {
+  const el = document.getElementById("foto-overzicht")
+  if (!el) return
+  if (!alleFotos.length) { el.innerHTML = "<div style='color:#666;'>Nog geen foto's. Upload er hierboven een.</div>"; return }
+  const groepen = {}
+  alleFotos.forEach(f => { const c = f.categorie || "Overig"; (groepen[c] = groepen[c] || []).push(f) })
+  let html = ""
+  Object.keys(groepen).sort().forEach(cat => {
+    html += `<div style="margin:14px 0 6px;font-weight:700;color:#fff;font-size:13px;">${fEsc(cat)}</div>`
+    groepen[cat].forEach(f => {
+      const isPdf = /\.pdf$/i.test(f.bestand || "")
+      const preview = isPdf
+        ? `<div style="width:54px;height:54px;border-radius:8px;background:#1f1f1f;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📄</div>`
+        : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid #2a2a2a;flex-shrink:0;" loading="lazy"></a>`
+      const weergaveLabel = f.weergave === "venster" ? "🪟 Apart venster" : "🖼️ Inline"
+      const statusLabel = f.actief === false ? "<span style='color:#ff6b6b;'>uit</span>" : "<span style='color:#7bd88f;'>actief</span>"
+      const triggers = (f.triggerWords || []).join(", ")
+      html += `<div style="display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:8px;background:#161616;">
+        ${preview}
+        <div style="flex:1;min-width:0;">
+          <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
+          <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}</div>
+          <input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="trigger words, komma-gescheiden" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:12px;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:6px;color:#fff;margin-top:2px;">
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="saveFotoTriggers('${fJs(f.bestand)}')">💾 Trigger words opslaan</button>
+            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="toggleFotoWeergave('${fJs(f.bestand)}','${f.weergave === "venster" ? "inline" : "venster"}')">↔ Maak ${f.weergave === "venster" ? "inline" : "apart venster"}</button>
+            <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="toggleFotoActief('${fJs(f.bestand)}',${f.actief === false})">${f.actief === false ? "✓ Activeren" : "⏸ Deactiveren"}</button>
+            <button class="btn" style="font-size:11px;padding:3px 8px;color:#ff6b6b;border-color:#5a2a2a;" onclick="deleteFoto('${fJs(f.bestand)}')">🗑 Verwijderen</button>
+          </div>
+        </div>
+      </div>`
+    })
+  })
+  el.innerHTML = html
+}
+
+async function fotoActie(payload) {
+  const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
+  const resp = await fetch(`${API}/fotos`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, wachtwoord }) })
+  return resp.json()
+}
+
+async function uploadFoto() {
+  const fileEl = document.getElementById("foto-file")
+  const status = document.getElementById("foto-status")
+  const file = fileEl.files[0]
+  if (!file) { status.textContent = "Kies eerst een bestand."; return }
+  status.style.color = "#888"; status.textContent = "Uploaden..."
+  try {
+    const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file) })
+    const weergave = document.querySelector('input[name="foto-weergave"]:checked').value
+    const r = await fotoActie({
+      action: "upload",
+      bestandsnaam: file.name,
+      contentType: file.type || "application/octet-stream",
+      categorie: document.getElementById("foto-categorie").value || "Overig",
+      onderschrift: document.getElementById("foto-onderschrift").value || "",
+      triggerWords: document.getElementById("foto-triggers").value || "",
+      weergave,
+      contentBase64: b64,
+    })
+    if (r.success) {
+      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!"
+      fileEl.value = ""
+      document.getElementById("foto-categorie").value = ""
+      document.getElementById("foto-onderschrift").value = ""
+      document.getElementById("foto-triggers").value = ""
+      laadFotos()
+    } else {
+      status.style.color = "#ff6b6b"; status.textContent = "Fout: " + (r.error || "onbekend")
+    }
+  } catch (e) {
+    status.style.color = "#ff6b6b"; status.textContent = "Fout: " + e.message
+  }
+}
+
+async function saveFotoTriggers(bestand) {
+  const input = document.getElementById("trg-" + bestand)
+  const r = await fotoActie({ action: "update", bestand, triggerWords: input ? input.value : "" })
+  if (r.success) laadFotos()
+  else alert("Mislukt: " + (r.error || "onbekend"))
+}
+async function toggleFotoWeergave(bestand, weergave) {
+  const r = await fotoActie({ action: "update", bestand, weergave })
+  if (r.success) laadFotos()
+  else alert("Mislukt: " + (r.error || "onbekend"))
+}
+async function toggleFotoActief(bestand, actief) {
+  const r = await fotoActie({ action: "update", bestand, actief })
+  if (r.success) laadFotos()
+  else alert("Mislukt: " + (r.error || "onbekend"))
+}
+async function deleteFoto(bestand) {
+  if (!confirm("Foto '" + bestand + "' verwijderen?")) return
+  const r = await fotoActie({ action: "delete", bestand })
+  if (r.success) laadFotos()
+  else alert("Mislukt: " + (r.error || "onbekend"))
 }
 
 // Data laden
