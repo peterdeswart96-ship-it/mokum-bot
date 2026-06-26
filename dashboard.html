@@ -149,6 +149,8 @@
   .tip:hover .tipbox { visibility: visible; opacity: 1; }
   .gezicht-switch { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: #ddd; background: #1f1f1f; border: 1px solid #3a3a3a; border-radius: 7px; padding: 3px 9px; cursor: pointer; }
   .gezicht-switch input { accent-color: #cc0000; cursor: pointer; }
+  .foto-inp { width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 12px; background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 6px; color: #fff; }
+  .foto-inp:focus { outline: none; border-color: #cc0000; }
 </style>
 </head>
 <body>
@@ -947,10 +949,14 @@ function renderFotos() {
         <div style="flex:1;min-width:0;">
           <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
           <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
-          <input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="trigger words, komma-gescheiden" style="width:100%;box-sizing:border-box;padding:5px 8px;font-size:12px;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:6px;color:#fff;margin-top:2px;">
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px;">
+            <input type="text" value="${fAttr(f.categorie || "")}" id="cat-${fAttr(f.bestand)}" placeholder="Categorie (bijv. Pool, Darts, Bar & lounge)" class="foto-inp">
+            <input type="text" value="${fAttr(f.onderschrift || "")}" id="ond-${fAttr(f.bestand)}" placeholder="Onderschrift (bijv. De bar van Mokum)" class="foto-inp">
+            <input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="Trigger words, komma-gescheiden (pool, tafels, biljart)" class="foto-inp">
+          </div>
           ${gezichtSwitch}
           <div style="display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;align-items:center;">
-            ${btn("fbtn-save", `saveFotoTriggers('${b}')`, "💾 Trigger words opslaan", "Slaat de trigger words op: de woorden waarbij de bot deze foto toont.")}
+            ${btn("fbtn-save", `saveFotoVelden('${b}')`, "💾 Opslaan", "Slaat categorie, onderschrift en trigger words op (de woorden waarbij de bot deze foto toont).")}
             ${btn("fbtn-view", `toggleFotoWeergave('${b}','${f.weergave === "venster" ? "inline" : "venster"}')`, `↔ Maak ${f.weergave === "venster" ? "inline" : "apart venster"}`, "Wissel weergave: inline (klein in de chat) of apart venster (grote foto/PDF die in een nieuw tabblad opent).")}
             ${btn(f.actief === false ? "fbtn-active" : "fbtn-off", `toggleFotoActief('${b}',${f.actief === false})`, f.actief === false ? "✓ Activeren" : "⏸ Deactiveren", "Actief = zichtbaar voor bezoekers in de chat. Gedeactiveerd = de bot toont deze foto niet.")}
             ${btn("fbtn-del", `deleteFoto('${b}')`, "🗑 Verwijderen", "Verwijdert de foto definitief uit de catalogus (inclusief een eventueel verborgen origineel).")}
@@ -979,20 +985,26 @@ async function uploadFoto() {
     if (p.faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de smiley-optie uit en probeer opnieuw)."; return }
     status.textContent = "Uploaden..."
     const weergave = document.querySelector('input[name="foto-weergave"]:checked').value
+    // Velden leeg gelaten? Dan net als bulk: 'Te labelen' + inactief (en hieronder te bewerken).
+    const catVal = document.getElementById("foto-categorie").value.trim()
+    const onderVal = document.getElementById("foto-onderschrift").value
+    const trigVal = document.getElementById("foto-triggers").value
+    const teLabelen = !catVal && !onderVal.trim() && !trigVal.trim()
     const r = await fotoActie({
       action: "upload",
       bestandsnaam: p.name,
       contentType: p.type,
-      categorie: document.getElementById("foto-categorie").value || "Overig",
-      onderschrift: document.getElementById("foto-onderschrift").value || "",
-      triggerWords: document.getElementById("foto-triggers").value || "",
+      categorie: teLabelen ? "Te labelen" : (catVal || "Overig"),
+      onderschrift: onderVal,
+      triggerWords: trigVal,
       weergave,
+      actief: !teLabelen,
       contentBase64: p.origB64,
       contentBase64Smiley: p.smileyB64,
       heeftGezichten: p.faces > 0 && !!p.smileyB64,
     })
     if (r.success) {
-      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (p.faces > 0 ? ` (${p.faces} gezicht(en) → smiley; origineel verborgen bewaard)` : "")
+      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen" (bewerk hieronder of vraag Claude).' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) → smiley; origineel verborgen bewaard)` : "")
       fileEl.value = ""
       document.getElementById("foto-categorie").value = ""
       document.getElementById("foto-onderschrift").value = ""
@@ -1037,9 +1049,16 @@ async function bulkUploadFotos() {
   laadFotos()
 }
 
-async function saveFotoTriggers(bestand) {
-  const input = document.getElementById("trg-" + bestand)
-  const r = await fotoActie({ action: "update", bestand, triggerWords: input ? input.value : "" })
+async function saveFotoVelden(bestand) {
+  const cat = document.getElementById("cat-" + bestand)
+  const ond = document.getElementById("ond-" + bestand)
+  const trg = document.getElementById("trg-" + bestand)
+  const r = await fotoActie({
+    action: "update", bestand,
+    categorie: cat ? (cat.value.trim() || "Overig") : undefined,
+    onderschrift: ond ? ond.value : undefined,
+    triggerWords: trg ? trg.value : undefined,
+  })
   if (r.success) laadFotos()
   else alert("Mislukt: " + (r.error || "onbekend"))
 }
