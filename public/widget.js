@@ -26,7 +26,7 @@
 
   // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
   const CATEGORIES = [
-    { id: 'toernooien', emoji: '🏆', topics: ['toernooien', 'resultaten', 'amsterdam-open'], newTopics: ['resultaten'], starTopics: ['amsterdam-open'] },
+    { id: 'toernooien', emoji: '🏆', topics: ['ledendag', 'toernooien', 'resultaten', 'amsterdam-open'], newTopics: ['resultaten'], starTopics: ['ledendag', 'amsterdam-open'] },
     { id: 'spelen', emoji: '🎱', topics: ['pool', 'darts', 'spelregels', 'gaming'] },
     { id: 'praktisch', emoji: 'ℹ️', topics: ['openingstijden', 'tarieven', 'locatie', 'eten-drinken', 'sport'] },
     { id: 'service', emoji: '🛠️', topics: ['keu-reparatie', 'keu-shop', 'clinics'] },
@@ -67,6 +67,7 @@
         { id: 'darts', emoji: '🎯', label: 'Darts' },
         { id: 'openingstijden', emoji: '📅', label: 'Openingstijden' },
         { id: 'tarieven', emoji: '💶', label: 'Tarieven' },
+        { id: 'ledendag', emoji: '🎉', label: 'Ledendag 5 juli' },
         { id: 'toernooien', emoji: '🏆', label: 'Toernooien' },
         { id: 'resultaten', emoji: '📊', label: 'Toernooi resultaten' },
         { id: 'amsterdam-open', emoji: '🏆', label: 'Amsterdam Open' },
@@ -88,6 +89,7 @@
         tarieven: ['Wat kost een uur poolen?', 'Zijn er dagprijzen of avondprijzen?', 'Kan ik pinnen?', 'Zijn er groepstarieven?'],
         toernooien: ['Wanneer is het volgende toernooi?', 'Welke toernooien zijn er aankomende week?', 'Zijn er ook toernooien voor beginnende spelers?', 'Wat kost deelname?'],
         resultaten: ['Wie won het laatste 8-ball toernooi?', 'Wie zijn de beste spelers van 2026?', 'Top 5 spelers per toernooisoort aller tijden', 'Wie zijn de beste 9-ball spelers dit jaar?', 'Laat de top 20 KNBB-rating zien'],
+        ledendag: ['Wat is de Ledendag op 5 juli?', 'Hoe laat begint de Ledendag?', 'Hoe meld ik me aan voor de Ledendag?', 'Wat zijn de aanbiedingen op de Ledendag?', 'Voor wie is de Ledendag?'],
         'amsterdam-open': ['Wanneer is het Go Customs Amsterdam Open?', 'Hoe schrijf ik me in voor een qualifier?', 'Wat is het prijzengeld van het Amsterdam Open?', 'Wanneer zijn de qualifiers en de finaledag?', 'Wat is het format van het Amsterdam Open?'],
         'eten-drinken': ['Wat staat er op het menu?', 'Hebben jullie vegetarische opties?', 'Wat kosten de bieren?', 'Kunnen jullie pizzas bestellen?'],
         sport: ['Welke sportwedstrijden kijken jullie vanavond?', 'Tonen jullie Champions League / Eredivisie?', 'Op hoeveel schermen wordt sport getoond?', 'Hoe vroeg moet ik er zijn voor een grote wedstrijd?'],
@@ -139,6 +141,7 @@
         { id: 'openingstijden', emoji: '📅', label: 'Opening Hours' },
         { id: 'tarieven', emoji: '💶', label: 'Rates' },
         { id: 'toernooien', emoji: '🏆', label: 'Tournaments' },
+        { id: 'ledendag', emoji: '🎉', label: 'Members Day July 5' },
         { id: 'resultaten', emoji: '📊', label: 'Tournament results' },
         { id: 'amsterdam-open', emoji: '🏆', label: 'Amsterdam Open' },
         { id: 'spelregels', emoji: '📖', label: 'Game Rules' },
@@ -159,6 +162,7 @@
         tarieven: ['How much does an hour of pool cost?', 'Are there day rates and evening rates?', 'Can I pay by card?', 'Are there group rates?'],
         toernooien: ['When is the next tournament?', 'Which tournaments are coming up next week?', 'Are there tournaments for beginners?', 'How much does it cost to participate?'],
         resultaten: ['Who won the last 8-ball tournament?', 'Who are the best players of 2026?', 'Top 5 players per tournament type all-time', 'Who are the best 9-ball players this year?', 'Show the top 20 KNBB rating'],
+        ledendag: ['What is the Members Day on July 5?', 'What time does the Members Day start?', 'How do I sign up for the Members Day?', 'What are the offers on Members Day?', 'Who is the Members Day for?'],
         'amsterdam-open': ['When is the Go Customs Amsterdam Open?', 'How do I sign up for a qualifier?', 'What is the prize money of the Amsterdam Open?', 'When are the qualifiers and the final day?', 'What is the format of the Amsterdam Open?'],
         'eten-drinken': ["What's on the menu?", 'Do you have vegetarian options?', 'How much are the beers?', 'Can we order pizzas?'],
         sport: ['Which sports are you showing tonight?', 'Do you show Champions League / Eredivisie?', 'How many screens do you have for sports?', 'How early should I arrive for a big match?'],
