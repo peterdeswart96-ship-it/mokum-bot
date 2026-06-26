@@ -249,7 +249,7 @@ function BotMessage({ content }) {
         ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
         li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
         a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
-        img: ({ src, alt }) => <a href={src} target="_blank" rel="noopener noreferrer"><img src={src} alt={alt} style={{ maxWidth: "100%", borderRadius: "8px", margin: "6px 0", display: "block", cursor: "zoom-in" }} loading="lazy" /></a>,
+        img: ({ src, alt }) => <a href={src} target="_blank" rel="noopener noreferrer" title="Klik om groot te bekijken"><img src={src} alt={alt} style={{ width: "auto", maxWidth: "min(100%, 420px)", maxHeight: "60dvh", borderRadius: "8px", margin: "6px 0", display: "block", cursor: "zoom-in" }} loading="lazy" /></a>,
       }}>{content}</ReactMarkdown>
     </div>
   )

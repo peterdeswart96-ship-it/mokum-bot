@@ -349,7 +349,7 @@
   function applyInline(text) {
     return text
       // Afbeeldingen EERST (anders pakt de link-regex het [..](..)-deel) — klikbaar naar apart venster
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer"><img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:6px 0;display:block;cursor:zoom-in;" loading="lazy"></a>')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" title="Klik om groot te bekijken"><img src="$2" alt="$1" style="width:auto;max-width:min(100%, 420px);max-height:60dvh;border-radius:8px;margin:6px 0;display:block;cursor:zoom-in;" loading="lazy"></a>')
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#ff6b6b;text-decoration:underline;">$1</a>')
   }
