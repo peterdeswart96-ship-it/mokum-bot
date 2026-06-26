@@ -708,7 +708,8 @@ async function getSummerLeagueContext() {
     `TOERNOOI-INFO (gebruik dit bij info-vragen zoals "wat is het / wanneer / hoe werkt het"): Mokum Summer 14.1 League — discipline straight pool (14.1), groepsfase met 6 poules (A t/m F). Loopt ${d.displayDate || "16 juni – 31 augustus 2026"}, locatie Mokum, organisatie Max Anholt (league oorspronkelijk van Anthony). Race to: poule A & B naar 100, poule C & D naar 75, poule E & F naar 50. Geen handicap in de poules (uitzondering: Nick geeft 50 punten voorsprong in zijn poule). De top 4 van elke poule gaat door naar een gehandicapte single-KO play-off. Inschrijven/details: ${SUMMER_LEAGUE_URL} .\n` +
     `STAND (toon deze NET ZOALS op Cuescore: per poule A t/m F als aparte lijst, met de "Gegevens bijgewerkt op"-datum van vandaag bovenaan; toon ALLE poules waar naar gevraagd wordt, anders alle zes):\n\n` +
     blocks +
-    "\n---"
+    `\n\nVERPLICHT: sluit ELK antwoord over de Mokum 14.1 Summer League (zowel info- als stand-vragen) AF met de link naar de Cuescore-pagina, exact als markdown: [Bekijk op Cuescore](${SUMMER_LEAGUE_URL})\n` +
+    "---"
   )
 }
 
