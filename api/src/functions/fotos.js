@@ -195,7 +195,7 @@ app.http("fotos", {
           onderschrift: onderschrift || "",
           triggerWords,
           weergave,
-          actief: true,
+          actief: body.actief === undefined ? true : !!body.actief,
         }
         const idx = catalog.findIndex((f) => f.bestand === veilig)
         if (idx >= 0) catalog[idx] = { ...catalog[idx], ...entry }
