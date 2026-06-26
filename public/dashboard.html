@@ -1066,12 +1066,16 @@ async function saveFotoVelden(bestand) {
   const cat = document.getElementById("cat-" + bestand)
   const ond = document.getElementById("ond-" + bestand)
   const trg = document.getElementById("trg-" + bestand)
+  const huidige = alleFotos.find(f => f.bestand === bestand)
+  // Een 'Te labelen'-foto die nu gelabeld wordt -> meteen activeren (live).
+  const activeer = huidige && huidige.categorie === "Te labelen"
   const r = await fotoActie({
     action: "update", bestand,
     categorie: cat ? (cat.value.trim() || "Overig") : undefined,
     onderschrift: ond ? ond.value : undefined,
     triggerWords: trg ? trg.value : undefined,
     gelabeldDoorClaude: false, // handmatig bewerkt -> niet meer 'door Claude'
+    ...(activeer ? { actief: true } : {}),
   })
   if (r.success) laadFotos()
   else alert("Mislukt: " + (r.error || "onbekend"))
