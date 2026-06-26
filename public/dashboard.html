@@ -478,6 +478,7 @@
     <main>
       <div style="max-width:780px;margin:0 auto;">
         <div class="insight-box" style="margin-bottom:16px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
+        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-26 11:46</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
         <div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
           <div style="font-size:13px;color:#ccc;flex:1;min-width:220px;">🙂 <b>Gezichten vervangen door smilies</b> (AVG). Bij het uploaden worden herkende gezichten automatisch afgedekt met een smiley op gezichtsgrootte. <span style="color:#888;">Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet.</span></div>
@@ -892,7 +893,7 @@ async function prepareUpload(file){
   if (faceAnonAan()) {
     try {
       await ensureFaceApi()
-      const dets = await faceapi.detectAllFaces(c, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
+      const dets = await faceapi.detectAllFaces(c, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 }))
       faces = dets.length
       if (faces > 0) {
         const c2 = document.createElement("canvas"); c2.width = w; c2.height = h
