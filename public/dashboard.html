@@ -151,6 +151,7 @@
   .gezicht-switch input { accent-color: #cc0000; cursor: pointer; }
   .foto-inp { width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 12px; background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 6px; color: #fff; }
   .foto-inp:focus { outline: none; border-color: #cc0000; }
+  .foto-lbl { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -487,13 +488,16 @@
           <div class="card-title">Foto uploaden</div>
           <div style="display:flex;flex-direction:column;gap:10px;">
             <input type="file" id="foto-file" accept="image/*,application/pdf" style="color:#ccc;" />
-            <input type="text" id="foto-categorie" placeholder="Categorie (bijv. Eten & drinken, Pool, Darts)" />
-            <input type="text" id="foto-onderschrift" placeholder="Onderschrift (bijv. Menukaart Mokum)" />
-            <input type="text" id="foto-triggers" placeholder="Trigger words, komma-gescheiden (menu, eten, drinken, kaart)" />
-            <div style="display:flex;gap:18px;align-items:center;font-size:13px;color:#ccc;flex-wrap:wrap;">
-              <span>Weergave:</span>
-              <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="inline" checked /> Inline (klein in chat)</label>
-              <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="venster" /> Apart venster (groot/PDF)</label>
+            <label class="gezicht-switch" style="align-self:flex-start;"><input type="checkbox" id="foto-claude-label" checked onchange="toggleClaudeLabel()"> 🤖 Door Claude laten labelen (categorie + onderschrift + trigger words)</label>
+            <div id="foto-velden" style="display:none;flex-direction:column;gap:10px;">
+              <input type="text" id="foto-categorie" placeholder="Categorie (bijv. Eten & drinken, Pool, Darts)" />
+              <input type="text" id="foto-onderschrift" placeholder="Onderschrift (bijv. Menukaart Mokum)" />
+              <input type="text" id="foto-triggers" placeholder="Trigger words, komma-gescheiden (menu, eten, drinken, kaart)" />
+              <div style="display:flex;gap:18px;align-items:center;font-size:13px;color:#ccc;flex-wrap:wrap;">
+                <span>Weergave:</span>
+                <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="inline" checked /> Inline (klein in chat)</label>
+                <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="venster" /> Apart venster (groot/PDF)</label>
+              </div>
             </div>
             <button class="btn-red" onclick="uploadFoto()" id="foto-upload-btn">Uploaden</button>
             <div id="foto-status" style="font-size:13px;color:#888;"></div>
@@ -842,6 +846,13 @@ function fJs(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"
 // ---- Gezichts-anonimisatie (AVG): vervangt gezichten door smilies, client-side ----
 function faceAnonAan(){ return (localStorage.getItem("mkm-foto-anon") ?? "1") === "1" }
 function setFotoAnon(on){ localStorage.setItem("mkm-foto-anon", on ? "1" : "0") }
+// 'Door Claude laten labelen' bij losse upload: verbergt de velden + zet 'Te labelen'
+function toggleClaudeLabel(){
+  const cb = document.getElementById("foto-claude-label")
+  const velden = document.getElementById("foto-velden")
+  if (velden) velden.style.display = cb.checked ? "none" : "flex"
+  localStorage.setItem("mkm-foto-claudelabel", cb.checked ? "1" : "0")
+}
 let _faceApiPromise = null
 function ensureFaceApi(){
   if (_faceApiPromise) return _faceApiPromise
@@ -905,6 +916,8 @@ async function prepareUpload(file){
 async function laadFotos() {
   const anonCb = document.getElementById("foto-anon-toggle")
   if (anonCb) anonCb.checked = faceAnonAan()
+  const clCb = document.getElementById("foto-claude-label")
+  if (clCb) { clCb.checked = (localStorage.getItem("mkm-foto-claudelabel") ?? "1") === "1"; toggleClaudeLabel() }
   const el = document.getElementById("foto-overzicht")
   if (el) el.textContent = "Laden..."
   try {
@@ -949,10 +962,10 @@ function renderFotos() {
         <div style="flex:1;min-width:0;">
           <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
           <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
-          <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px;">
-            <input type="text" value="${fAttr(f.categorie || "")}" id="cat-${fAttr(f.bestand)}" placeholder="Categorie (bijv. Pool, Darts, Bar & lounge)" class="foto-inp">
-            <input type="text" value="${fAttr(f.onderschrift || "")}" id="ond-${fAttr(f.bestand)}" placeholder="Onderschrift (bijv. De bar van Mokum)" class="foto-inp">
-            <input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="Trigger words, komma-gescheiden (pool, tafels, biljart)" class="foto-inp">
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+            <div><div class="foto-lbl">Categorie</div><input type="text" value="${fAttr(f.categorie || "")}" id="cat-${fAttr(f.bestand)}" placeholder="bijv. Pool, Darts, Bar & lounge" class="foto-inp"></div>
+            <div><div class="foto-lbl">Onderschrift</div><input type="text" value="${fAttr(f.onderschrift || "")}" id="ond-${fAttr(f.bestand)}" placeholder="bijv. De bar van Mokum" class="foto-inp"></div>
+            <div><div class="foto-lbl">Trigger words <span style="color:#666;font-weight:400;">(komma-gescheiden)</span></div><input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="bijv. bar, borrel, biertje, tap" class="foto-inp"></div>
           </div>
           ${gezichtSwitch}
           <div style="display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;align-items:center;">
@@ -984,19 +997,17 @@ async function uploadFoto() {
     const p = await prepareUpload(file)
     if (p.faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de smiley-optie uit en probeer opnieuw)."; return }
     status.textContent = "Uploaden..."
+    // Door Claude laten labelen (default) -> 'Te labelen' + inactief, velden genegeerd.
+    const teLabelen = document.getElementById("foto-claude-label").checked
     const weergave = document.querySelector('input[name="foto-weergave"]:checked').value
-    // Velden leeg gelaten? Dan net als bulk: 'Te labelen' + inactief (en hieronder te bewerken).
-    const catVal = document.getElementById("foto-categorie").value.trim()
-    const onderVal = document.getElementById("foto-onderschrift").value
-    const trigVal = document.getElementById("foto-triggers").value
-    const teLabelen = !catVal && !onderVal.trim() && !trigVal.trim()
+    const catVal = teLabelen ? "" : document.getElementById("foto-categorie").value.trim()
     const r = await fotoActie({
       action: "upload",
       bestandsnaam: p.name,
       contentType: p.type,
       categorie: teLabelen ? "Te labelen" : (catVal || "Overig"),
-      onderschrift: onderVal,
-      triggerWords: trigVal,
+      onderschrift: teLabelen ? "" : document.getElementById("foto-onderschrift").value,
+      triggerWords: teLabelen ? "" : document.getElementById("foto-triggers").value,
       weergave,
       actief: !teLabelen,
       contentBase64: p.origB64,
@@ -1004,7 +1015,7 @@ async function uploadFoto() {
       heeftGezichten: p.faces > 0 && !!p.smileyB64,
     })
     if (r.success) {
-      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen" (bewerk hieronder of vraag Claude).' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) → smiley; origineel verborgen bewaard)` : "")
+      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen". Vraag Claude om te labelen, of bewerk hem in het overzicht.' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) → smiley; origineel verborgen bewaard)` : "")
       fileEl.value = ""
       document.getElementById("foto-categorie").value = ""
       document.getElementById("foto-onderschrift").value = ""
