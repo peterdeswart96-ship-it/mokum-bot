@@ -733,14 +733,15 @@ async function getFotoContext(message, sasToken) {
   const lines = matches.map((f) => {
     const cap = f.onderschrift || "Bekijk"
     if (f.weergave === "venster") {
-      return `- APART VENSTER (grote afbeelding/PDF): toon als link/knop [${cap}](${f.url}) en vermeld kort dat het in een nieuw venster opent.`
+      return `- APART VENSTER (grote afbeelding/PDF): voeg ALTIJD deze link/knop toe: [${cap}](${f.url}) en vermeld kort dat het in een nieuw venster opent.`
     }
-    return `- INLINE (klein, in de chat): toon exact als markdown-afbeelding ![${cap}](${f.url})`
+    return `- INLINE: voeg ALTIJD deze afbeelding toe op een eigen regel, exact als markdown: ![${cap}](${f.url})`
   })
   return (
-    `---\nRELEVANTE FOTO('S) bij deze vraag — verwerk ze in je antwoord zoals hieronder aangegeven. ` +
-    `BELANGRIJK: gebruik UITSLUITEND de hier opgegeven URL('s). Ken je elders (bijv. in een kennisbron) een andere URL voor hetzelfde onderwerp, NEGEER die dan en gebruik deze. ` +
-    `Voor INLINE gebruik je EXACT de markdown ![onderschrift](url) zodat de afbeelding in de chat verschijnt. Verzin zelf NOOIT andere afbeeldings-URL's.\n` +
+    `---\nRELEVANTE FOTO('S) bij deze vraag. Dit is GEEN optie: je MOET de hieronder opgegeven foto('s) in je antwoord opnemen, ` +
+    `OOK bij indirecte of brede vragen (bijv. "vertel me over...", "is er een bbq...") en ongeacht hoeveel tekst je verder geeft. ` +
+    `Gebruik UITSLUITEND de hier opgegeven URL('s); ken je elders (bijv. in een kennisbron) een andere URL voor hetzelfde onderwerp, NEGEER die en gebruik deze. ` +
+    `Verzin zelf NOOIT andere afbeeldings-URL's. Laat de afbeelding/link NOOIT weg als deze sectie aanwezig is.\n` +
     lines.join("\n") +
     "\n---"
   )
