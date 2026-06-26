@@ -236,6 +236,7 @@ app.http("fotos", {
         if (body.triggerWords !== undefined) catalog[idx].triggerWords = normTriggers(body.triggerWords)
         if (body.weergave !== undefined) catalog[idx].weergave = body.weergave === "venster" ? "venster" : "inline"
         if (body.actief !== undefined) catalog[idx].actief = !!body.actief
+        if (body.gelabeldDoorClaude !== undefined) catalog[idx].gelabeldDoorClaude = !!body.gelabeldDoorClaude
         // Echte gezichten tonen i.p.v. smilies (alleen mogelijk als er een verborgen origineel is)
         if (body.toonEcht !== undefined && catalog[idx].bestandEcht) {
           catalog[idx].toonEcht = !!body.toonEcht

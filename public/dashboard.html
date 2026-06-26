@@ -860,7 +860,8 @@ function ensureFaceApi(){
     if (!window.faceapi) {
       await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"; s.onload = res; s.onerror = () => rej(new Error("face-api kon niet laden")); document.head.appendChild(s) })
     }
-    await faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model")
+    // SSD MobileNet v1: veel sterker dan tinyFaceDetector op kleine/donkere gezichten in brede scenes
+    await faceapi.nets.ssdMobilenetv1.loadFromUri("https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model")
   })()
   return _faceApiPromise
 }
@@ -891,7 +892,7 @@ async function prepareUpload(file){
   if (faceAnonAan()) {
     try {
       await ensureFaceApi()
-      const dets = await faceapi.detectAllFaces(c, new faceapi.TinyFaceDetectorOptions({ inputSize: 1024, scoreThreshold: 0.3 }))
+      const dets = await faceapi.detectAllFaces(c, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.3 }))
       faces = dets.length
       if (faces > 0) {
         const c2 = document.createElement("canvas"); c2.width = w; c2.height = h
@@ -962,6 +963,7 @@ function renderFotos() {
         <div style="flex:1;min-width:0;">
           <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
           <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
+          ${f.gelabeldDoorClaude ? '<div style="font-size:10px;color:#9ecbff;background:#14324a;border:1px solid #1f567d;border-radius:6px;padding:2px 7px;display:inline-block;margin:2px 0;">🤖 Door Claude gelabeld — pas hieronder gerust handmatig aan</div>' : ""}
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
             <div><div class="foto-lbl">Categorie</div><input type="text" value="${fAttr(f.categorie || "")}" id="cat-${fAttr(f.bestand)}" placeholder="bijv. Pool, Darts, Bar & lounge" class="foto-inp"></div>
             <div><div class="foto-lbl">Onderschrift</div><input type="text" value="${fAttr(f.onderschrift || "")}" id="ond-${fAttr(f.bestand)}" placeholder="bijv. De bar van Mokum" class="foto-inp"></div>
@@ -1069,6 +1071,7 @@ async function saveFotoVelden(bestand) {
     categorie: cat ? (cat.value.trim() || "Overig") : undefined,
     onderschrift: ond ? ond.value : undefined,
     triggerWords: trg ? trg.value : undefined,
+    gelabeldDoorClaude: false, // handmatig bewerkt -> niet meer 'door Claude'
   })
   if (r.success) laadFotos()
   else alert("Mislukt: " + (r.error || "onbekend"))
