@@ -1253,16 +1253,31 @@ app.http("analyse", {
 
 // Kennisbron upload endpoint — voor de upload wizard in het dashboard
 app.http("kennisbron-upload", {
-  methods: ["POST", "OPTIONS"],
+  methods: ["GET", "POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     }
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
+    }
+    // GET: bestaande kennisbron lezen (?pad=map/bestand.txt) of lijst (?list=1)
+    if (request.method === "GET") {
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) return { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geen SAS token" }) }
+      const url = new URL(request.url)
+      if (url.searchParams.get("list") === "1") {
+        const blobs = await listAllBlobs(sasToken)
+        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ bestanden: blobs }) }
+      }
+      const pad = url.searchParams.get("pad")
+      if (!pad) return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef ?pad=map/bestand.txt of ?list=1" }) }
+      const inhoud = await fetchBlobContent(pad, sasToken)
+      if (inhoud === null) return { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Niet gevonden" }) }
+      return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ pad, inhoud }) }
     }
     try {
       const body = await request.json()
