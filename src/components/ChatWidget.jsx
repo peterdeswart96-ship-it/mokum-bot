@@ -249,7 +249,7 @@ function BotMessage({ content }) {
         ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
         li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
         a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
-        img: ({ src, alt }) => <a href={src} target="_blank" rel="noopener noreferrer"><img src={src} alt={alt} style={{ maxWidth: "100%", borderRadius: "8px", margin: "6px 0", display: "block", cursor: "zoom-in" }} loading="lazy" /></a>,
+        img: ({ src, alt }) => <a href={src} target="_blank" rel="noopener noreferrer" title="Klik om groot te bekijken"><img src={src} alt={alt} style={{ width: "auto", maxWidth: "min(100%, 420px)", maxHeight: "60dvh", borderRadius: "8px", margin: "6px 0", display: "block", cursor: "zoom-in" }} loading="lazy" /></a>,
       }}>{content}</ReactMarkdown>
     </div>
   )
@@ -442,25 +442,31 @@ export default function ChatWidget() {
   }
 
   const isMobile = windowWidth < 480
-  const chatWidth = isMobile
+  const isMax = size === "max"
+  const chatWidth = isMax
+    ? "100dvw"  // volledig scherm (desktop + mobiel)
+    : isMobile
     ? `${windowWidth - 16}px`
     : (size === "groot" ? "min(80vw, 900px)" : size === "klein" ? "380px" : "460px")
-  const chatHeight = size === "groot"
+  const chatHeight = isMax
+    ? "100dvh"  // volledig scherm (desktop + mobiel)
+    : size === "groot"
     ? (isMobile ? "calc(100dvh - 90px - 16px)" : "85dvh")
     : `min(${isMobile ? (size === "klein" ? 460 : 600) : (size === "klein" ? 520 : 660)}px, calc(100dvh - 90px - 80px - 16px))`
-  const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
+  const chatRight = isMax ? "0px" : isMobile ? "8px" : WIDGET_CONFIG.right
+  const chatBottom = isMax ? "0px" : WIDGET_CONFIG.bottom
 
   return (
-    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: chatRight, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
+    <div style={{ position: "fixed", bottom: chatBottom, right: chatRight, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
 
       {open && (
         <div style={{
-          marginBottom: "16px",
+          marginBottom: isMax ? "0" : "16px",
           width: chatWidth,
           // Hoogte: dvh houdt rekening met Safari adresbalk op iPhone
           // 90px = bottom widget, 80px = sluitknop + marge, 16px = adembreedte bovenkant
           height: chatHeight,
-          borderRadius: "16px", overflow: "hidden",
+          borderRadius: isMax ? "0" : "16px", overflow: "hidden",
           boxShadow: "0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px #2a2a2a",
           display: "flex", flexDirection: "column",
           backgroundColor: C.black,
@@ -651,6 +657,7 @@ export default function ChatWidget() {
                 <option value="klein">{lang === "nl" ? "Klein" : "Small"}</option>
                 <option value="middel">{lang === "nl" ? "Middel" : "Medium"}</option>
                 <option value="groot">{lang === "nl" ? "Groot" : "Large"}</option>
+                <option value="max">{lang === "nl" ? "Max (volledig scherm)" : "Max (full screen)"}</option>
               </select>
               </div>
             </div>

@@ -214,6 +214,7 @@
 
   function getWidth() {
     const mobile = window.innerWidth < 480
+    if (state.size === 'max') return '100dvw' // volledig scherm (desktop + mobiel)
     if (mobile) return (window.innerWidth - 12) + 'px'
     if (state.size === 'groot') return 'min(80vw, 900px)'
     if (state.size === 'klein') return '380px'
@@ -222,6 +223,7 @@
 
   function getHeight() {
     const mobile = window.innerWidth < 480
+    if (state.size === 'max') return '100dvh' // volledig scherm (desktop + mobiel)
     // Mobiel: zo schermvullend mogelijk. Dit is de basiswaarde; fitMobileWindow()
     // verfijnt hoogte/bottom via de visualViewport API zodra het toetsenbord opent.
     if (mobile) return 'calc(100dvh - 16px)'
@@ -231,10 +233,12 @@
   }
 
   function getBottom() {
+    if (state.size === 'max') return '0px'
     return window.innerWidth < 480 ? '8px' : WIDGET_CONFIG.bottom
   }
 
   function getRight() {
+    if (state.size === 'max') return '0px'
     return window.innerWidth < 480 ? '6px' : WIDGET_CONFIG.right
   }
 
@@ -247,8 +251,10 @@
     const vv = window.visualViewport
     if (!vv) return
     const keyboardInset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
-    win.style.height = (vv.height - 16) + 'px'
-    win.style.bottom = (keyboardInset + 8) + 'px'
+    const margin = state.size === 'max' ? 0 : 16
+    const bottomPad = state.size === 'max' ? 0 : 8
+    win.style.height = (vv.height - margin) + 'px'
+    win.style.bottom = (keyboardInset + bottomPad) + 'px'
   }
 
   function injectStyles() {
@@ -343,7 +349,7 @@
   function applyInline(text) {
     return text
       // Afbeeldingen EERST (anders pakt de link-regex het [..](..)-deel) — klikbaar naar apart venster
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer"><img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:6px 0;display:block;cursor:zoom-in;" loading="lazy"></a>')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" title="Klik om groot te bekijken"><img src="$2" alt="$1" style="width:auto;max-width:min(100%, 420px);max-height:60dvh;border-radius:8px;margin:6px 0;display:block;cursor:zoom-in;" loading="lazy"></a>')
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#ff6b6b;text-decoration:underline;">$1</a>')
   }
@@ -388,7 +394,8 @@
     const chatHeight = getHeight()
 
     if (state.open) {
-      const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`, undefined, { id: 'mokum-chat-window' })
+      const winRadius = state.size === 'max' ? '0' : '16px'
+      const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:${winRadius};overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`, undefined, { id: 'mokum-chat-window' })
 
       // Header
       const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
@@ -553,8 +560,8 @@
 
       // Venster-kiezer — alleen de dropdown in een strak antraciet kadertje, gecentreerd
       const sizeOpts = state.lang === 'nl'
-        ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot']]
-        : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large']]
+        ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot'], ['max', 'Max (volledig scherm)']]
+        : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large'], ['max', 'Max (full screen)']]
       const sizeRow = el('div', 'display:flex;justify-content:center;')
       const sizeBox = el('div', `display:inline-flex;align-items:center;background:${C.anthracite};border:1px solid ${C.border};border-radius:9px;padding:2px 4px;`)
       const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
