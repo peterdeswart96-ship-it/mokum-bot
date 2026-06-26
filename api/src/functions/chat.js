@@ -737,8 +737,8 @@ async function getFotoContext(message, sasToken) {
   })
   return (
     `---\nRELEVANTE FOTO('S) bij deze vraag — verwerk ze in je antwoord zoals hieronder aangegeven. ` +
-    `Voor INLINE gebruik je EXACT de markdown ![onderschrift](url) zodat de afbeelding in de chat verschijnt. ` +
-    `Verzin zelf NOOIT andere afbeeldings-URL's.\n` +
+    `BELANGRIJK: gebruik UITSLUITEND de hier opgegeven URL('s). Ken je elders (bijv. in een kennisbron) een andere URL voor hetzelfde onderwerp, NEGEER die dan en gebruik deze. ` +
+    `Voor INLINE gebruik je EXACT de markdown ![onderschrift](url) zodat de afbeelding in de chat verschijnt. Verzin zelf NOOIT andere afbeeldings-URL's.\n` +
     lines.join("\n") +
     "\n---"
   )
