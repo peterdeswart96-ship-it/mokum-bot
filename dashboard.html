@@ -478,11 +478,24 @@
     <main>
       <div style="max-width:780px;margin:0 auto;">
         <div class="insight-box" style="margin-bottom:16px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
-        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-26 11:46</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
+        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — blur + correctie-tool</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
-        <div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
-          <div style="font-size:13px;color:#ccc;flex:1;min-width:220px;">🙂 <b>Gezichten vervangen door smilies</b> (AVG). Bij het uploaden worden herkende gezichten automatisch afgedekt met een smiley op gezichtsgrootte. <span style="color:#888;">Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet.</span></div>
-          <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#fff;white-space:nowrap;"><input type="checkbox" id="foto-anon-toggle" onchange="setFotoAnon(this.checked)"> Aan</label>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
+            <div style="font-size:13px;color:#ccc;flex:1;min-width:220px;">🛡️ <b>Gezichten anonimiseren</b> (AVG). Bij het uploaden worden herkende gezichten automatisch afgedekt. <span style="color:#888;">Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet.</span></div>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#fff;white-space:nowrap;"><input type="checkbox" id="foto-anon-toggle" onchange="setFotoAnon(this.checked)"> Aan</label>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #2a2a2a;">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#ccc;">Stijl:
+              <select id="foto-anonstijl" onchange="setAnonStijl(this.value)" style="background:#222;color:#fff;border:1px solid #444;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;">
+                <option value="blur">Blur (vervagen)</option>
+                <option value="pixelate">Pixelate (mozaïek)</option>
+                <option value="zwart">Zwart vlak</option>
+                <option value="smiley">Smiley</option>
+              </select>
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#ccc;" title="Toont vóór elke upload een venster waarin je zelf gemiste gezichten kunt toevoegen (slepen) of valse verwijderen."><input type="checkbox" id="foto-correctie-toggle" onchange="setCorrectie(this.checked)"> 🖊️ Controleren vóór upload (gemiste gezichten toevoegen)</label>
+          </div>
         </div>
 
         <div class="card" style="margin-bottom:16px;">
@@ -902,9 +915,97 @@ function fEsc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","
 function fAttr(s){return String(s==null?"":s).replace(/"/g,"&quot;")}
 function fJs(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
 
-// ---- Gezichts-anonimisatie (AVG): vervangt gezichten door smilies, client-side ----
+// ---- Gezichts-anonimisatie (AVG): dekt gezichten af (blur/pixelate/zwart/smiley), client-side ----
 function faceAnonAan(){ return (localStorage.getItem("mkm-foto-anon") ?? "1") === "1" }
 function setFotoAnon(on){ localStorage.setItem("mkm-foto-anon", on ? "1" : "0") }
+function anonStijl(){ return localStorage.getItem("mkm-foto-anonstijl") || "blur" }
+function setAnonStijl(v){ localStorage.setItem("mkm-foto-anonstijl", v) }
+function correctieAan(){ return localStorage.getItem("mkm-foto-correctie") === "1" }
+function setCorrectie(on){ localStorage.setItem("mkm-foto-correctie", on ? "1" : "0") }
+
+// Dekt één gebied (box {x,y,width,height}, in bron-pixels) af op ctx; leest beeld uit bron-canvas src.
+function maskRegion(ctx, src, box, style){
+  const cx = box.x + box.width/2, cy = box.y + box.height/2
+  const rw = box.width/2 * 1.35, rh = box.height/2 * 1.45 // iets ruimer dan de box (haarlijn/kin meenemen)
+  if (style === "zwart"){
+    ctx.save(); ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI*2); ctx.fill(); ctx.restore(); return
+  }
+  if (style === "smiley"){
+    const size = Math.max(box.width, box.height) * 1.7
+    ctx.save(); ctx.textAlign = "center"; ctx.textBaseline = "middle"
+    ctx.fillStyle = "#FCD34D"; ctx.beginPath(); ctx.arc(cx, cy, size*0.42, 0, Math.PI*2); ctx.fill()
+    ctx.font = `${Math.round(size)}px serif`; ctx.fillText("🙂", cx, cy); ctx.restore(); return
+  }
+  if (style === "pixelate"){
+    const x = Math.max(0, cx-rw), y = Math.max(0, cy-rh)
+    const w = Math.min(src.width-x, rw*2), h = Math.min(src.height-y, rh*2)
+    if (w <= 0 || h <= 0) return
+    const px = Math.max(6, Math.round(Math.max(w,h)/10))
+    const sw = Math.max(1, Math.round(w/px)), sh = Math.max(1, Math.round(h/px))
+    const tmp = document.createElement("canvas"); tmp.width = Math.ceil(w); tmp.height = Math.ceil(h)
+    const tctx = tmp.getContext("2d"); tctx.imageSmoothingEnabled = false
+    tctx.drawImage(src, x, y, w, h, 0, 0, sw, sh)
+    tctx.drawImage(tmp, 0, 0, sw, sh, 0, 0, w, h)
+    ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI*2); ctx.clip(); ctx.drawImage(tmp, x, y); ctx.restore(); return
+  }
+  // blur (default): teken het hele bronbeeld geblurd, geknipt tot de ellips (geen donkere randen)
+  ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI*2); ctx.clip()
+  ctx.filter = `blur(${Math.max(8, Math.round(Math.max(box.width, box.height)/3.5))}px)`
+  ctx.drawImage(src, 0, 0); ctx.restore(); ctx.filter = "none"
+}
+
+// Handmatige correctie: toon de foto met gevonden gezichts-vlakken; sleep om toe te voegen, klik om te verwijderen.
+// Returnt de definitieve vlakken (in bron-pixels) of null bij annuleren/overslaan.
+function reviewFacesModal(srcCanvas, boxes, filename){
+  return new Promise(resolve => {
+    const DISPLAY_W = Math.min(srcCanvas.width, 560)
+    const scale = DISPLAY_W / srcCanvas.width
+    const dispH = Math.round(srcCanvas.height * scale)
+    const ov = document.createElement("div")
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px;"
+    const panel = document.createElement("div")
+    panel.style.cssText = "background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;max-width:95vw;max-height:95vh;overflow:auto;"
+    panel.innerHTML = `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:4px;">Controleer de gezichten${filename?" — "+fEsc(filename):""}</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:10px;max-width:560px;">Sleep over een <b>gemist gezicht</b> om een vlak toe te voegen. Klik op een vlak (×) om het te verwijderen. Stijl: <b style="color:#ddd;">${anonStijl()}</b>.</div>`
+    const stage = document.createElement("div")
+    stage.style.cssText = `position:relative;width:${DISPLAY_W}px;height:${dispH}px;margin:0 auto;cursor:crosshair;touch-action:none;user-select:none;`
+    const imgEl = document.createElement("canvas"); imgEl.width = srcCanvas.width; imgEl.height = srcCanvas.height
+    imgEl.getContext("2d").drawImage(srcCanvas, 0, 0)
+    imgEl.style.cssText = `width:${DISPLAY_W}px;height:${dispH}px;display:block;border-radius:8px;`
+    stage.appendChild(imgEl)
+    let cur = boxes.map(b => ({ x:b.x, y:b.y, width:b.width, height:b.height }))
+    function renderBoxes(){
+      Array.from(stage.querySelectorAll(".rev-box")).forEach(e => e.remove())
+      cur.forEach((b, i) => {
+        const d = document.createElement("div"); d.className = "rev-box"
+        d.style.cssText = `position:absolute;left:${b.x*scale}px;top:${b.y*scale}px;width:${b.width*scale}px;height:${b.height*scale}px;border:2px solid #ff5252;background:rgba(255,82,82,0.18);border-radius:6px;cursor:pointer;box-sizing:border-box;`
+        d.onclick = (e) => { e.stopPropagation(); cur.splice(i,1); renderBoxes() }
+        const x = document.createElement("div"); x.textContent = "×"
+        x.style.cssText = "position:absolute;top:-9px;right:-9px;width:18px;height:18px;line-height:15px;text-align:center;background:#ff5252;color:#fff;border-radius:50%;font-size:14px;font-weight:700;pointer-events:none;"
+        d.appendChild(x); stage.appendChild(d)
+      })
+      counter.textContent = `${cur.length} vlak(ken)`
+    }
+    let start = null, ghost = null
+    const pt = (e) => { const r = stage.getBoundingClientRect(); const t = e.touches && e.touches[0]; const px = (t?t.clientX:e.clientX)-r.left, py = (t?t.clientY:e.clientY)-r.top; return { x:Math.max(0,Math.min(DISPLAY_W,px)), y:Math.max(0,Math.min(dispH,py)) } }
+    const down = (e) => { if (e.target.classList.contains("rev-box")) return; start = pt(e); ghost = document.createElement("div"); ghost.style.cssText="position:absolute;border:2px dashed #ffd54f;background:rgba(255,213,79,0.15);border-radius:6px;box-sizing:border-box;pointer-events:none;"; stage.appendChild(ghost); e.preventDefault() }
+    const move = (e) => { if(!start)return; const p=pt(e); ghost.style.left=Math.min(start.x,p.x)+"px"; ghost.style.top=Math.min(start.y,p.y)+"px"; ghost.style.width=Math.abs(p.x-start.x)+"px"; ghost.style.height=Math.abs(p.y-start.y)+"px"; e.preventDefault() }
+    const up = (e) => { if(!start)return; const p=pt(e); const x=Math.min(start.x,p.x),y=Math.min(start.y,p.y),w=Math.abs(p.x-start.x),h=Math.abs(p.y-start.y); if(ghost){ghost.remove();ghost=null} if(w>8&&h>8){ cur.push({ x:x/scale, y:y/scale, width:w/scale, height:h/scale }); renderBoxes() } start=null }
+    stage.addEventListener("mousedown",down); window.addEventListener("mousemove",move); window.addEventListener("mouseup",up)
+    stage.addEventListener("touchstart",down,{passive:false}); stage.addEventListener("touchmove",move,{passive:false}); stage.addEventListener("touchend",up)
+    panel.appendChild(stage)
+    const bar = document.createElement("div"); bar.style.cssText="display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;"
+    const counter = document.createElement("span"); counter.style.cssText="margin-right:auto;font-size:12px;color:#888;"
+    const cancel = document.createElement("button"); cancel.textContent="Overslaan"; cancel.style.cssText="padding:8px 14px;border-radius:8px;border:1px solid #444;background:#222;color:#ccc;cursor:pointer;"
+    const ok = document.createElement("button"); ok.textContent="Toepassen & uploaden"; ok.style.cssText="padding:8px 14px;border-radius:8px;border:none;background:#7bd88f;color:#000;font-weight:700;cursor:pointer;"
+    const cleanup = () => { window.removeEventListener("mousemove",move); window.removeEventListener("mouseup",up); ov.remove() }
+    cancel.onclick = () => { cleanup(); resolve(null) }
+    ok.onclick = () => { cleanup(); resolve(cur) }
+    bar.appendChild(counter); bar.appendChild(cancel); bar.appendChild(ok); panel.appendChild(bar)
+    ov.appendChild(panel); document.body.appendChild(ov)
+    renderBoxes()
+  })
+}
 // 'Door Claude laten labelen' bij losse upload: verbergt de velden + zet 'Te labelen'
 function toggleClaudeLabel(){
   const cb = document.getElementById("foto-claude-label")
@@ -931,7 +1032,8 @@ function _canvasB64(canvas){ return new Promise((res) => canvas.toBlob(b => { co
 // Verkleint de foto (max 1600px, JPEG — handelt ook HEIC af) en maakt indien er
 // gezichten zijn én anonimisatie aan staat een tweede 'smiley'-versie.
 // Returnt { name, type, origB64, smileyB64, faces }. faces = -1 = anonimiseren mislukt (NIET uploaden).
-async function prepareUpload(file){
+async function prepareUpload(file, opts){
+  opts = opts || {}
   if (!file.type || !file.type.startsWith("image/")) {
     return { name: file.name, type: file.type || "application/octet-stream", origB64: await _readB64(file), smileyB64: null, faces: 0 }
   }
@@ -952,16 +1054,18 @@ async function prepareUpload(file){
     try {
       await ensureFaceApi()
       const dets = await faceapi.detectAllFaces(c, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 }))
-      faces = dets.length
+      let boxes = dets.map(d => ({ x: d.box.x, y: d.box.y, width: d.box.width, height: d.box.height }))
+      // optionele handmatige correctie (gemiste gezichten toevoegen / valse verwijderen)
+      if (typeof opts.reviewBoxes === "function") {
+        boxes = await opts.reviewBoxes(c, boxes, file.name)
+        if (boxes === null) { URL.revokeObjectURL(img.src); return { name, type: "image/jpeg", origB64, smileyB64: null, faces: -2 } } // overgeslagen
+      }
+      faces = boxes.length
       if (faces > 0) {
         const c2 = document.createElement("canvas"); c2.width = w; c2.height = h
         const ctx2 = c2.getContext("2d"); ctx2.drawImage(c, 0, 0)
-        ctx2.textAlign = "center"; ctx2.textBaseline = "middle"
-        dets.forEach(d => {
-          const b = d.box, cx = b.x + b.width / 2, cy = b.y + b.height / 2, size = Math.max(b.width, b.height) * 1.7
-          ctx2.fillStyle = "#FCD34D"; ctx2.beginPath(); ctx2.arc(cx, cy, size * 0.42, 0, Math.PI * 2); ctx2.fill()
-          ctx2.font = `${Math.round(size)}px serif`; ctx2.fillText("🙂", cx, cy)
-        })
+        const stijl = anonStijl()
+        boxes.forEach(b => maskRegion(ctx2, c, b, stijl))
         smileyB64 = await _canvasB64(c2)
       }
     } catch (e) {
@@ -976,6 +1080,10 @@ async function prepareUpload(file){
 async function laadFotos() {
   const anonCb = document.getElementById("foto-anon-toggle")
   if (anonCb) anonCb.checked = faceAnonAan()
+  const stijlSel = document.getElementById("foto-anonstijl")
+  if (stijlSel) stijlSel.value = anonStijl()
+  const corrCb = document.getElementById("foto-correctie-toggle")
+  if (corrCb) corrCb.checked = correctieAan()
   const clCb = document.getElementById("foto-claude-label")
   if (clCb) { clCb.checked = (localStorage.getItem("mkm-foto-claudelabel") ?? "1") === "1"; toggleClaudeLabel() }
   const el = document.getElementById("foto-overzicht")
@@ -1055,8 +1163,9 @@ async function uploadFoto() {
   if (!file) { status.textContent = "Kies eerst een bestand."; return }
   status.style.color = "#888"; status.textContent = file.type.startsWith("image/") ? "Foto verwerken..." : "Uploaden..."
   try {
-    const p = await prepareUpload(file)
-    if (p.faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de smiley-optie uit en probeer opnieuw)."; return }
+    const p = await prepareUpload(file, correctieAan() ? { reviewBoxes: reviewFacesModal } : {})
+    if (p.faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de anonimisatie uit en probeer opnieuw)."; return }
+    if (p.faces === -2) { status.style.color = "#888"; status.textContent = "Overgeslagen (niet geüpload)."; return }
     status.textContent = "Uploaden..."
     // Door Claude laten labelen (default) -> 'Te labelen' + inactief, velden genegeerd.
     const teLabelen = document.getElementById("foto-claude-label").checked
@@ -1076,7 +1185,7 @@ async function uploadFoto() {
       heeftGezichten: p.faces > 0 && !!p.smileyB64,
     })
     if (r.success) {
-      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen". Vraag Claude om te labelen, of bewerk hem in het overzicht.' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) → smiley; origineel verborgen bewaard)` : "")
+      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen". Vraag Claude om te labelen, of bewerk hem in het overzicht.' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) afgedekt — ${anonStijl()}; origineel verborgen bewaard)` : "")
       fileEl.value = ""
       document.getElementById("foto-categorie").value = ""
       document.getElementById("foto-onderschrift").value = ""
@@ -1097,14 +1206,16 @@ async function bulkUploadFotos() {
   const files = Array.from(fileEl.files || [])
   if (!files.length) { status.style.color = "#888"; status.textContent = "Kies eerst bestanden."; return }
   btn.disabled = true
-  let ok = 0, fout = 0, totFaces = 0, anonFout = 0
+  let ok = 0, fout = 0, totFaces = 0, anonFout = 0, overgeslagen = 0
+  const review = correctieAan() ? { reviewBoxes: reviewFacesModal } : {}
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     status.style.color = "#888"
     status.textContent = `${file.type.startsWith("image/") ? "Verwerken + uploaden" : "Uploaden"} ${i + 1}/${files.length}: ${file.name}...`
     try {
-      const p = await prepareUpload(file)
+      const p = await prepareUpload(file, review)
       if (p.faces === -1) { anonFout++; fout++; continue } // anonimisatie mislukt -> niet uploaden (AVG)
+      if (p.faces === -2) { overgeslagen++; continue } // handmatig overgeslagen
       if (p.faces > 0) totFaces += p.faces
       const r = await fotoActie({
         action: "upload", bestandsnaam: p.name, contentType: p.type,
@@ -1117,7 +1228,7 @@ async function bulkUploadFotos() {
   btn.disabled = false
   fileEl.value = ""
   status.style.color = ok ? "#7bd88f" : "#ff6b6b"
-  status.textContent = `Klaar: ${ok} geüpload${totFaces ? `, ${totFaces} gezicht(en) vervangen` : ""}${fout ? `, ${fout} mislukt${anonFout ? ` (waarvan ${anonFout} door mislukte anonimisatie)` : ""}` : ""}. Ze staan onder "Te labelen" — vraag Claude om ze te labelen.`
+  status.textContent = `Klaar: ${ok} geüpload${totFaces ? `, ${totFaces} gezicht(en) afgedekt` : ""}${overgeslagen ? `, ${overgeslagen} overgeslagen` : ""}${fout ? `, ${fout} mislukt${anonFout ? ` (waarvan ${anonFout} door mislukte anonimisatie)` : ""}` : ""}. Ze staan onder "Te labelen" — vraag Claude om ze te labelen.`
   laadFotos()
 }
 
