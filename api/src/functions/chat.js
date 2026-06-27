@@ -167,7 +167,7 @@ function httpsRequest(options, body) {
   })
 }
 
-async function saveConversation(messages, reply) {
+async function saveConversation(messages, reply, isTest) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
     if (!sasToken) return
@@ -181,7 +181,7 @@ async function saveConversation(messages, reply) {
     const random = Math.random().toString(36).substring(2, 8)
     const blobName = `${amsTijd}-${random}.json`
     // timestamp-veld blijft UTC ISO — het dashboard rekent dat zelf om naar Amsterdam-tijd
-    const content = JSON.stringify({ timestamp: new Date().toISOString(), messages, reply }, null, 2)
+    const content = JSON.stringify({ timestamp: new Date().toISOString(), messages, reply, isTest: !!isTest }, null, 2)
     const contentLength = Buffer.byteLength(content)
     const options = {
       hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -969,6 +969,15 @@ app.http("chat", {
           body: JSON.stringify({ error: "messages array required" }),
         }
       }
+      // '#test'-prefix: markeer dit gesprek als testvraag (voor het dashboard) en
+      // verwerk de ECHTE vraag (zonder prefix) zodat de bot normaal antwoordt.
+      let isTest = false
+      for (const m of messages) {
+        if (m && m.role === "user" && typeof m.content === "string" && /^\s*#test\b/i.test(m.content)) {
+          isTest = true
+          m.content = m.content.replace(/^\s*#test\b[:\s-]*/i, "").trim()
+        }
+      }
       const lastMessage = messages[messages.length - 1]?.content || ""
       const lastMessageLower = lastMessage.toLowerCase()
       const isTournamentQuery =
@@ -1040,7 +1049,7 @@ app.http("chat", {
           reply += f.weergave === "venster" ? `\n\n[${cap}](${f.url})` : `\n\n![${cap}](${f.url})`
         }
       }
-      saveConversation(messages, reply)
+      saveConversation(messages, reply, isTest)
       return {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -1109,6 +1118,56 @@ app.http("gesprekken", {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           body: result.body,
         }
+      }
+      // Eén gesprek verwijderen of als testvraag (de)markeren. Beveiligd met dashboard-wachtwoord.
+      if ((action === "delete" || action === "mark") && request.method === "POST") {
+        const crypto = require("crypto")
+        let cbody = {}
+        try { cbody = await request.json() } catch {}
+        const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+        const hash = cbody.wachtwoord ? crypto.createHash("sha256").update(cbody.wachtwoord).digest("hex") : ""
+        if (hash !== DASHBOARD_HASH) {
+          return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+        }
+        const naam = cbody.blob
+        if (!naam || naam.includes("/") || naam.includes("..")) {
+          return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Ongeldige blobnaam" }) }
+        }
+        if (action === "delete") {
+          const delOpts = {
+            hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+            path: `/gesprekken/${encodeURIComponent(naam)}?${sasToken}`,
+            method: "DELETE",
+            headers: { "x-ms-version": "2020-04-08" },
+          }
+          const r = await httpsRequest(delOpts)
+          return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: r.status === 202 }) }
+        }
+        // action === "mark": lees het gesprek, zet isTest, schrijf terug
+        const getOpts = {
+          hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+          path: `/gesprekken/${encodeURIComponent(naam)}?${sasToken}`,
+          method: "GET",
+          headers: { "x-ms-version": "2020-04-08" },
+        }
+        const got = await httpsRequest(getOpts)
+        let data = {}
+        try { data = JSON.parse(got.body) } catch {}
+        data.isTest = !!cbody.isTest
+        const newContent = JSON.stringify(data, null, 2)
+        const putOpts = {
+          hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+          path: `/gesprekken/${encodeURIComponent(naam)}?${sasToken}`,
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(newContent),
+            "x-ms-blob-type": "BlockBlob",
+            "x-ms-version": "2020-04-08",
+          },
+        }
+        await httpsRequest(putOpts, newContent)
+        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest }) }
       }
       // Opschonen — verwijdert gesprekken vóór een datum. Beveiligd met dashboard-wachtwoord.
       if (action === "cleanup" && request.method === "POST") {
