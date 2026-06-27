@@ -484,16 +484,16 @@ export default function ChatWidget() {
     ? `${windowWidth - 16}px`
     : (size === "groot" ? "calc(100vw - 32px)" : size === "klein" ? "380px" : "460px")
   const chatHeight = size === "groot"
-    ? (isMobile ? "calc(100dvh - 90px - 16px)" : `calc(100dvh - ${WIDGET_CONFIG.bottom} - 8px)`)
+    ? (isMobile ? "calc(100dvh - 90px - 16px)" : "calc(100dvh - 20px)")
     : `min(${isMobile ? (size === "klein" ? 460 : 600) : (size === "klein" ? 520 : 660)}px, calc(100dvh - 90px - 80px - 16px))`
   const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
 
   return (
-    <div style={{ position: "fixed", bottom: WIDGET_CONFIG.bottom, right: chatRight, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
+    <div style={{ position: "fixed", bottom: open ? (isMobile ? "8px" : "12px") : WIDGET_CONFIG.bottom, right: chatRight, zIndex: open ? 2147483000 : 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", width: chatWidth }}>
 
       {open && (
         <div style={{
-          marginBottom: "16px",
+          marginBottom: "0",
           width: chatWidth,
           // Hoogte: dvh houdt rekening met Safari adresbalk op iPhone
           // 90px = bottom widget, 80px = sluitknop + marge, 16px = adembreedte bovenkant
@@ -506,27 +506,26 @@ export default function ChatWidget() {
         }}>
 
           {/* Header */}
-          <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "5px 12px", display: "flex", alignItems: "stretch", justifyContent: "space-between", gap: "8px", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "7px", minWidth: 0, flexShrink: 1, overflow: "hidden", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "4px 9px" }}>
-              <EightBallIcon size={26} />
+          <div style={{ backgroundColor: C.blackCard, borderBottom: `1px solid ${C.border}`, padding: "3px 10px", display: "flex", alignItems: "stretch", justifyContent: "space-between", gap: "8px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", minWidth: 0, flexShrink: 1, overflow: "hidden", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "8px", padding: "2px 8px" }}>
+              <EightBallIcon size={18} />
               <div style={{ minWidth: 0, overflow: "hidden" }}>
-                <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>MOKUM MAGIC 8 BALL</div>
-                <div style={{ color: C.red, fontSize: "9px", marginTop: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Pool & Darts Amsterdam</div>
+                <div style={{ fontWeight: "800", color: C.white, fontSize: "12px", letterSpacing: "0.05em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>MOKUM MAGIC 8 BALL</div>
               </div>
               {testModusAan() && <div style={{ fontSize: "10px", color: "#7bd88f", background: "#143020", border: "1px solid #2f5a36", borderRadius: "6px", padding: "1px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>🧪 test</div>}
             </div>
-            <div style={{ display: "flex", alignItems: "center", flexShrink: 0, gap: isMobile ? "3px" : "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "10px", padding: isMobile ? "3px 7px" : "4px 9px" }}>
+            <div style={{ display: "flex", alignItems: "center", flexShrink: 0, gap: isMobile ? "2px" : "5px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "8px", padding: isMobile ? "2px 6px" : "2px 7px" }}>
               <button
                 onClick={resetChat}
                 title={lang === "nl" ? "Terug naar home" : "Back to home"}
-                style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "13px", padding: "3px 7px", lineHeight: 1.2 }}
+                style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: "6px", color: C.gray, cursor: "pointer", fontSize: "12px", padding: "2px 6px", lineHeight: 1.1 }}
               >🏠</button>
 
               <LanguageSwitcher lang={lang} onSwitch={switchLanguage} />
 
               <button
                 onClick={() => setOpen(false)}
-                style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "16px", fontWeight: "bold", padding: "3px", lineHeight: 1 }}
+                style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "15px", fontWeight: "bold", padding: "2px", lineHeight: 1 }}
               >✕</button>
             </div>
           </div>
@@ -551,16 +550,16 @@ export default function ChatWidget() {
             )}
 
             {stage === "topics" && !loading && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
-                {/* Inklapbare knop "Voorbeeldvragen per rubriek" */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: 0 }}>
+                {/* Inklapbare knop "Voorbeeldvragen per rubriek" — compact, strak onder de header */}
                 <button onClick={() => setExamplesOpen((o) => !o)} style={{
                   width: "100%", textAlign: "left", background: C.anthracite, border: "1px solid #3d3d44", borderLeft: `3px solid ${C.red}`,
-                  borderRadius: "10px", color: C.white, fontSize: "13px", fontWeight: 700, padding: "11px 14px", cursor: "pointer",
+                  borderRadius: "9px", color: C.white, fontSize: "12.5px", fontWeight: 700, padding: "6px 12px", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px",
                 }}>
                   <span>📋 {t.examplesBtn}</span>
                   <span style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                    <span style={{ background: C.red, color: "#fff", fontSize: "9px", fontWeight: 800, padding: "2px 6px", borderRadius: "6px", letterSpacing: "0.05em" }}>NEW</span>
+                    <span style={{ background: C.red, color: "#fff", fontSize: "9px", fontWeight: 800, padding: "1px 5px", borderRadius: "6px", letterSpacing: "0.05em" }}>NEW</span>
                     <span style={{ fontSize: "11px" }}>{examplesOpen ? "▲" : "▼"}</span>
                   </span>
                 </button>
@@ -660,7 +659,7 @@ export default function ChatWidget() {
 
           {/* Input + venster-formaat — alles in één rij, strak onderaan */}
           <div style={{ borderTop: `1px solid ${C.border}`, backgroundColor: C.blackCard, padding: "8px 14px", flexShrink: 0 }}>
-            <div style={{ display: "flex", gap: "6px", alignItems: "stretch" }}>
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
               <input
                 type="text"
                 value={input}

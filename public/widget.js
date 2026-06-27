@@ -234,13 +234,14 @@
     // Mobiel: zo schermvullend mogelijk. Dit is de basiswaarde; fitMobileWindow()
     // verfijnt hoogte/bottom via de visualViewport API zodra het toetsenbord opent.
     if (mobile) return 'calc(100dvh - 16px)'
-    if (state.size === 'groot') return `calc(100dvh - ${WIDGET_CONFIG.bottom} - 8px)` // MAX: heel scherm, mét ruimte voor de bottom-offset zodat de top zichtbaar blijft
+    if (state.size === 'groot') return 'calc(100dvh - 20px)' // MAX: heel scherm (12px bottom + 8px top)
     const cap = state.size === 'klein' ? 520 : 660
     return `min(${cap}px, calc(100dvh - 90px - 80px - 16px))`
   }
 
   function getBottom() {
-    return window.innerWidth < 480 ? '8px' : WIDGET_CONFIG.bottom
+    // Open venster zit laag (overlapt o.a. de WhatsApp-knop rechtsonder) en gebruikt de ruimte optimaal.
+    return window.innerWidth < 480 ? '8px' : '12px'
   }
 
   function getRight() {
@@ -423,13 +424,13 @@
     const chatHeight = getHeight()
 
     if (state.open) {
-      const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`, undefined, { id: 'mokum-chat-window' })
+      const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:2147483000;`, undefined, { id: 'mokum-chat-window' })
 
       // Header
-      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:5px 12px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
-      const hdrL = el('div', `display:flex;align-items:center;gap:7px;min-width:0;flex-shrink:1;overflow:hidden;background:${C.anthracite};border:1px solid ${C.border};border-radius:10px;padding:4px 9px;`)
-      hdrL.innerHTML = eightBallSVG(26, false)
-      const hdrTitle = el('div', 'min-width:0;overflow:hidden;', `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:9px;margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Pool & Darts Amsterdam</div>`)
+      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:3px 10px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
+      const hdrL = el('div', `display:flex;align-items:center;gap:5px;min-width:0;flex-shrink:1;overflow:hidden;background:${C.anthracite};border:1px solid ${C.border};border-radius:8px;padding:2px 8px;`)
+      hdrL.innerHTML = eightBallSVG(18, false)
+      const hdrTitle = el('div', 'min-width:0;overflow:hidden;', `<div style="font-weight:800;color:${C.white};font-size:12px;letter-spacing:0.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOKUM MAGIC 8 BALL</div>`)
       hdrL.appendChild(hdrTitle)
       if (testModusAan()) hdrL.appendChild(el('div', `font-size:10px;color:#7bd88f;background:#143020;border:1px solid #2f5a36;border-radius:6px;padding:1px 6px;margin-left:2px;white-space:nowrap;flex-shrink:0;`, '🧪 test'))
 
@@ -476,19 +477,19 @@
 
       // Stage: topics — beginner-uitleg + inklapbare voorbeeldvragen per categorie
       if (state.stage === 'topics' && !state.loading) {
-        const container = el('div', 'display:flex;flex-direction:column;gap:10px;margin-top:4px;')
+        const container = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:0;')
 
-        // Inklapbare knop "Voorbeeldvragen per rubriek" met NEW-badge
+        // Inklapbare knop "Voorbeeldvragen per rubriek" met NEW-badge — compact, strak onder de header
         const toggle = btn(
           `<span style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;">
              <span>📋 ${t.examplesBtn}</span>
              <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-               <span style="background:${C.red};color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:0.05em;">NEW</span>
+               <span style="background:${C.red};color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:6px;letter-spacing:0.05em;">NEW</span>
                <span style="font-size:11px;">${state.examplesOpen ? '▲' : '▼'}</span>
              </span>
            </span>`,
           () => { state.examplesOpen = !state.examplesOpen; render() },
-          `width:100%;text-align:left;background:${C.anthracite};border:1px solid #3d3d44;border-left:3px solid ${C.red};border-radius:10px;color:${C.white};font-size:13px;font-weight:700;padding:11px 14px;`
+          `width:100%;text-align:left;background:${C.anthracite};border:1px solid #3d3d44;border-left:3px solid ${C.red};border-radius:9px;color:${C.white};font-size:12.5px;font-weight:700;padding:6px 12px;`
         )
         container.appendChild(toggle)
 
@@ -573,7 +574,7 @@
 
       // Input — altijd zichtbaar; alles in één rij, strak onderaan
       const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:8px 14px;flex-shrink:0;`)
-      const inputRow = el('div', 'display:flex;gap:6px;align-items:stretch;')
+      const inputRow = el('div', 'display:flex;gap:6px;align-items:center;')
       const input = el('input', `flex:1;min-width:0;box-sizing:border-box;height:35px;padding:0 12px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
       input.value = state.input
       input.oninput = e => { state.input = e.target.value }
