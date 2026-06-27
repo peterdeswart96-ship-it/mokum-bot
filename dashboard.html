@@ -478,7 +478,7 @@
     <main>
       <div style="max-width:780px;margin:0 auto;">
         <div class="insight-box" style="margin-bottom:16px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
-        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — blur + correctie-tool</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
+        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — blur + correctie-tool (v2)</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
         <div class="card" style="margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
@@ -981,7 +981,7 @@ function reviewFacesModal(srcCanvas, boxes, filename){
         d.style.cssText = `position:absolute;left:${b.x*scale}px;top:${b.y*scale}px;width:${b.width*scale}px;height:${b.height*scale}px;border:2px solid #ff5252;background:rgba(255,82,82,0.18);border-radius:6px;cursor:pointer;box-sizing:border-box;`
         d.onclick = (e) => { e.stopPropagation(); cur.splice(i,1); renderBoxes() }
         const x = document.createElement("div"); x.textContent = "×"
-        x.style.cssText = "position:absolute;top:-9px;right:-9px;width:18px;height:18px;line-height:15px;text-align:center;background:#ff5252;color:#fff;border-radius:50%;font-size:14px;font-weight:700;pointer-events:none;"
+        x.style.cssText = "position:absolute;top:-5px;right:-5px;width:9px;height:9px;line-height:8px;text-align:center;background:#ff5252;color:#fff;border-radius:50%;font-size:9px;font-weight:700;pointer-events:none;"
         d.appendChild(x); stage.appendChild(d)
       })
       counter.textContent = `${cur.length} vlak(ken)`
