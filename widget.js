@@ -224,7 +224,7 @@
   function getWidth() {
     const mobile = window.innerWidth < 480
     if (mobile) return (window.innerWidth - 12) + 'px'
-    if (state.size === 'groot') return 'min(80vw, 900px)'
+    if (state.size === 'groot') return 'calc(100vw - 32px)' // MAX: vrijwel het hele scherm
     if (state.size === 'klein') return '380px'
     return '460px' // middel
   }
@@ -234,7 +234,7 @@
     // Mobiel: zo schermvullend mogelijk. Dit is de basiswaarde; fitMobileWindow()
     // verfijnt hoogte/bottom via de visualViewport API zodra het toetsenbord opent.
     if (mobile) return 'calc(100dvh - 16px)'
-    if (state.size === 'groot') return '85dvh'
+    if (state.size === 'groot') return 'calc(100dvh - 32px)' // MAX: vrijwel het hele scherm
     const cap = state.size === 'klein' ? 520 : 660
     return `min(${cap}px, calc(100dvh - 90px - 80px - 16px))`
   }
@@ -426,17 +426,17 @@
       const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:9999;`, undefined, { id: 'mokum-chat-window' })
 
       // Header
-      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:10px 16px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
-      const hdrL = el('div', `display:flex;align-items:center;gap:9px;min-width:0;flex-shrink:1;overflow:hidden;background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:6px 12px;`)
-      hdrL.innerHTML = eightBallSVG(34, false)
-      const hdrTitle = el('div', 'min-width:0;overflow:hidden;', `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Pool & Darts Amsterdam</div>`)
+      const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:5px 12px;display:flex;align-items:stretch;justify-content:space-between;gap:8px;flex-shrink:0;`)
+      const hdrL = el('div', `display:flex;align-items:center;gap:7px;min-width:0;flex-shrink:1;overflow:hidden;background:${C.anthracite};border:1px solid ${C.border};border-radius:10px;padding:4px 9px;`)
+      hdrL.innerHTML = eightBallSVG(26, false)
+      const hdrTitle = el('div', 'min-width:0;overflow:hidden;', `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:9px;margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Pool & Darts Amsterdam</div>`)
       hdrL.appendChild(hdrTitle)
       if (testModusAan()) hdrL.appendChild(el('div', `font-size:10px;color:#7bd88f;background:#143020;border:1px solid #2f5a36;border-radius:6px;padding:1px 6px;margin-left:2px;white-space:nowrap;flex-shrink:0;`, '🧪 test'))
 
-      const hdrR = el('div', `display:flex;align-items:center;flex-shrink:0;gap:${isMobile ? '3px' : '6px'};background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:${isMobile ? '5px 8px' : '6px 12px'};`)
+      const hdrR = el('div', `display:flex;align-items:center;flex-shrink:0;gap:${isMobile ? '3px' : '6px'};background:${C.anthracite};border:1px solid ${C.border};border-radius:10px;padding:${isMobile ? '3px 7px' : '4px 9px'};`)
 
       // Home knop
-      const homeBtn = btn('🏠', () => { resetChat(); render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:14px;padding:4px 8px;line-height:1.4;`)
+      const homeBtn = btn('🏠', () => { resetChat(); render() }, `background:none;border:1px solid ${C.border};border-radius:6px;color:${C.gray};font-size:13px;padding:3px 7px;line-height:1.2;`)
       homeBtn.title = state.lang === 'nl' ? 'Terug naar home' : 'Back to home'
 
       // SVG vlaggen
@@ -451,7 +451,7 @@
       })
 
       // Sluit knop
-      const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.gray};font-size:18px;font-weight:bold;padding:4px;line-height:1;`)
+      const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.gray};font-size:16px;font-weight:bold;padding:3px;line-height:1;`)
 
       hdrR.append(homeBtn, flagsWrap, closeBtn)
       hdr.append(hdrL, hdrR)
@@ -576,31 +576,25 @@
 
       setTimeout(() => { body.scrollTop = body.scrollHeight }, 50)
 
-      // Input — altijd zichtbaar
-      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:8px 16px 6px;display:flex;flex-direction:column;gap:5px;flex-shrink:0;`)
-      const inputRow = el('div', 'display:flex;gap:8px;align-items:stretch;')
-      const input = el('input', `flex:1;box-sizing:border-box;height:44px;padding:0 14px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
+      // Input — altijd zichtbaar; alles in één rij, strak onderaan
+      const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:8px 14px;flex-shrink:0;`)
+      const inputRow = el('div', 'display:flex;gap:6px;align-items:stretch;')
+      const input = el('input', `flex:1;min-width:0;box-sizing:border-box;height:35px;padding:0 12px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: 'text', placeholder: t.placeholder })
       input.value = state.input
       input.oninput = e => { state.input = e.target.value }
       input.onkeydown = e => { if (e.key === 'Enter') sendMessage() }
-      const sendBtnEl = btn('→', () => sendMessage(), `box-sizing:border-box;height:44px;padding:0 18px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
+      // Verzendknop en venster-kiezer: EXACT dezelfde afmeting (64×35), naast elkaar
+      const CTRL = `box-sizing:border-box;height:35px;width:64px;flex:0 0 64px;border-radius:8px;`
+      const sendBtnEl = btn('→', () => sendMessage(), `${CTRL}display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
       sendBtnEl.disabled = state.loading
-      inputRow.append(input, sendBtnEl)
-
-      // Venster-kiezer — alleen de dropdown in een strak antraciet kadertje, gecentreerd
-      const sizeOpts = state.lang === 'nl'
-        ? [['klein', 'Klein'], ['middel', 'Middel'], ['groot', 'Groot']]
-        : [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'Large']]
-      const sizeRow = el('div', 'display:flex;justify-content:center;')
-      const sizeBox = el('div', `display:inline-flex;align-items:center;background:${C.anthracite};border:1px solid ${C.border};border-radius:9px;padding:2px 4px;`)
+      const sizeOpts = [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'MAX']]
       const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
-      const sizeSelect = el('select', `display:block;line-height:normal;background:${C.blackInput};border:1px solid ${C.border};border-radius:7px;color:${C.white};font-size:10px;padding:2px 6px;cursor:pointer;`, optsHtml)
+      const sizeSelect = el('select', `${CTRL}background:${C.blackInput};border:1px solid ${C.border};color:${C.white};font-size:11.5px;text-align:center;text-align-last:center;padding:0 4px;cursor:pointer;`, optsHtml)
       sizeSelect.value = state.size
       sizeSelect.onchange = e => { state.size = e.target.value; render() }
-      sizeBox.appendChild(sizeSelect)
-      sizeRow.appendChild(sizeBox)
 
-      inputArea.append(inputRow, sizeRow)
+      inputRow.append(input, sendBtnEl, sizeSelect)
+      inputArea.append(inputRow)
 
       win.append(hdr, body, inputArea)
       root.appendChild(win)
