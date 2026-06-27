@@ -252,7 +252,7 @@
   // boven het toetsenbord (visualViewport krimpt wanneer het toetsenbord opent).
   function fitMobileWindow() {
     if (!state.open || window.innerWidth >= 480) return
-    const win = document.getElementById('mokum-chat-window')
+    const win = shadow && shadow.getElementById('mokum-chat-window')
     if (!win) return
     const vv = window.visualViewport
     if (!vv) return
@@ -261,12 +261,16 @@
     win.style.bottom = (keyboardInset + 8) + 'px'
   }
 
+  let shadow = null // Shadow DOM-root — schermt de widget af van pagina-CSS (thema-stijlen lekten anders in en bliezen de afmetingen op)
+
   function injectStyles() {
-    if (document.getElementById('mokum-widget-styles')) return
+    if (shadow.getElementById('mokum-widget-styles')) return
     const style = document.createElement('style')
     style.id = 'mokum-widget-styles'
     style.textContent = `
+      #mokum-widget-root { line-height: normal; color: #fff; }
       #mokum-widget-root * { box-sizing: border-box; font-family: Arial, sans-serif; }
+      #mokum-widget-root button, #mokum-widget-root input, #mokum-widget-root select, #mokum-widget-root textarea { font-family: inherit; line-height: normal; margin: 0; }
       #mokum-widget-root button { cursor: pointer; }
       #mokum-widget-root input:focus { outline: none; }
       #mokum-widget-root a { color: #ff6b6b; text-decoration: underline; }
@@ -293,7 +297,7 @@
       .mokum-carousel-btn { position: absolute; right: 8px; bottom: 12px; background: rgba(0,0,0,0.72); color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
       .mokum-carousel-btn:hover { background: rgba(0,0,0,0.9); }
     `
-    document.head.appendChild(style)
+    shadow.appendChild(style)
   }
 
   function eightBallSVG(size, animate) {
@@ -413,7 +417,7 @@
   }
 
   function render() {
-    const root = document.getElementById('mokum-widget-root')
+    const root = shadow && shadow.getElementById('mokum-widget-root')
     if (!root) return
     root.innerHTML = ''
 
@@ -760,10 +764,15 @@
   }
 
   function init() {
-    injectStyles()
+    // Host in de pagina; de hele widget leeft in een Shadow DOM zodat thema-CSS er niet in kan lekken.
+    const host = document.createElement('div')
+    host.id = 'mokum-widget-host'
+    document.body.appendChild(host)
+    shadow = host.attachShadow({ mode: 'open' })
     const root = document.createElement('div')
     root.id = 'mokum-widget-root'
-    document.body.appendChild(root)
+    shadow.appendChild(root)
+    injectStyles()
     state.messages = [{ role: 'assistant', content: tr().welcome }]
     render()
   }
