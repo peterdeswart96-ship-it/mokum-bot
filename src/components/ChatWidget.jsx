@@ -5,6 +5,15 @@ import translations from "../config/translations"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
 
+// Testmodus: aan/uit via ?mokumtest=1 / ?mokumtest=0 (bewaard per browser).
+// Aan = elke vraag van dit apparaat wordt als testvraag opgeslagen (#test-prefix; backend strip + isTest).
+try {
+  const tp = new URLSearchParams(window.location.search).get("mokumtest")
+  if (tp === "1") localStorage.setItem("mokum-testmode", "1")
+  else if (tp === "0") localStorage.removeItem("mokum-testmode")
+} catch (e) {}
+function testModusAan() { try { return localStorage.getItem("mokum-testmode") === "1" } catch (e) { return false } }
+
 const C = {
   red:        "#cc0000",
   redDark:    "#990000",
@@ -397,10 +406,14 @@ export default function ChatWidget() {
     setLoading(true)
     setStage("chat")
     const callChat = async () => {
+      // Testmodus: markeer de laatste vraag met #test (state blijft schoon voor weergave)
+      const payloadMsgs = testModusAan()
+        ? newMessages.map((m, idx) => (idx === newMessages.length - 1 && m.role === "user") ? { ...m, content: "#test " + m.content } : m)
+        : newMessages
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: payloadMsgs }),
       })
       if (!response.ok) throw new Error("http " + response.status)
       const data = await response.json()
@@ -500,6 +513,7 @@ export default function ChatWidget() {
                 <div style={{ fontWeight: "800", color: C.white, fontSize: "13px", letterSpacing: "0.06em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>MOKUM MAGIC 8 BALL</div>
                 <div style={{ color: C.red, fontSize: "11px", marginTop: "1px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Pool & Darts Amsterdam</div>
               </div>
+              {testModusAan() && <div style={{ fontSize: "10px", color: "#7bd88f", background: "#143020", border: "1px solid #2f5a36", borderRadius: "6px", padding: "1px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>🧪 test</div>}
             </div>
             <div style={{ display: "flex", alignItems: "center", flexShrink: 0, gap: isMobile ? "3px" : "6px", background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "12px", padding: isMobile ? "5px 8px" : "6px 12px" }}>
               <button

@@ -6,6 +6,15 @@
 
   const API_URL = 'https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net'
   const DEFAULT_LANG = 'nl'
+
+  // Testmodus: aan/uit via ?mokumtest=1 / ?mokumtest=0 (blijft bewaard per browser).
+  // Staat 'ie aan, dan wordt elke vraag van dit apparaat als testvraag opgeslagen (#test-prefix).
+  try {
+    const tp = new URLSearchParams(window.location.search).get('mokumtest')
+    if (tp === '1') localStorage.setItem('mokum-testmode', '1')
+    else if (tp === '0') localStorage.removeItem('mokum-testmode')
+  } catch (e) {}
+  function testModusAan() { try { return localStorage.getItem('mokum-testmode') === '1' } catch (e) { return false } }
   const INTERN_HASH = '3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f'
 
   const C = {
@@ -422,6 +431,7 @@
       hdrL.innerHTML = eightBallSVG(34, false)
       const hdrTitle = el('div', 'min-width:0;overflow:hidden;', `<div style="font-weight:800;color:${C.white};font-size:13px;letter-spacing:0.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">MOKUM MAGIC 8 BALL</div><div style="color:${C.red};font-size:11px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Pool & Darts Amsterdam</div>`)
       hdrL.appendChild(hdrTitle)
+      if (testModusAan()) hdrL.appendChild(el('div', `font-size:10px;color:#7bd88f;background:#143020;border:1px solid #2f5a36;border-radius:6px;padding:1px 6px;margin-left:2px;white-space:nowrap;flex-shrink:0;`, '🧪 test'))
 
       const hdrR = el('div', `display:flex;align-items:center;flex-shrink:0;gap:${isMobile ? '3px' : '6px'};background:${C.anthracite};border:1px solid ${C.border};border-radius:12px;padding:${isMobile ? '5px 8px' : '6px 12px'};`)
 
@@ -707,7 +717,13 @@
     state.input = ''; state.loading = true; state.stage = 'chat'
     render()
     async function callChat() {
-      const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: state.messages }) })
+      // Testmodus: markeer de vraag met #test (backend strip het en zet isTest). State blijft schoon.
+      let payloadMsgs = state.messages
+      if (testModusAan()) {
+        payloadMsgs = state.messages.map((m, idx) =>
+          (idx === state.messages.length - 1 && m.role === 'user') ? { ...m, content: '#test ' + m.content } : m)
+      }
+      const res = await fetch(`${API_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: payloadMsgs }) })
       if (!res.ok) throw new Error('http ' + res.status)
       const data = await res.json()
       if (!data || typeof data.reply !== 'string') throw new Error('geen antwoord')
