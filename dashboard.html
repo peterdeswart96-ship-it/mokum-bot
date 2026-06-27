@@ -563,12 +563,13 @@
         <div class="card-title">Zoeken & filteren</div>
         <div class="grid-2">
           <input type="text" id="zoek-input" placeholder="Zoek in vragen en antwoorden..." oninput="zoekGesprekken()" />
-          <div style="display:flex;gap:8px;">
-            <div style="flex:1;"><input type="date" id="zoek-van" /></div>
-            <div style="flex:1;"><input type="date" id="zoek-tot" /></div>
-            <button class="btn" id="groepeer-btn" onclick="toggleGroeperen()" title="Dezelfde vragen samenvoegen tot één rij">🔁 Groeperen</button>
-            <button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()" title="Toon alleen gesprekken waar de bot mogelijk geen antwoord wist">⚠️ Onbeantwoord</button>
-            <button class="btn" onclick="resetZoek()">Reset</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <div style="flex:1;min-width:120px;"><input type="date" id="zoek-van" /></div>
+            <div style="flex:1;min-width:120px;"><input type="date" id="zoek-tot" /></div>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" id="groepeer-btn" onclick="toggleGroeperen()">🔁 Groeperen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Voegt identieke vragen samen tot één rij met een ×-teller, zodat je sneller overzicht hebt.</span></span></span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()">⚠️ Onbeantwoord</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Toont alleen gesprekken waarin de bot waarschijnlijk geen antwoord wist — handig om verbeterpunten te vinden.</span></span></span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" id="filter-test" onclick="toggleTest()">🧪 Testvragen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Toont alleen testvragen. Een gesprek is een testvraag als de vraag met <b>#test</b> begon, of als je 'm hier handmatig als test markeerde.</span></span></span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" onclick="resetZoek()">Reset</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Wist het zoekveld, de datums en alle actieve filters (onbeantwoord/test).</span></span></span>
           </div>
         </div>
         <div style="font-size:12px;color:#555;margin-top:8px;" id="zoek-status"></div>
@@ -603,6 +604,7 @@
       <!-- SUBTAB: OVERZICHT -->
       <div id="htab-overzicht">
         <div class="insight-box" style="margin-bottom:16px;">✅ De Mokum Magic 8 Ball is live op <strong>poolen-amsterdam.nl</strong>. Bezoekers zien de bot rechtsonder op elke pagina.</div>
+        <div class="insight-box" style="margin-bottom:16px;background:#0a1420;border-left-color:#2b6cb0;">🧪 <strong>Aan het testen?</strong> Begin je vraag met <code style="background:#11243a;padding:1px 6px;border-radius:4px;">#test</code> (bijv. <em>"#test hoeveel pooltafels zijn er?"</em>). De bot antwoordt gewoon, maar het gesprek krijgt in het dashboard (tab <strong>Gesprekken</strong>) een 🧪-markering en blijft zo apart van de echte bezoekersvragen. Geef dit ook door aan Nick & Mark als zij testen. Je kunt gesprekken daar ook handmatig als test markeren of verwijderen.</div>
         <div class="card-title">Hoe werkt het?</div>
         <div class="card">
           <div class="row"><span class="row-label">🌐 WordPress site</span><span class="row-val" style="font-size:13px;">Bot laadt automatisch via één script tag</span></div>
@@ -877,6 +879,8 @@ const API = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.
 let alleGesprekken = []
 let gefilterd = []
 let alleenOnbeantwoord = false
+let alleenTest = false
+let _gesprekRijen = []
 
 // Login — verificatie via backend, hash staat niet meer in de frontend
 async function login() {
@@ -1577,6 +1581,12 @@ function botKonNietAntwoorden(g) {
   return indicatoren.some(i => alles.includes(i))
 }
 
+// Testvraag? Via de isTest-vlag (backend, bij #test of handmatig gemarkeerd) of een #test-prefix in een vraag.
+function isTestGesprek(g) {
+  if (g.isTest) return true
+  return (g.messages || []).some(m => m && m.role === "user" && /^\s*#test\b/i.test(m.content || ""))
+}
+
 // Gesprekken tab
 let groeperen = true
 function eersteVraagVan(g){ return g.messages?.find(m => m.role === "user")?.content || "Geen vraag" }
@@ -1604,20 +1614,23 @@ function renderGesprekken() {
       const key = eersteVraagVan(g).toLowerCase().trim().replace(/\s+/g, " ")
       const cur = map.get(key)
       if (!cur) {
-        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g) })
+        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), naams: g.naam ? [g.naam] : [] })
       } else {
         cur.count++
         cur.laatste = Math.max(cur.laatste, new Date(g.timestamp).getTime())
         if ((g.messages?.length || 0) > (cur.rep.messages?.length || 0)) cur.rep = g // langste = meest complete gesprek
         if (botKonNietAntwoorden(g)) cur.onbeantwoord = true
+        if (isTestGesprek(g)) cur.test = true
+        if (g.naam) cur.naams.push(g.naam)
       }
     })
     rijen = [...map.values()].sort((a, b) => b.laatste - a.laatste)
     document.getElementById("lijst-count").textContent = `${rijen.length} unieke vragen · ${gefilterd.length} gesprekken`
   } else {
-    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g) }))
+    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), naams: g.naam ? [g.naam] : [] }))
     document.getElementById("lijst-count").textContent = `${gefilterd.length} gesprekken`
   }
+  _gesprekRijen = rijen
 
   lijst.innerHTML = rijen.slice(0, 150).map((row, i) => {
     const g = row.rep
@@ -1631,7 +1644,7 @@ function renderGesprekken() {
     return `<div class="convo-item" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div style="flex:1;">
-          <div class="convo-title">${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${kort}</div>
+          <div class="convo-title">${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
           <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}</div>
         </div>
         <span style="color:#555;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
@@ -1640,6 +1653,10 @@ function renderGesprekken() {
         ${row.count > 1 ? `<div style="font-size:11px;color:#888;margin-bottom:6px;">Deze vraag komt ${row.count}× voor — hieronder het meest complete gesprek.</div>` : ""}
         ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 500)}${(m.content?.length || 0) > 500 ? "..." : ""}</div>`).join("")}
         ${g.reply ? `<div class="msg-bot"><strong style="color:#cc0000;font-size:11px;">ANTWOORD:</strong><br>${g.reply.substring(0, 500)}${g.reply.length > 500 ? "..." : ""}</div>` : ""}
+        <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
+          <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Markeert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haalt de markering weg). Testvragen krijgen een 🧪 en zijn apart te filteren.</span></span></span>
+          <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;color:#ff8a8a;border-color:#6b2626;" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief uit de opslag. Kan niet ongedaan worden gemaakt.</span></span></span>
+        </div>
       </div>
     </div>`
   }).join("")
@@ -1660,9 +1677,10 @@ function zoekGesprekken() {
     if (tot && new Date(g.timestamp) > new Date(tot + "T23:59:59")) return false
     if (zoek && !g.messages?.some(m => m.content?.toLowerCase().includes(zoek)) && !g.reply?.toLowerCase().includes(zoek)) return false
     if (alleenOnbeantwoord && !botKonNietAntwoorden(g)) return false
+    if (alleenTest && !isTestGesprek(g)) return false
     return true
   })
-  document.getElementById("zoek-status").textContent = zoek || van || tot || alleenOnbeantwoord ? `${gefilterd.length} resultaten` : ""
+  document.getElementById("zoek-status").textContent = zoek || van || tot || alleenOnbeantwoord || alleenTest ? `${gefilterd.length} resultaten` : ""
   renderGesprekken()
 }
 
@@ -1674,14 +1692,54 @@ function toggleOnbeantwoord() {
   zoekGesprekken()
 }
 
+function toggleTest() {
+  alleenTest = !alleenTest
+  const b = document.getElementById("filter-test")
+  if (alleenTest) { b.style.background = "#cc0000"; b.style.color = "#fff"; b.style.borderColor = "#cc0000" }
+  else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
+  zoekGesprekken()
+}
+
+// Beheer-acties op gesprekken (wachtwoord-beveiligd in de backend)
+async function gesprekActie(payload) {
+  const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
+  const resp = await fetch(`${API}/gesprekken?action=${payload.action}`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, wachtwoord }),
+  })
+  return resp.json()
+}
+async function markTestGesprek(i, isTest) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const naams = row.naams || []
+  if (!naams.length) return
+  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, isTest }) } catch {} }
+  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.isTest = isTest })
+  zoekGesprekken()
+}
+async function deleteGesprek(i) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const naams = row.naams || []
+  if (!naams.length) return
+  if (!confirm(`${naams.length > 1 ? naams.length + " gesprekken van deze vraag" : "Dit gesprek"} definitief verwijderen?`)) return
+  let fout = 0
+  for (const naam of naams) { try { const r = await gesprekActie({ action: "delete", blob: naam }); if (!r.success) fout++ } catch { fout++ } }
+  alleGesprekken = alleGesprekken.filter(g => !naams.includes(g.naam))
+  zoekGesprekken()
+  if (fout) alert(`${fout} gesprek(ken) konden niet verwijderd worden.`)
+}
+
 function resetZoek() {
   document.getElementById("zoek-input").value = ""
   document.getElementById("zoek-van").value = ""
   document.getElementById("zoek-tot").value = ""
   document.getElementById("zoek-status").textContent = ""
   alleenOnbeantwoord = false
+  alleenTest = false
   const b = document.getElementById("filter-onbeantwoord")
   if (b) { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
+  const bt = document.getElementById("filter-test")
+  if (bt) { bt.style.background = ""; bt.style.color = ""; bt.style.borderColor = "" }
   gefilterd = [...alleGesprekken]
   renderGesprekken()
 }
