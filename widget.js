@@ -278,6 +278,10 @@
       .mokum-chip-accent:hover { background: #990000; }
       .mokum-chip-inline { width: auto !important; display: inline-block !important; }
       .mokum-back-btn { background: none; border: none; color: #888; font-size: 12px; padding: 4px 0; text-align: left; cursor: pointer; }
+      .mokum-carousel { position: relative; margin: 6px 0; display: inline-block; max-width: 100%; }
+      .mokum-carousel .mokum-slide { margin: 0 !important; display: block; }
+      .mokum-carousel-btn { position: absolute; right: 8px; bottom: 12px; background: rgba(0,0,0,0.72); color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+      .mokum-carousel-btn:hover { background: rgba(0,0,0,0.9); }
     `
     document.head.appendChild(style)
   }
@@ -343,9 +347,31 @@
   function applyInline(text) {
     return text
       // Afbeeldingen EERST (anders pakt de link-regex het [..](..)-deel) — klikbaar naar apart venster
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer"><img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:6px 0;display:block;cursor:zoom-in;" loading="lazy"></a>')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer"><img src="$2" alt="$1" style="max-width:100%;max-height:300px;border-radius:8px;margin:6px 0;display:block;cursor:zoom-in;" loading="lazy"></a>')
       .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#fff;font-weight:700;">$1</strong>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#ff6b6b;text-decoration:underline;">$1</a>')
+  }
+
+  // Meerdere foto's in één antwoord → toon er één + een 'meer/more'-knop rechtsonder om te bladeren
+  function enhanceCarousel(bubble) {
+    const anchors = Array.from(bubble.querySelectorAll('a')).filter(a => a.children.length === 1 && a.children[0].tagName === 'IMG')
+    if (anchors.length < 2) return
+    const firstWrap = anchors[0].closest('p') || anchors[0]
+    const car = document.createElement('div')
+    car.className = 'mokum-carousel'
+    firstWrap.parentNode.insertBefore(car, firstWrap)
+    anchors.forEach((a, i) => { a.classList.add('mokum-slide'); a.style.display = i === 0 ? 'block' : 'none'; car.appendChild(a) })
+    // ruim lege paragrafen op die overbleven na het verplaatsen
+    Array.from(bubble.querySelectorAll('p')).forEach(p => { if (!p.textContent.trim() && !p.querySelector('img')) p.remove() })
+    const total = anchors.length
+    let idx = 0
+    const moreTxt = (state.lang === 'en') ? 'more' : 'meer'
+    const b = document.createElement('button')
+    b.type = 'button'; b.className = 'mokum-carousel-btn'
+    const lab = () => { b.innerHTML = `${moreTxt} ${idx + 1}/${total} ›` }
+    lab()
+    b.onclick = (e) => { e.preventDefault(); e.stopPropagation(); anchors[idx].style.display = 'none'; idx = (idx + 1) % total; anchors[idx].style.display = 'block'; lab() }
+    car.appendChild(b)
   }
 
   function el(tag, style, html, attrs) {
@@ -426,7 +452,7 @@
       state.messages.forEach(msg => {
         const wrap = el('div', `display:flex;justify-content:${msg.role === 'user' ? 'flex-end' : 'flex-start'};`)
         const bubble = el('div', null, null, { class: msg.role === 'user' ? 'mokum-msg-user' : 'mokum-msg-bot' })
-        if (msg.role === 'assistant') bubble.innerHTML = formatBotMessage(msg.content)
+        if (msg.role === 'assistant') { bubble.innerHTML = formatBotMessage(msg.content); enhanceCarousel(bubble) }
         else bubble.textContent = msg.content
         wrap.appendChild(bubble)
         body.appendChild(wrap)
