@@ -106,10 +106,11 @@ const translations = {
         "Hoe vroeg moet ik er zijn voor een grote wedstrijd?",
       ],
       "keu-reparatie": [
-        "Kunnen jullie mijn keu repareren?",
-        "Wat kost een keu reparatie?",
-        "Hoe lang duurt een reparatie?",
-        "Welke reparaties doen jullie?",
+        "Wat kost een nieuwe pomerans (tip)?",
+        "Kunnen jullie een ferrule (dop) repareren?",
+        "Kan ik mijn eigen pomerans laten plaatsen?",
+        "Welke reparaties doet Renato?",
+        "Is er een WhatsApp-groep voor keu-reparatie?",
       ],
       "keu-shop": [
         "Verkopen jullie keuen?",
@@ -292,10 +293,11 @@ const translations = {
         "How early should I arrive for a big match?",
       ],
       "keu-reparatie": [
-        "Can you repair my cue?",
-        "How much does a cue repair cost?",
-        "How long does a repair take?",
-        "What kind of repairs do you do?",
+        "What does a new cue tip cost?",
+        "Can you repair a ferrule?",
+        "Can I bring my own tip to be fitted?",
+        "What repairs does Renato do?",
+        "Is there a WhatsApp group for cue repair?",
       ],
       "keu-shop": [
         "Do you sell cues?",
