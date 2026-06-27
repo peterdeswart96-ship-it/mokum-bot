@@ -239,18 +239,43 @@ const markdownStyles = {
   a: { color: "#ff6b6b", textDecoration: "underline" },
 }
 
-function BotMessage({ content }) {
+// Carousel: meerdere foto's → toon er één + 'meer/more'-knop rechtsonder om te bladeren
+function FotoCarousel({ images, lang }) {
+  const [idx, setIdx] = useState(0)
+  const more = lang === "en" ? "more" : "meer"
+  const img = images[idx % images.length]
+  return (
+    <div style={{ position: "relative", display: "inline-block", maxWidth: "100%", margin: "6px 0" }}>
+      <a href={img.src} target="_blank" rel="noopener noreferrer">
+        <img src={img.src} alt={img.alt} style={{ maxWidth: "100%", maxHeight: "300px", borderRadius: "8px", display: "block", cursor: "zoom-in" }} loading="lazy" />
+      </a>
+      <button type="button" onClick={(e) => { e.preventDefault(); setIdx((idx + 1) % images.length) }}
+        style={{ position: "absolute", right: "8px", bottom: "12px", background: "rgba(0,0,0,0.72)", color: "#fff", border: "1px solid rgba(255,255,255,0.28)", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer", lineHeight: 1, boxShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>
+        {more} {(idx % images.length) + 1}/{images.length} ›
+      </button>
+    </div>
+  )
+}
+
+function BotMessage({ content, lang }) {
+  const imgRe = /!\[([^\]]*)\]\(([^)]+)\)/g
+  const images = [...content.matchAll(imgRe)].map(m => ({ alt: m[1], src: m[2] }))
+  const textPart = images.length >= 2 ? content.replace(imgRe, "").trim() : content
+  const md = (
+    <ReactMarkdown components={{
+      p: ({ children }) => <p style={markdownStyles.p}>{children}</p>,
+      strong: ({ children }) => <strong style={markdownStyles.strong}>{children}</strong>,
+      ul: ({ children }) => <ul style={markdownStyles.ul}>{children}</ul>,
+      ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
+      li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
+      a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
+      img: ({ src, alt }) => <a href={src} target="_blank" rel="noopener noreferrer"><img src={src} alt={alt} style={{ maxWidth: "100%", maxHeight: "300px", borderRadius: "8px", margin: "6px 0", display: "block", cursor: "zoom-in" }} loading="lazy" /></a>,
+    }}>{textPart}</ReactMarkdown>
+  )
   return (
     <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.blackCard, color: C.white, border: `1px solid ${C.border}` }}>
-      <ReactMarkdown components={{
-        p: ({ children }) => <p style={markdownStyles.p}>{children}</p>,
-        strong: ({ children }) => <strong style={markdownStyles.strong}>{children}</strong>,
-        ul: ({ children }) => <ul style={markdownStyles.ul}>{children}</ul>,
-        ol: ({ children }) => <ol style={markdownStyles.ol}>{children}</ol>,
-        li: ({ children }) => <li style={markdownStyles.li}>{children}</li>,
-        a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" style={markdownStyles.a}>{children}</a>,
-        img: ({ src, alt }) => <a href={src} target="_blank" rel="noopener noreferrer"><img src={src} alt={alt} style={{ maxWidth: "100%", borderRadius: "8px", margin: "6px 0", display: "block", cursor: "zoom-in" }} loading="lazy" /></a>,
-      }}>{content}</ReactMarkdown>
+      {md}
+      {images.length >= 2 && <FotoCarousel images={images} lang={lang} />}
     </div>
   )
 }
@@ -500,7 +525,7 @@ export default function ChatWidget() {
                 {msg.role === "user" ? (
                   <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 2px 12px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.red, color: C.white }}>{msg.content}</div>
                 ) : (
-                  <BotMessage content={msg.content} />
+                  <BotMessage content={msg.content} lang={lang} />
                 )}
               </div>
             ))}
