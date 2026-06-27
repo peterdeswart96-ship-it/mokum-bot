@@ -1373,6 +1373,10 @@ async function laadGesprekken() {
   }
 }
 
+// Analyses sluiten testvragen uit (#test of handmatig gemarkeerd). De Gesprekken-lijst toont ze wél.
+function echteGesprekken() { return alleGesprekken.filter(g => !isTestGesprek(g)) }
+function gefilterdEcht() { return gefilterd.filter(g => !isTestGesprek(g)) }
+
 function updateAlles() {
   updateMetricsMarkNick()
   updateMetricsSander()
@@ -1389,19 +1393,21 @@ function updateMetricsMarkNick() {
   const vandaag = nu.toDateString()
   const weekGeleden = new Date(nu); weekGeleden.setDate(weekGeleden.getDate() - 7)
 
-  document.getElementById("m-totaal").textContent = alleGesprekken.length
-  document.getElementById("m-vandaag").textContent = gefilterd.filter(g => new Date(g.timestamp).toDateString() === vandaag).length
-  document.getElementById("m-week").textContent = gefilterd.filter(g => new Date(g.timestamp) >= weekGeleden).length
-  document.getElementById("m-actief").textContent = new Set(gefilterd.map(g => new Date(g.timestamp).toDateString())).size
+  const bron = gefilterdEcht()
+  document.getElementById("m-totaal").textContent = echteGesprekken().length
+  document.getElementById("m-vandaag").textContent = bron.filter(g => new Date(g.timestamp).toDateString() === vandaag).length
+  document.getElementById("m-week").textContent = bron.filter(g => new Date(g.timestamp) >= weekGeleden).length
+  document.getElementById("m-actief").textContent = new Set(bron.map(g => new Date(g.timestamp).toDateString())).size
 }
 
 // Metrics Sander
 function updateMetricsSander() {
-  const uniekVragen = new Set(alleGesprekken.flatMap(g => (g.messages || []).filter(m => m.role === "user").map(m => m.content?.toLowerCase().trim().substring(0, 60)))).size
-  const nlGesprekken = alleGesprekken.filter(g => detecteerTaal(g) === "nl").length
-  const enGesprekken = alleGesprekken.filter(g => detecteerTaal(g) === "en").length
+  const bron = echteGesprekken()
+  const uniekVragen = new Set(bron.flatMap(g => (g.messages || []).filter(m => m.role === "user").map(m => m.content?.toLowerCase().trim().substring(0, 60)))).size
+  const nlGesprekken = bron.filter(g => detecteerTaal(g) === "nl").length
+  const enGesprekken = bron.filter(g => detecteerTaal(g) === "en").length
 
-  document.getElementById("s-totaal").textContent = alleGesprekken.length
+  document.getElementById("s-totaal").textContent = bron.length
   document.getElementById("s-uniek-vragen").textContent = uniekVragen
   document.getElementById("s-nl").textContent = nlGesprekken
   document.getElementById("s-en").textContent = enGesprekken
@@ -1420,7 +1426,8 @@ function detecteerTaal(gesprek) {
 // Chart: gesprekken per dag
 function renderChartDagen() {
   const container = document.getElementById("chart-dagen")
-  if (gefilterd.length === 0) { container.innerHTML = '<div class="empty">Geen data</div>'; return }
+  const bron = gefilterdEcht()
+  if (bron.length === 0) { container.innerHTML = '<div class="empty">Geen data</div>'; return }
 
   const dagenMap = {}
   const nu = new Date()
@@ -1429,7 +1436,7 @@ function renderChartDagen() {
     const key = d.toISOString().split("T")[0]
     dagenMap[key] = 0
   }
-  gefilterd.forEach(g => {
+  bron.forEach(g => {
     const key = new Date(g.timestamp).toISOString().split("T")[0]
     if (dagenMap[key] !== undefined) dagenMap[key]++
   })
@@ -1474,10 +1481,11 @@ function detecteerOnderwerp(gesprek) {
 
 function renderChartOnderwerpen() {
   const container = document.getElementById("chart-onderwerpen")
-  if (gefilterd.length === 0) { container.innerHTML = '<div class="empty">Geen data</div>'; return }
+  const bron = gefilterdEcht()
+  if (bron.length === 0) { container.innerHTML = '<div class="empty">Geen data</div>'; return }
 
   const counts = {}
-  gefilterd.forEach(g => {
+  bron.forEach(g => {
     const o = detecteerOnderwerp(g)
     counts[o] = (counts[o] || 0) + 1
   })
@@ -1505,7 +1513,7 @@ function renderChartOnderwerpen() {
 
 // Kosten
 function renderKosten() {
-  const n = gefilterd.length
+  const n = gefilterdEcht().length
   const tokensPerGesprek = 3 * (800 + 600)  // 3 berichten gemiddeld
   const totaalTokens = n * tokensPerGesprek
   const input = (n * 3 * 800 / 1e6) * 3    // $3 per 1M input tokens
@@ -1519,9 +1527,10 @@ function renderKosten() {
 
 // Taalverdeling
 function renderTaalverdeling() {
-  const nl = alleGesprekken.filter(g => detecteerTaal(g) === "nl").length
-  const en = alleGesprekken.filter(g => detecteerTaal(g) === "en").length
-  const totaal = alleGesprekken.length || 1
+  const bron = echteGesprekken()
+  const nl = bron.filter(g => detecteerTaal(g) === "nl").length
+  const en = bron.filter(g => detecteerTaal(g) === "en").length
+  const totaal = bron.length || 1
   const nlPct = Math.round((nl / totaal) * 100)
   const enPct = Math.round((en / totaal) * 100)
 
@@ -1755,10 +1764,12 @@ async function startAnalyse(type) {
 
   btn.disabled = true
   btn.textContent = "⏳ Analyseren..."
-  resultaat.innerHTML = '<div class="loading">AI analyseert ' + Math.min(gefilterd.length, 50) + ' gesprekken...</div>'
+  // Testvragen tellen niet mee in de analyse
+  const analyseBron = gefilterdEcht()
+  resultaat.innerHTML = '<div class="loading">AI analyseert ' + Math.min(analyseBron.length, 50) + ' gesprekken...</div>'
 
   // Bouw de gespreksdata op — wordt naar de backend gestuurd voor analyse
-  const sample = gefilterd.slice(0, 50)
+  const sample = analyseBron.slice(0, 50)
 
   try {
     // Via de backend — voorkomt CORS problemen bij directe Anthropic API aanroep
