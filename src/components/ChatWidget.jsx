@@ -282,7 +282,7 @@ function BotMessage({ content, lang }) {
     }}>{textPart}</ReactMarkdown>
   )
   return (
-    <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.blackCard, color: C.white, border: `1px solid ${C.border}` }}>
+    <div style={{ maxWidth: "85%", padding: "6px", borderRadius: "12px 12px 12px 2px", fontSize: "14px", lineHeight: "1.55", backgroundColor: "#2d2d2d", color: C.white, border: "none" }}>
       {md}
       {images.length >= 2 && <FotoCarousel images={images} lang={lang} />}
     </div>
@@ -536,7 +536,7 @@ export default function ChatWidget() {
             {messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
                 {msg.role === "user" ? (
-                  <div style={{ maxWidth: "85%", padding: "10px 14px", borderRadius: "12px 12px 2px 12px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.red, color: C.white }}>{msg.content}</div>
+                  <div style={{ maxWidth: "85%", padding: "6px", borderRadius: "12px 12px 2px 12px", fontSize: "14px", lineHeight: "1.55", backgroundColor: C.red, color: C.white }}>{msg.content}</div>
                 ) : (
                   <BotMessage content={msg.content} lang={lang} />
                 )}

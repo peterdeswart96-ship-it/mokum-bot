@@ -280,12 +280,13 @@
       .mokum-chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
       .mokum-chat-body::-webkit-scrollbar { width: 4px; }
       .mokum-chat-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
-      .mokum-msg-bot { max-width: 85%; padding: 10px 14px; border-radius: 12px 12px 12px 2px; font-size: 14px; line-height: 1.55; background: #161616; color: #fff; border: 1px solid #2a2a2a; }
+      .mokum-msg-bot { max-width: 85%; padding: 6px; border-radius: 12px 12px 12px 2px; font-size: 14px; line-height: 1.55; background: #2d2d2d; color: #fff; border: none; }
       .mokum-msg-bot p { margin: 0 0 6px 0; }
+      .mokum-msg-bot > *:last-child { margin-bottom: 0 !important; }
       .mokum-msg-bot strong { color: #fff; font-weight: 700; }
       .mokum-msg-bot ul, .mokum-msg-bot ol { margin: 4px 0; padding-left: 16px; }
       .mokum-msg-bot li { margin: 2px 0; line-height: 1.6; }
-      .mokum-msg-user { max-width: 85%; padding: 10px 14px; border-radius: 12px 12px 2px 12px; font-size: 14px; line-height: 1.55; background: #cc0000; color: #fff; }
+      .mokum-msg-user { max-width: 85%; padding: 6px; border-radius: 12px 12px 2px 12px; font-size: 14px; line-height: 1.55; background: #cc0000; color: #fff; }
       .mokum-chip { font-size: 13px; font-weight: 400 !important; padding: 8px 14px; border-radius: 20px; background: transparent; color: #fff; border: 1px solid #2a2a2a; transition: all 0.15s ease; text-align: left; line-height: 1.4; display: block; width: 100%; }
       .mokum-chip:hover { background: #2a2a2a; border-color: #444; }
       .mokum-chip-accent { background: #cc0000; border: none; }
