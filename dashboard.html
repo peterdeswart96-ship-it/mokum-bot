@@ -153,15 +153,15 @@
   .foto-inp:focus { outline: none; border-color: #cc0000; }
   .foto-lbl { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
   /* Foto's-tab: compacter (minder hoogte, ruimte effectiever) */
-  #tab-fotos .card { padding: 0.7rem 0.95rem; margin-bottom: 0.5rem; }
-  #tab-fotos .card-title { margin-bottom: 7px; }
-  #tab-fotos .insight-box { padding: 8px 13px; margin-bottom: 7px; font-size: 12.5px; line-height: 1.4; }
-  #tab-fotos input[type=text], #tab-fotos select { padding: 6px 9px; font-size: 12.5px; }
-  #tab-fotos input[type=file] { font-size: 12px; }
-  #tab-fotos .btn-red { padding: 8px 16px; font-size: 13px; }
-  #tab-fotos .gezicht-switch { padding: 3px 8px; }
+  #tab-fotos .card { padding: 0.5rem 0.8rem; margin-bottom: 0.35rem; }
+  #tab-fotos .card-title { margin-bottom: 5px; }
+  #tab-fotos .insight-box { padding: 6px 11px; margin-bottom: 5px; font-size: 12px; line-height: 1.35; }
+  #tab-fotos input[type=text], #tab-fotos select { padding: 5px 8px; font-size: 12px; }
+  #tab-fotos input[type=file] { font-size: 11.5px; }
+  #tab-fotos .btn-red { padding: 6px 14px; font-size: 12.5px; }
+  #tab-fotos .gezicht-switch { padding: 2px 7px; }
   /* filterbalk boven het foto-overzicht */
-  .foto-filterbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 9px; }
+  .foto-filterbar { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
   .foto-filterbar select { width: auto; flex: 0 1 auto; max-width: 48%; }
   .foto-filterbar .ffsearch { flex: 1 1 170px; min-width: 130px; width: auto; }
   .foto-filterbar .ffcount { font-size: 11px; color: #777; margin-left: auto; white-space: nowrap; }
@@ -490,15 +490,15 @@
   <div id="tab-fotos" class="tab-content">
     <main>
       <div style="max-width:780px;margin:0 auto;">
-        <div class="insight-box" style="margin-bottom:7px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
-        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — compacter + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
+        <div class="insight-box" style="margin-bottom:5px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
+        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
         <div class="card" style="margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
             <div style="font-size:13px;color:#ccc;flex:1;min-width:220px;">🛡️ <b>Gezichten anonimiseren</b> (AVG). Bij het uploaden worden herkende gezichten automatisch afgedekt. <span style="color:#888;">Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet.</span></div>
             <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#fff;white-space:nowrap;"><input type="checkbox" id="foto-anon-toggle" onchange="setFotoAnon(this.checked)"> Aan</label>
           </div>
-          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid #2a2a2a;">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid #2a2a2a;">
             <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#ccc;">Stijl:
               <select id="foto-anonstijl" onchange="setAnonStijl(this.value)" style="background:#222;color:#fff;border:1px solid #444;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;">
                 <option value="blur">Blur (vervagen)</option>
@@ -513,7 +513,7 @@
 
         <div class="card" style="margin-bottom:16px;">
           <div class="card-title">Foto uploaden</div>
-          <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;flex-direction:column;gap:5px;">
             <input type="file" id="foto-file" accept="image/*,application/pdf" style="color:#ccc;" />
             <label class="gezicht-switch" style="align-self:flex-start;"><input type="checkbox" id="foto-claude-label" checked onchange="toggleClaudeLabel()"> 🤖 Door Claude laten labelen (categorie + onderschrift + trigger words)</label>
             <div id="foto-velden" style="display:none;flex-direction:column;gap:10px;">
@@ -533,8 +533,8 @@
 
         <div class="card" style="margin-bottom:16px;">
           <div class="card-title">Bulk uploaden</div>
-          <div style="font-size:12px;color:#888;margin-bottom:6px;">Selecteer meerdere foto's tegelijk. Ze komen binnen als <b>"Te labelen"</b> (nog niet zichtbaar voor bezoekers). Vraag daarna Claude om ze te categoriseren en van trigger words te voorzien.</div>
-          <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="font-size:11.5px;color:#888;margin-bottom:5px;line-height:1.35;">Selecteer meerdere foto's tegelijk. Ze komen binnen als <b>"Te labelen"</b> (nog niet zichtbaar voor bezoekers). Vraag daarna Claude om ze te categoriseren en van trigger words te voorzien.</div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
             <input type="file" id="foto-bulk-file" accept="image/*,application/pdf" multiple style="color:#ccc;" />
             <button class="btn-red" onclick="bulkUploadFotos()" id="foto-bulk-btn">Bulk uploaden</button>
             <div id="foto-bulk-status" style="font-size:13px;color:#888;"></div>
@@ -1166,12 +1166,12 @@ function renderFotos() {
   lijst.forEach(f => { const c = f.categorie || "Overig"; (groepen[c] = groepen[c] || []).push(f) })
   let html = ""
   Object.keys(groepen).sort().forEach(cat => {
-    html += `<div style="margin:10px 0 4px;font-weight:700;color:#fff;font-size:13px;">${fEsc(cat)}</div>`
+    html += `<div style="margin:7px 0 3px;font-weight:700;color:#fff;font-size:13px;">${fEsc(cat)}</div>`
     groepen[cat].forEach(f => {
       const isPdf = /\.pdf$/i.test(f.bestand || "")
       const preview = isPdf
-        ? `<div style="width:54px;height:54px;border-radius:8px;background:#1f1f1f;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📄</div>`
-        : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid #2a2a2a;flex-shrink:0;" loading="lazy"></a>`
+        ? `<div style="width:46px;height:46px;border-radius:8px;background:#1f1f1f;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>`
+        : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid #2a2a2a;flex-shrink:0;" loading="lazy"></a>`
       const weergaveLabel = f.weergave === "venster" ? "🪟 Apart venster" : "🖼️ Inline"
       const statusLabel = f.actief === false ? "<span style='color:#ff6b6b;'>uit</span>" : "<span style='color:#7bd88f;'>actief</span>"
       const gezichtLabel = f.heeftGezichten ? (f.toonEcht ? " · <span style='color:#ffae6b;'>😶 echte gezichten</span>" : " · <span style='color:#7bd88f;'>🛡️ geanonimiseerd</span>") : ""
@@ -1180,24 +1180,24 @@ function renderFotos() {
       const btn = (cls, onclick, label, tip) =>
         `<span style="display:inline-flex;align-items:center;gap:3px;"><button class="fbtn ${cls}" onclick="${onclick}">${label}</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">${fEsc(tip)}</span></span></span>`
       const gezichtSwitch = f.heeftGezichten
-        ? `<div style="margin-top:7px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        ? `<div style="margin-top:5px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
              <label class="gezicht-switch"><input type="checkbox" ${f.toonEcht ? "checked" : ""} onchange="toggleEchteGezichten('${b}', this)"> Echte gezichten tonen</label>
              <span class="tip"><span class="ic">ℹ️</span><span class="tipbox">AVG: standaard zijn gezichten geanonimiseerd (blur). Zet dit alleen aan als de afgebeelde personen toestemming hebben gegeven (bijv. eigen medewerkers).</span></span>
            </div>`
         : ""
-      html += `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px;border:1px solid #2a2a2a;border-radius:10px;margin-bottom:6px;background:#161616;">
+      html += `<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border:1px solid #2a2a2a;border-radius:9px;margin-bottom:4px;background:#161616;">
         ${preview}
         <div style="flex:1;min-width:0;">
           <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
-          <div style="font-size:11px;color:#888;margin:3px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
-          ${f.gelabeldDoorClaude ? '<div style="font-size:10px;color:#9ecbff;background:#14324a;border:1px solid #1f567d;border-radius:6px;padding:2px 7px;display:inline-block;margin:2px 0;">🤖 Door Claude gelabeld — pas hieronder gerust handmatig aan</div>' : ""}
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+          <div style="font-size:11px;color:#888;margin:2px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
+          ${f.gelabeldDoorClaude ? '<div style="font-size:10px;color:#9ecbff;background:#14324a;border:1px solid #1f567d;border-radius:6px;padding:1px 7px;display:inline-block;margin:1px 0;">🤖 Door Claude gelabeld — pas hieronder gerust handmatig aan</div>' : ""}
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:3px;">
             <div><div class="foto-lbl">Categorie</div><input type="text" value="${fAttr(f.categorie || "")}" id="cat-${fAttr(f.bestand)}" placeholder="bijv. Pool, Darts, Bar & lounge" class="foto-inp"></div>
             <div><div class="foto-lbl">Onderschrift</div><input type="text" value="${fAttr(f.onderschrift || "")}" id="ond-${fAttr(f.bestand)}" placeholder="bijv. De bar van Mokum" class="foto-inp"></div>
             <div><div class="foto-lbl">Trigger words <span style="color:#666;font-weight:400;">(komma-gescheiden)</span></div><input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="bijv. bar, borrel, biertje, tap" class="foto-inp"></div>
           </div>
           ${gezichtSwitch}
-          <div style="display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;align-items:center;">
+          <div style="display:flex;gap:7px;margin-top:5px;flex-wrap:wrap;align-items:center;">
             ${btn("fbtn-save", `saveFotoVelden('${b}')`, "💾 Opslaan", "Slaat categorie, onderschrift en trigger words op (de woorden waarbij de bot deze foto toont).")}
             ${btn("fbtn-view", `toggleFotoWeergave('${b}','${f.weergave === "venster" ? "inline" : "venster"}')`, `↔ Maak ${f.weergave === "venster" ? "inline" : "apart venster"}`, "Wissel weergave: inline (klein in de chat) of apart venster (grote foto/PDF die in een nieuw tabblad opent).")}
             ${btn(f.actief === false ? "fbtn-active" : "fbtn-off", `toggleFotoActief('${b}',${f.actief === false})`, f.actief === false ? "✓ Activeren" : "⏸ Deactiveren", "Actief = zichtbaar voor bezoekers in de chat. Gedeactiveerd = de bot toont deze foto niet.")}
