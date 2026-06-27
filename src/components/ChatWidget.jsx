@@ -484,7 +484,7 @@ export default function ChatWidget() {
     ? `${windowWidth - 16}px`
     : (size === "groot" ? "calc(100vw - 32px)" : size === "klein" ? "380px" : "460px")
   const chatHeight = size === "groot"
-    ? (isMobile ? "calc(100dvh - 90px - 16px)" : "calc(100dvh - 32px)")
+    ? (isMobile ? "calc(100dvh - 90px - 16px)" : `calc(100dvh - ${WIDGET_CONFIG.bottom} - 8px)`)
     : `min(${isMobile ? (size === "klein" ? 460 : 600) : (size === "klein" ? 520 : 660)}px, calc(100dvh - 90px - 80px - 16px))`
   const chatRight = isMobile ? "8px" : WIDGET_CONFIG.right
 
@@ -552,11 +552,6 @@ export default function ChatWidget() {
 
             {stage === "topics" && !loading && (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
-                {/* Beginner-uitleg */}
-                <div style={{ fontSize: "13px", color: "#bbb", lineHeight: 1.5, background: C.anthracite, border: `1px solid ${C.border}`, borderRadius: "10px", padding: "10px 12px" }}>
-                  {t.beginnerInfo}
-                </div>
-
                 {/* Inklapbare knop "Voorbeeldvragen per rubriek" */}
                 <button onClick={() => setExamplesOpen((o) => !o)} style={{
                   width: "100%", textAlign: "left", background: C.anthracite, border: "1px solid #3d3d44", borderLeft: `3px solid ${C.red}`,
@@ -674,20 +669,22 @@ export default function ChatWidget() {
                 placeholder={t.placeholder}
                 style={{ flex: 1, minWidth: 0, boxSizing: "border-box", height: "35px", padding: "0 12px", borderRadius: "8px", fontSize: "14px", color: C.white, backgroundColor: C.blackInput, border: `1px solid ${C.border}`, outline: "none" }}
               />
-              <button
-                onClick={() => sendMessage()}
-                disabled={loading}
-                style={{ boxSizing: "border-box", height: "35px", width: "64px", flex: "0 0 64px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
-              >→</button>
-              <select
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                style={{ boxSizing: "border-box", height: "35px", width: "64px", flex: "0 0 64px", background: C.blackInput, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "11.5px", textAlign: "center", textAlignLast: "center", padding: "0 4px", cursor: "pointer" }}
-              >
-                <option value="klein">Small</option>
-                <option value="middel">Medium</option>
-                <option value="groot">MAX</option>
-              </select>
+              <div style={{ display: "flex", gap: "4px", alignItems: "stretch", flexShrink: 0 }}>
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={loading}
+                  style={{ boxSizing: "border-box", height: "35px", width: "64px", flex: "0 0 64px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", color: C.white, backgroundColor: C.red, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1 }}
+                >→</button>
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  style={{ boxSizing: "border-box", height: "35px", width: "64px", flex: "0 0 64px", background: C.blackInput, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "11.5px", textAlign: "center", textAlignLast: "center", padding: "0 4px", cursor: "pointer" }}
+                >
+                  <option value="klein">Small</option>
+                  <option value="middel">Medium</option>
+                  <option value="groot">MAX</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

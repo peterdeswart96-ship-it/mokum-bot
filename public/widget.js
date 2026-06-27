@@ -234,7 +234,7 @@
     // Mobiel: zo schermvullend mogelijk. Dit is de basiswaarde; fitMobileWindow()
     // verfijnt hoogte/bottom via de visualViewport API zodra het toetsenbord opent.
     if (mobile) return 'calc(100dvh - 16px)'
-    if (state.size === 'groot') return 'calc(100dvh - 32px)' // MAX: vrijwel het hele scherm
+    if (state.size === 'groot') return `calc(100dvh - ${WIDGET_CONFIG.bottom} - 8px)` // MAX: heel scherm, mét ruimte voor de bottom-offset zodat de top zichtbaar blijft
     const cap = state.size === 'klein' ? 520 : 660
     return `min(${cap}px, calc(100dvh - 90px - 80px - 16px))`
   }
@@ -478,11 +478,6 @@
       if (state.stage === 'topics' && !state.loading) {
         const container = el('div', 'display:flex;flex-direction:column;gap:10px;margin-top:4px;')
 
-        // Beginner-uitleg
-        container.appendChild(el('div',
-          `font-size:13px;color:#bbb;line-height:1.5;background:${C.anthracite};border:1px solid ${C.border};border-radius:10px;padding:10px 12px;`,
-          t.beginnerInfo))
-
         // Inklapbare knop "Voorbeeldvragen per rubriek" met NEW-badge
         const toggle = btn(
           `<span style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;">
@@ -593,7 +588,10 @@
       sizeSelect.value = state.size
       sizeSelect.onchange = e => { state.size = e.target.value; render() }
 
-      inputRow.append(input, sendBtnEl, sizeSelect)
+      // → en dropdown als strak groepje (weinig ruimte ertussen), iets ruimer van het invoerveld
+      const ctrlGroup = el('div', 'display:flex;gap:4px;align-items:stretch;flex-shrink:0;')
+      ctrlGroup.append(sendBtnEl, sizeSelect)
+      inputRow.append(input, ctrlGroup)
       inputArea.append(inputRow)
 
       win.append(hdr, body, inputArea)
