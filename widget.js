@@ -24,7 +24,7 @@
     anthracite: '#26262b',
   }
 
- const WIDGET_CONFIG = { bottom: '70px', right: '10px', width: '440px' }
+ const WIDGET_CONFIG = { bottom: '70px', right: '24px', width: '440px' } // right=24 lijnt de 8-bal-launcher horizontaal uit met de WhatsApp-knop
 
   // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
   const RATE_MAX = 2
@@ -494,7 +494,7 @@
              </span>
            </span>`,
           () => { state.examplesOpen = !state.examplesOpen; render() },
-          `width:100%;text-align:left;background:${C.anthracite};border:1px solid #3d3d44;border-left:3px solid ${C.red};border-radius:9px;color:${C.white};font-size:12.5px;font-weight:700;padding:6px 12px;`
+          `width:100%;text-align:left;background:${C.anthracite};border:2px solid ${C.red};border-radius:9px;color:${C.white};font-size:12.5px;font-weight:700;padding:6px 12px;`
         )
         container.appendChild(toggle)
 
@@ -504,7 +504,7 @@
             const catWrap = el('div', 'display:flex;flex-direction:column;gap:6px;')
             const catTitle = (t.catTitles && t.catTitles[cat.id]) || cat.id
             catWrap.appendChild(el('div',
-              `margin-top:6px;background:${C.anthracite};border-left:3px solid ${C.red};border-radius:6px;padding:6px 10px;`,
+              `margin-top:6px;background:${C.anthracite};border:2px solid ${C.red};border-radius:6px;padding:6px 10px;`,
               `<span style="font-size:12px;font-weight:800;color:${C.white};letter-spacing:0.07em;text-transform:uppercase;">${cat.emoji} ${catTitle}</span>`))
             const chips = el('div', 'display:flex;flex-wrap:wrap;gap:6px;')
             cat.topics.forEach(tid => {
