@@ -677,7 +677,7 @@ export default function ChatWidget() {
                 <select
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
-                  style={{ boxSizing: "border-box", height: "30px", width: "64px", flex: "0 0 64px", background: C.blackInput, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "11.5px", textAlign: "center", textAlignLast: "center", padding: "0 4px", cursor: "pointer" }}
+                  style={{ boxSizing: "border-box", height: "30px", width: "64px", flex: "0 0 64px", WebkitAppearance: "none", appearance: "none", background: `${C.blackInput} url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='8'%20height='5'%20viewBox='0%200%208%205'%3E%3Cpath%20d='M0%200l4%205%204-5z'%20fill='%23aaaaaa'/%3E%3C/svg%3E") no-repeat right 6px center`, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.white, fontSize: "11.5px", textAlign: "center", textAlignLast: "center", padding: "0 13px 0 5px", cursor: "pointer" }}
                 >
                   <option value="klein">Small</option>
                   <option value="middel">Medium</option>
