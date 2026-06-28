@@ -595,6 +595,63 @@
     </main>
   </div>
 
+  <!-- TAB: FOTO-WIZARD (geleid foto toevoegen) -->
+  <div id="tab-fotowizard" class="tab-content">
+    <main>
+      <div class="card" style="max-width:1032px;margin:0 auto;">
+        <div style="margin-bottom:14px;">
+          <button class="btn" onclick="showAnalyse('vragen')" style="padding:6px 12px;font-size:12px;">← Terug naar Vragen</button>
+        </div>
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:40px;margin-bottom:8px;">📷</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Foto toevoegen</div>
+          <div style="font-size:13px;color:var(--muted);">Claude stelt categorie, onderschrift en trigger words voor — jij vult aan en uploadt.</div>
+        </div>
+        <div style="display:flex;align-items:center;margin-bottom:24px;max-width:360px;">
+          <div class="stap-dot active" id="fw-dot-1">1</div>
+          <div class="stap-lijn" id="fw-lijn-1"></div>
+          <div class="stap-dot" id="fw-dot-2">2</div>
+        </div>
+
+        <!-- Stap 1: foto kiezen + gezichtscheck -->
+        <div id="fw-stap-1">
+          <div class="card-title">Stap 1 — Kies een foto</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Bij het kiezen controleert het dashboard automatisch op gezichten (AVG).</div>
+          <label style="background:transparent;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">📁 Bestand kiezen<input type="file" id="fw-file" accept="image/*" onchange="fwFileGekozen()" style="display:none;"></label>
+          <span id="fw-bestandnaam" style="font-size:13px;color:var(--muted);margin-left:8px;">Geen bestand gekozen</span>
+          <div id="fw-preview" style="margin-top:14px;"></div>
+          <div id="fw-melding" style="margin-top:12px;"></div>
+          <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+            <button class="btn-sm-red" id="fw-volgende" onclick="fotoWizardStap2(this)" disabled style="opacity:0.5;">Volgende →</button>
+          </div>
+        </div>
+
+        <!-- Stap 2: voorstel + aanpassen + uploaden -->
+        <div id="fw-stap-2" style="display:none;">
+          <div class="card-title">Stap 2 — Voorstel van Claude</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">✨ Controleer en pas gerust aan. Voeg extra trigger words toe waar je wil.</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <img id="fw-preview2" alt="" style="width:200px;height:150px;border-radius:10px;border:1px solid var(--border);object-fit:cover;">
+            <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px;">
+              <div><div class="foto-lbl">Categorie</div><input type="text" id="fw-categorie" class="foto-inp" list="fw-cat-list" placeholder="bijv. Darts"><datalist id="fw-cat-list"></datalist></div>
+              <div><div class="foto-lbl">Onderschrift</div><input type="text" id="fw-onderschrift" class="foto-inp" placeholder="bijv. De dartborden bij Mokum"></div>
+              <div><div class="foto-lbl">Trigger words <span style="color:var(--muted);font-weight:400;">(komma-gescheiden, NL + EN)</span></div><input type="text" id="fw-triggers" class="foto-inp" placeholder="bijv. dart, dartbord, darts, dartboard"></div>
+              <div><div class="foto-lbl">Weergave</div>
+                <label style="font-size:13px;margin-right:14px;cursor:pointer;"><input type="radio" name="fw-weergave" value="inline" checked style="accent-color:var(--accent);"> Inline (klein in de chat)</label>
+                <label style="font-size:13px;cursor:pointer;"><input type="radio" name="fw-weergave" value="venster" style="accent-color:var(--accent);"> Apart venster</label>
+              </div>
+            </div>
+          </div>
+          <div id="fw-status" style="margin-top:14px;font-size:13px;"></div>
+          <div style="margin-top:20px;display:flex;justify-content:space-between;">
+            <button class="btn" onclick="fwToonStap(1)">← Terug</button>
+            <button class="btn-sm-red" id="fw-upload" onclick="fotoWizardUpload(this)">📷 Uploaden</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
   <!-- TAB: FOTO'S -->
   <div id="tab-fotos" class="tab-content">
     <main>
@@ -669,8 +726,11 @@
     <main>
 
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-        <div style="font-size:13px;color:var(--muted);">Zie je een vraag die de bot niet (goed) beantwoordt? Voeg er meteen kennis voor toe.</div>
-        <button class="btn-sm-red" onclick="nieuweKennis()">➕ Kennis toevoegen</button>
+        <div style="font-size:13px;color:var(--muted);">Zie je een vraag die de bot niet (goed) beantwoordt? Voeg er meteen kennis of een foto voor toe.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" onclick="nieuweFoto()">📷 Foto toevoegen</button>
+          <button class="btn-sm-red" onclick="nieuweKennis()">➕ Kennis toevoegen</button>
+        </div>
       </div>
 
       <div class="card">
@@ -1395,6 +1455,123 @@ async function fotoActie(payload) {
   const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
   const resp = await fetch(`${API}/fotos`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, wachtwoord }) })
   return resp.json()
+}
+
+// ===== Geleide foto-wizard (foto kiezen → gezichtscheck → Claude-voorstel → uploaden) =====
+let _fwPrepared = null
+
+function fwToonStap(stap) {
+  document.getElementById("fw-stap-1").style.display = stap === 1 ? "block" : "none"
+  document.getElementById("fw-stap-2").style.display = stap === 2 ? "block" : "none"
+  const d1 = document.getElementById("fw-dot-1"), d2 = document.getElementById("fw-dot-2"), l1 = document.getElementById("fw-lijn-1")
+  if (d1) { d1.classList.toggle("done", stap > 1); d1.classList.toggle("active", stap === 1); d1.textContent = stap > 1 ? "✓" : "1" }
+  if (d2) d2.classList.toggle("active", stap === 2)
+  if (l1) l1.classList.toggle("done", stap > 1)
+}
+
+function nieuweFoto() {
+  _fwPrepared = null
+  const f = document.getElementById("fw-file"); if (f) f.value = ""
+  document.getElementById("fw-bestandnaam").textContent = "Geen bestand gekozen"
+  document.getElementById("fw-preview").innerHTML = ""
+  document.getElementById("fw-melding").innerHTML = ""
+  document.getElementById("fw-categorie").value = ""
+  document.getElementById("fw-onderschrift").value = ""
+  document.getElementById("fw-triggers").value = ""
+  document.getElementById("fw-status").innerHTML = ""
+  const v = document.getElementById("fw-volgende"); if (v) { v.disabled = true; v.style.opacity = "0.5" }
+  fwToonStap(1)
+  showTab("fotowizard", null)
+}
+
+// Foto verkleinen + base64 + gezichtsdetectie (zonder anonimiseren — alleen detecteren)
+async function fwPrepareFoto(file) {
+  const img = await _loadImg(file)
+  const MAXDIM = 1600
+  const scale = Math.min(1, MAXDIM / Math.max(img.naturalWidth, img.naturalHeight))
+  const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale))
+  const c = document.createElement("canvas"); c.width = w; c.height = h
+  const ctx = c.getContext("2d"); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high"
+  ctx.drawImage(img, 0, 0, w, h)
+  const b64 = await _canvasB64(c)
+  let faces = 0
+  try { await ensureFaceApi(); const dets = await faceapi.detectAllFaces(c, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.2 })); faces = dets.length }
+  catch (e) { faces = -1 } // detectie mislukt
+  const name = (file.name.replace(/\.[^.]+$/, "") || file.name) + ".jpg"
+  URL.revokeObjectURL(img.src)
+  return { name, type: "image/jpeg", b64, faces, dataUrl: "data:image/jpeg;base64," + b64 }
+}
+
+async function fwFileGekozen() {
+  const f = document.getElementById("fw-file").files[0]
+  const naam = document.getElementById("fw-bestandnaam"), prev = document.getElementById("fw-preview")
+  const meld = document.getElementById("fw-melding"), volg = document.getElementById("fw-volgende")
+  _fwPrepared = null; volg.disabled = true; volg.style.opacity = "0.5"; meld.innerHTML = ""; prev.innerHTML = ""
+  if (!f) { naam.textContent = "Geen bestand gekozen"; return }
+  if (!f.type.startsWith("image/")) { naam.textContent = f.name; meld.innerHTML = '<span style="color:var(--bad);">Kies een afbeelding (jpg/png).</span>'; return }
+  naam.textContent = f.name
+  meld.innerHTML = '<span style="color:var(--muted);">Foto verwerken en gezichten controleren…</span>'
+  try {
+    const p = await fwPrepareFoto(f)
+    prev.innerHTML = `<img src="${p.dataUrl}" alt="" style="max-width:280px;max-height:200px;border-radius:10px;border:1px solid var(--border);">`
+    if (p.faces === -1) {
+      meld.innerHTML = '<span style="color:var(--warn-text);">⚠️ Gezichtsdetectie kon niet laden. Upload deze foto liever via de Foto\'s-tab (daar kun je gezichten controleren/anonimiseren).</span>'
+    } else if (p.faces > 0) {
+      meld.innerHTML = `<div style="background:var(--bad-soft);border:1px solid var(--bad-border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--bad);">🚫 Er ${p.faces === 1 ? "is 1 gezicht" : "zijn " + p.faces + " gezichten"} gedetecteerd. Upload deze foto via de <b>Foto's-tab</b> — daar worden gezichten eerst geanonimiseerd met de ingebouwde tool (AVG).<br><button class="btn" style="margin-top:8px;padding:6px 12px;font-size:12px;" onclick="showTab('fotos', document.querySelector('.tab[onclick*=fotos]'))">→ Open Foto's-tab</button></div>`
+    } else {
+      _fwPrepared = p
+      meld.innerHTML = '<span style="color:var(--good);">✓ Geen gezichten gevonden — je kunt door.</span>'
+      volg.disabled = false; volg.style.opacity = "1"
+    }
+  } catch (e) { meld.innerHTML = `<span style="color:var(--bad);">Fout bij verwerken: ${e.message}</span>` }
+}
+
+async function fotoWizardStap2(btn) {
+  if (!_fwPrepared) return
+  const origineel = btn.innerHTML; btn.disabled = true; btn.innerHTML = "⏳ Claude bekijkt de foto…"
+  await zorgFotoCatalogus()
+  const categorieen = [...new Set(alleFotos.map(f => f.categorie).filter(Boolean))]
+  let suggestie = null
+  try {
+    const r = await fetch(`${API}/foto-suggestie`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contentBase64: _fwPrepared.b64, contentType: _fwPrepared.type, categorieen, bedrijf: "Mokum Pool & Darts" }),
+    })
+    if (r.ok) { const d = await r.json(); suggestie = d.suggestie }
+  } catch (e) {}
+  btn.disabled = false; btn.innerHTML = origineel
+  document.getElementById("fw-preview2").src = _fwPrepared.dataUrl
+  document.getElementById("fw-cat-list").innerHTML = categorieen.map(c => `<option value="${fAttr(c)}">`).join("")
+  document.getElementById("fw-categorie").value = suggestie?.categorie || ""
+  document.getElementById("fw-onderschrift").value = suggestie?.onderschrift || ""
+  document.getElementById("fw-triggers").value = suggestie?.triggerWords || ""
+  document.getElementById("fw-status").innerHTML = suggestie ? "" : '<span style="color:var(--warn-text);">⚠️ Claude kon geen voorstel maken — vul de velden zelf in.</span>'
+  fwToonStap(2)
+}
+
+async function fotoWizardUpload(btn) {
+  if (!_fwPrepared) { fwToonStap(1); return }
+  const status = document.getElementById("fw-status")
+  const categorie = document.getElementById("fw-categorie").value.trim()
+  const onderschrift = document.getElementById("fw-onderschrift").value.trim()
+  const triggers = document.getElementById("fw-triggers").value.trim()
+  const weergave = document.querySelector('input[name="fw-weergave"]:checked').value
+  if (!categorie && !triggers) { status.innerHTML = '<span style="color:var(--bad);">Vul minstens een categorie of trigger words in.</span>'; return }
+  const origineel = btn.innerHTML; btn.disabled = true; btn.innerHTML = "⏳ Uploaden…"
+  status.innerHTML = '<span style="color:var(--muted);">Uploaden…</span>'
+  try {
+    const r = await fotoActie({
+      action: "upload", bestandsnaam: _fwPrepared.name, contentType: _fwPrepared.type,
+      categorie: categorie || "Overig", onderschrift, triggerWords: triggers, weergave,
+      actief: true, contentBase64: _fwPrepared.b64, heeftGezichten: false,
+    })
+    if (r.success) {
+      status.innerHTML = '<span style="color:var(--good);">✓ Foto geüpload en live! Hij verschijnt nu bij passende vragen. <button class="btn" style="padding:5px 10px;font-size:12px;margin-left:8px;" onclick="nieuweFoto()">Nog een foto</button></span>'
+      _fwPrepared = null
+      try { await laadFotos() } catch (e) {}
+    } else { status.innerHTML = `<span style="color:var(--bad);">Fout: ${r.error || "onbekend"}</span>` }
+  } catch (e) { status.innerHTML = `<span style="color:var(--bad);">Fout: ${e.message}</span>` }
+  btn.disabled = false; btn.innerHTML = origineel
 }
 
 async function uploadFoto() {
