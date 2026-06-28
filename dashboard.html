@@ -1419,14 +1419,21 @@ async function laadGesprekken() {
     const data = await resp.json()
     const namen = data.namen || []
 
+    // Gesprekken parallel ophalen in batches (sneller dan één voor één),
+    // met een concurrency-limiet zodat we de API niet overspoelen.
     const gesprekken = []
     const batch = namen.slice(0, 200)
-    for (const naam of batch) {
-      try {
-        const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`)
-        const g = await r.json()
-        gesprekken.push({ naam, ...g })
-      } catch {}
+    const CONCURRENCY = 12
+    for (let i = 0; i < batch.length; i += CONCURRENCY) {
+      const deel = batch.slice(i, i + CONCURRENCY)
+      const resultaten = await Promise.all(deel.map(async (naam) => {
+        try {
+          const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`)
+          const g = await r.json()
+          return { naam, ...g }
+        } catch { return null }
+      }))
+      for (const g of resultaten) { if (g) gesprekken.push(g) }
     }
 
     alleGesprekken = gesprekken.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
