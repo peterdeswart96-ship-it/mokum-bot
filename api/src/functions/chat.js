@@ -1153,7 +1153,9 @@ app.http("gesprekken", {
         const got = await httpsRequest(getOpts)
         let data = {}
         try { data = JSON.parse(got.body) } catch {}
-        data.isTest = !!cbody.isTest
+        // Alleen meegestuurde vlaggen wijzigen (zodat OK-markering de test-vlag niet wist, en omgekeerd)
+        if (cbody.isTest !== undefined) data.isTest = !!cbody.isTest
+        if (cbody.afgehandeld !== undefined) data.afgehandeld = !!cbody.afgehandeld
         const newContent = JSON.stringify(data, null, 2)
         const putOpts = {
           hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -1167,7 +1169,7 @@ app.http("gesprekken", {
           },
         }
         await httpsRequest(putOpts, newContent)
-        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest }) }
+        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest, afgehandeld: data.afgehandeld }) }
       }
       // Opschonen — verwijdert gesprekken vóór een datum. Beveiligd met dashboard-wachtwoord.
       if (action === "cleanup" && request.method === "POST") {
@@ -1413,6 +1415,80 @@ app.http("kennisbron-upload", {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ error: error.message }),
       }
+    }
+  },
+})
+
+// AI-suggestie voor de geleide kennis-wizard: stelt titel + categorie + concept-inhoud voor.
+// Verzint nooit feiten; ontbrekende info wordt een [VUL AAN: ...]-placeholder.
+app.http("kennis-suggestie", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
+    const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
+    try {
+      const body = await request.json()
+      const omschrijving = (body.omschrijving || "").toString().trim()
+      const vraag = (body.vraag || "").toString().trim()
+      const antwoord = (body.antwoord || "").toString().trim()
+      const categorieen = Array.isArray(body.categorieen) && body.categorieen.length ? body.categorieen : ["algemeen"]
+      const bedrijf = (body.bedrijf || "deze zaak").toString().trim()
+      if (!omschrijving && !vraag) return json(400, { error: "omschrijving of vraag vereist" })
+
+      const system = `Je helpt een beheerder kennis toe te voegen aan de chatbot van ${bedrijf}. Op basis van de input stel je voor: een korte duidelijke TITEL, de best passende CATEGORIE (kies er exact één uit de gegeven lijst), een kebab-case BESTANDSNAAM (kleine letters, koppeltekens, eindigend op .txt), en een nette concept-INHOUD voor de kennisbron in helder Nederlands.
+
+Regels voor de inhoud:
+- Baseer je UITSLUITEND op de gegeven informatie. Verzin GEEN feiten (prijzen, tijden, namen, aantallen).
+- Ontbreekt concrete info? Zet dan een duidelijke placeholder zoals "[VUL AAN: ...]" zodat de beheerder het invult.
+- Schrijf feitelijke kennis (geen chat-antwoord), kort en gestructureerd, eventueel met opsommingen.
+
+Antwoord ALLEEN met geldig JSON, zonder markdown:
+{"titel":"...","categorie":"één-uit-de-lijst","bestandsnaam":"kebab-naam.txt","inhoud":"..."}`
+
+      const userMsg = `Toegestane categorieën: ${categorieen.join(", ")}
+
+${vraag ? `Een bezoeker stelde deze vraag aan de bot:\n"${vraag}"\n` : ""}${antwoord ? `\nDe bot antwoordde nu (mogelijk onvolledig/onjuist):\n"${antwoord.substring(0, 600)}"\n` : ""}
+Omschrijving van wat de beheerder wil toevoegen:
+${omschrijving || "(geen extra omschrijving — leid het af uit de vraag)"}`
+
+      const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
+      const response = await client.messages.create({
+        // Zeldzaam + hoogwaardig (admin voegt kennis toe) → sterker model dan de bot (Haiku).
+        // Kosten verwaarloosbaar bij lage frequentie; veel betere structuur/instructie-naleving.
+        model: "claude-sonnet-4-6",
+        max_tokens: 1500,
+        system,
+        messages: [{ role: "user", content: userMsg }],
+      })
+
+      let text = (response.content[0]?.text || "").replace(/```json|```/g, "").trim()
+      let suggestie
+      try {
+        suggestie = JSON.parse(text)
+      } catch (e) {
+        let c = text
+        if (c.endsWith(",")) c = c.slice(0, -1)
+        const ob = (c.match(/\{/g) || []).length - (c.match(/\}/g) || []).length
+        for (let i = 0; i < ob; i++) c += "}"
+        try { suggestie = JSON.parse(c) } catch (e2) { suggestie = null }
+      }
+      if (!suggestie || !suggestie.titel) return json(502, { error: "AI-suggestie kon niet worden gelezen" })
+
+      // Normaliseer: geldige categorie + nette .txt-bestandsnaam
+      if (!categorieen.includes(suggestie.categorie)) suggestie.categorie = categorieen[0]
+      let bn = (suggestie.bestandsnaam || suggestie.titel || "kennis").toString().toLowerCase().replace(/\.txt$/i, "")
+      bn = bn.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "kennis"
+      suggestie.bestandsnaam = bn + ".txt"
+      return json(200, { suggestie })
+    } catch (error) {
+      context.log("kennis-suggestie error:", error)
+      return json(500, { error: error.message })
     }
   },
 })
