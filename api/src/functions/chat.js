@@ -1623,13 +1623,11 @@ Regels:
       if (!vertaald) return json(502, { error: "Lege vertaling" })
 
       const enPad = pad.replace(/\.(txt|md)$/i, ".en.$1")
-      const slash = enPad.indexOf("/")
-      const map = slash > 0 ? enPad.slice(0, slash) : ""
-      const bestand = slash > 0 ? enPad.slice(slash + 1) : enPad
+      const encodedPath = enPad.split("/").map(s => encodeURIComponent(s)).join("/")
       const contentBytes = Buffer.from(vertaald, "utf-8")
       const result = await httpsRequest({
         hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
-        path: `/${CONTAINER}/${map ? encodeURIComponent(map) + "/" : ""}${encodeURIComponent(bestand)}?${sasToken}`,
+        path: `/${CONTAINER}/${encodedPath}?${sasToken}`,
         method: "PUT",
         headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Length": contentBytes.length, "x-ms-blob-type": "BlockBlob", "x-ms-version": "2020-04-08" },
       }, contentBytes)
