@@ -111,6 +111,9 @@
   .convo-act.on { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
   .convo-act-del { background: var(--bad-soft); border-color: var(--bad-border); color: var(--bad); }
   .convo-act-del:hover { filter: brightness(1.1); }
+  .convo-act-ok.on { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
+  .convo-item.afgehandeld { background: var(--good-soft); border-radius: 10px; }
+  .convo-item.afgehandeld:hover { background: var(--good-soft); }
   .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
   .msg-user { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
   .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.5; color: var(--text); }
@@ -257,7 +260,6 @@
   <div class="tab-bar-wrap">
   <div class="tab-bar">
     <button class="tab active" id="toptab-analyse" onclick="showAnalyse('overzicht')">🔍 Analyse</button>
-    <button class="tab" onclick="showTab('upload', this)">📁 Kennisbronnen uploaden</button>
     <button class="tab" onclick="showTab('fotos', this)">📷 Foto's</button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
@@ -386,10 +388,13 @@
     <main>
 
       <div class="card" style="max-width:1032px;margin:0 auto;">
+        <div style="margin-bottom:14px;">
+          <button class="btn" onclick="showAnalyse('vragen')" style="padding:6px 12px;font-size:12px;">← Terug naar Vragen</button>
+        </div>
         <div style="text-align:center;margin-bottom:24px;">
-          <div style="font-size:40px;margin-bottom:8px;">📁</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Kennisbron uploaden</div>
-          <div style="font-size:13px;color:var(--muted);">Voeg nieuwe informatie toe aan de bot in 4 stappen</div>
+          <div style="font-size:40px;margin-bottom:8px;">✨</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Kennis toevoegen</div>
+          <div style="font-size:13px;color:var(--muted);">Claude stelt een titel, categorie en concepttekst voor — jij controleert en uploadt.</div>
         </div>
 
         <!-- Stappen indicator -->
@@ -425,14 +430,14 @@
             <button class="tag" onclick="snelkeuze('Interne instructies voor personeel')">🔒 Intern</button>
           </div>
           <div style="margin-top:20px;display:flex;justify-content:flex-end;">
-            <button class="btn-sm-red" onclick="wizardStap2()">Volgende stap →</button>
+            <button class="btn-sm-red" onclick="wizardStap2(this)">✨ Claude doet een voorstel →</button>
           </div>
         </div>
 
         <!-- Stap 2: Voorstel bestandsnaam en categorie -->
         <div id="upload-stap-2" style="display:none;">
-          <div class="card-title">Stap 2 — Voorstel bestandsnaam en categorie</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">De wizard heeft een voorstel gemaakt op basis van je omschrijving. Je kunt dit aanpassen.</div>
+          <div class="card-title">Stap 2 — Voorstel van Claude</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">✨ Claude stelde een titel en categorie voor (en een concepttekst bij stap 3). Controleer en pas gerust aan.</div>
 
           <div style="margin-bottom:14px;">
             <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Categorie (map in Azure Storage)</label>
@@ -631,25 +636,55 @@
   <div id="tab-gesprekken" class="tab-content">
     <main>
 
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+        <div style="font-size:13px;color:var(--muted);">Zie je een vraag die de bot niet (goed) beantwoordt? Voeg er meteen kennis voor toe.</div>
+        <button class="btn-sm-red" onclick="nieuweKennis()">➕ Kennis toevoegen</button>
+      </div>
+
       <div class="card">
-        <div class="card-title">Zoeken & filteren</div>
-        <div class="grid-2">
-          <input type="text" id="zoek-input" placeholder="Zoek in vragen en antwoorden..." oninput="zoekGesprekken()" />
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="zoek-input" placeholder="🔎 Zoek in vragen en antwoorden..." oninput="zoekGesprekken()" style="flex:1;min-width:200px;" />
+          <span class="tip">
+            <button class="btn" id="filter-knop" onclick="toggleFilterPanel()">⚙️ Filters <span id="filter-badge" style="display:none;background:var(--accent);color:#fff;border-radius:999px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;">0</span></button>
+            <span class="tipbox">Open filters: periode, onbeantwoord, nog te doen, testvragen en groeperen.</span>
+          </span>
+          <span class="tip">
+            <button class="btn" onclick="resetZoek()">Reset</button>
+            <span class="tipbox">Wist zoekterm, periode en alle actieve filters.</span>
+          </span>
+        </div>
+
+        <!-- Filter-paneel (samengevouwen) -->
+        <div id="filter-panel" style="display:none;margin-top:14px;border-top:1px solid var(--divider);padding-top:14px;">
+          <div class="foto-lbl" style="margin-bottom:6px;">Periode</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="datum-presets">
+            <button class="btn dp" data-p="7" onclick="zetPeriode('7')" style="padding:6px 12px;font-size:12px;">Laatste 7 dagen</button>
+            <button class="btn dp" data-p="30" onclick="zetPeriode('30')" style="padding:6px 12px;font-size:12px;">30 dagen</button>
+            <button class="btn dp" data-p="90" onclick="zetPeriode('90')" style="padding:6px 12px;font-size:12px;">90 dagen</button>
+            <button class="btn dp" data-p="jaar" onclick="zetPeriode('jaar')" style="padding:6px 12px;font-size:12px;">Dit jaar</button>
+            <button class="btn dp" data-p="alles" onclick="zetPeriode('alles')" style="padding:6px 12px;font-size:12px;">Alles</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;">
+            <div style="flex:1;min-width:130px;"><label class="foto-lbl">Van</label><input type="date" id="zoek-van" onchange="zoekGesprekken()" /></div>
+            <div style="flex:1;min-width:130px;"><label class="foto-lbl">Tot</label><input type="date" id="zoek-tot" onchange="zoekGesprekken()" /></div>
+          </div>
+          <div class="foto-lbl" style="margin-bottom:6px;">Tonen</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <div style="flex:1;min-width:120px;"><input type="date" id="zoek-van" /></div>
-            <div style="flex:1;min-width:120px;"><input type="date" id="zoek-tot" /></div>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" id="groepeer-btn" onclick="toggleGroeperen()">🔁 Groeperen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Voegt identieke vragen samen tot één rij met een ×-teller, zodat je sneller overzicht hebt.</span></span></span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()">⚠️ Onbeantwoord</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Toont alleen gesprekken waarin de bot waarschijnlijk geen antwoord wist — handig om verbeterpunten te vinden.</span></span></span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" id="filter-test" onclick="toggleTest()">🧪 Testvragen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Toont alleen testvragen. Een gesprek is een testvraag als de vraag met <b>#test</b> begon, of als je 'm hier handmatig als test markeerde.</span></span></span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" onclick="resetZoek()">Reset</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Wist het zoekveld, de datums en alle actieve filters (onbeantwoord/test).</span></span></span>
+            <span class="tip"><button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()">⚠️ Onbeantwoord</button><span class="tipbox">Alleen gesprekken waarin de bot waarschijnlijk geen antwoord wist.</span></span>
+            <span class="tip"><button class="btn" id="filter-nietok" onclick="toggleNietOk()">🟢 Nog te doen</button><span class="tipbox">Alleen vragen die nog NIET als OK (afgehandeld) zijn gemarkeerd.</span></span>
+            <span class="tip"><button class="btn" id="filter-test" onclick="toggleTest()">🧪 Testvragen</button><span class="tipbox">Alleen testvragen (#test of handmatig gemarkeerd).</span></span>
+            <span class="tip"><button class="btn" id="groepeer-btn" onclick="toggleGroeperen()">🔁 Groeperen</button><span class="tipbox">Voegt identieke vragen samen tot één rij met een ×-teller.</span></span>
           </div>
         </div>
         <div style="font-size:12px;color:var(--muted-2);margin-top:8px;" id="zoek-status"></div>
       </div>
 
       <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="card-title" style="margin-bottom:0;">Gesprekken</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer;"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)" style="accent-color:var(--accent);width:16px;height:16px;cursor:pointer;"> Alles selecteren</label>
+            <span class="tip"><button class="btn" id="verwijder-selectie-btn" onclick="verwijderSelectie()" style="display:none;padding:6px 12px;font-size:12px;color:var(--bad);border-color:var(--bad-border);">🗑 Verwijder selectie (<span id="sel-count">0</span>)</button><span class="tipbox">Verwijdert ALLE aangevinkte gesprekken in één keer, definitief uit de opslag. Je krijgt eerst een waarschuwing ter bevestiging. Handig om bijv. testvragen op te ruimen.</span></span>
+          </div>
           <span style="font-size:12px;color:var(--muted-2);" id="lijst-count"></span>
         </div>
         <div id="gesprekken-lijst"><div class="loading">Laden...</div></div>
@@ -734,7 +769,7 @@
 
       <!-- SUBTAB: KENNISBRONNEN -->
       <div id="htab-kennisbronnen" style="display:none;">
-        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="showTab('upload', document.querySelector('[onclick*=upload]'))" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;text-decoration:underline;">📁 Kennisbronnen uploaden wizard</button> — de bot gebruikt het direct.</div>
+        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="nieuweKennis()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;text-decoration:underline;">✨ Kennis toevoegen</button> — de bot gebruikt het direct.</div>
 
         <div class="card-title">Hoe werkt het?</div>
         <div class="card">
@@ -967,6 +1002,8 @@ let alleGesprekken = []
 let gefilterd = []
 let alleenOnbeantwoord = false
 let alleenTest = false
+let alleenNietOk = false
+let geselecteerdeNaams = new Set()
 let _gesprekRijen = []
 
 // Login — verificatie via backend, hash staat niet meer in de frontend
@@ -1286,11 +1323,10 @@ function renderFotos() {
       const triggers = (f.triggerWords || []).join(", ")
       const b = fJs(f.bestand)
       const btn = (cls, onclick, label, tip) =>
-        `<span style="display:inline-flex;align-items:center;gap:3px;"><button class="fbtn ${cls}" onclick="${onclick}">${label}</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">${fEsc(tip)}</span></span></span>`
+        `<span class="tip"><button class="fbtn ${cls}" onclick="${onclick}">${label}</button><span class="tipbox">${fEsc(tip)}</span></span>`
       const gezichtSwitch = f.heeftGezichten
         ? `<div style="margin-top:5px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-             <label class="gezicht-switch"><input type="checkbox" ${f.toonEcht ? "checked" : ""} onchange="toggleEchteGezichten('${b}', this)"> Echte gezichten tonen</label>
-             <span class="tip"><span class="ic">ℹ️</span><span class="tipbox">AVG: standaard zijn gezichten geanonimiseerd (blur). Zet dit alleen aan als de afgebeelde personen toestemming hebben gegeven (bijv. eigen medewerkers).</span></span>
+             <span class="tip"><label class="gezicht-switch"><input type="checkbox" ${f.toonEcht ? "checked" : ""} onchange="toggleEchteGezichten('${b}', this)"> Echte gezichten tonen</label><span class="tipbox">AVG: standaard zijn gezichten geanonimiseerd (blur). Zet dit alleen aan als de afgebeelde personen toestemming hebben gegeven (bijv. eigen medewerkers).</span></span>
            </div>`
         : ""
       html += `<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border:1px solid var(--border);border-radius:9px;margin-bottom:4px;background:var(--card);">
@@ -1712,11 +1748,8 @@ let groeperen = true
 function eersteVraagVan(g){ return g.messages?.find(m => m.role === "user")?.content || "Geen vraag" }
 function toggleGroeperen() {
   groeperen = !groeperen
-  const b = document.getElementById("groepeer-btn")
-  if (b) {
-    if (groeperen) { b.style.background = "var(--accent)"; b.style.color = "#fff"; b.style.borderColor = "var(--accent)" }
-    else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
-  }
+  setFilterPill(document.getElementById("groepeer-btn"), groeperen)
+  updateFilterBadge()
   renderGesprekken()
 }
 
@@ -1734,20 +1767,21 @@ function renderGesprekken() {
       const key = eersteVraagVan(g).toLowerCase().trim().replace(/\s+/g, " ")
       const cur = map.get(key)
       if (!cur) {
-        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), naams: g.naam ? [g.naam] : [] })
+        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), naams: g.naam ? [g.naam] : [] })
       } else {
         cur.count++
         cur.laatste = Math.max(cur.laatste, new Date(g.timestamp).getTime())
         if ((g.messages?.length || 0) > (cur.rep.messages?.length || 0)) cur.rep = g // langste = meest complete gesprek
         if (botKonNietAntwoorden(g)) cur.onbeantwoord = true
         if (isTestGesprek(g)) cur.test = true
+        if (isAfgehandeld(g)) cur.afgehandeld = true
         if (g.naam) cur.naams.push(g.naam)
       }
     })
     rijen = [...map.values()].sort((a, b) => b.laatste - a.laatste)
     document.getElementById("lijst-count").textContent = `${rijen.length} unieke vragen · ${gefilterd.length} gesprekken`
   } else {
-    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), naams: g.naam ? [g.naam] : [] }))
+    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), naams: g.naam ? [g.naam] : [] }))
     document.getElementById("lijst-count").textContent = `${gefilterd.length} gesprekken`
   }
   _gesprekRijen = rijen
@@ -1761,11 +1795,12 @@ function renderGesprekken() {
     const taal = detecteerTaal(g)
     const onderwerp = detecteerOnderwerp(g)
     const countBadge = row.count > 1 ? ` <span class="tag" style="background:var(--border);color:var(--bad);">×${row.count}</span>` : ""
-    return `<div class="convo-item" onclick="toggleDetail(${i})">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div style="flex:1;">
-          <div class="convo-title">${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
-          <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}<button class="convo-act convo-act-test${row.test ? " on" : ""}" onclick="event.stopPropagation();markTestGesprek(${i},${!row.test})" title="${row.test ? "Test-markering weghalen" : "Markeer als testvraag"}">T</button><button class="convo-act convo-act-del" onclick="event.stopPropagation();deleteGesprek(${i})" title="Gesprek verwijderen">×</button></div>
+    return `<div class="convo-item${row.afgehandeld ? " afgehandeld" : ""}" onclick="toggleDetail(${i})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <input type="checkbox" class="convo-check" ${row.naams.length && row.naams.every(n => geselecteerdeNaams.has(n)) ? "checked" : ""} onclick="event.stopPropagation();toggleSelectie(${i}, this.checked)" title="Selecteer voor bulk-actie" style="margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;cursor:pointer;">
+        <div style="flex:1;min-width:0;">
+          <div class="convo-title">${row.afgehandeld ? '<span title="Afgehandeld (OK)" style="margin-right:6px;">✅</span>' : ""}${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
+          <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}<button class="convo-act convo-act-ok${row.afgehandeld ? " on" : ""}" onclick="event.stopPropagation();markOkGesprek(${i},${!row.afgehandeld})" title="${row.afgehandeld ? "OK-markering weghalen" : "Markeer als OK (afgehandeld)"}">✓</button><button class="convo-act convo-act-test${row.test ? " on" : ""}" onclick="event.stopPropagation();markTestGesprek(${i},${!row.test})" title="${row.test ? "Test-markering weghalen" : "Markeer als testvraag"}">T</button><button class="convo-act convo-act-del" onclick="event.stopPropagation();deleteGesprek(${i})" title="Gesprek verwijderen">×</button></div>
         </div>
         <span style="color:var(--muted-2);font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
       </div>
@@ -1773,19 +1808,59 @@ function renderGesprekken() {
         ${row.count > 1 ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Deze vraag komt ${row.count}× voor — hieronder het meest complete gesprek.</div>` : ""}
         ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 500)}${(m.content?.length || 0) > 500 ? "..." : ""}</div>`).join("")}
         ${g.reply ? `<div class="msg-bot"><strong style="color:var(--accent);font-size:11px;">ANTWOORD:</strong><br>${g.reply.substring(0, 500)}${g.reply.length > 500 ? "..." : ""}</div>` : ""}
+        ${row.onbeantwoord ? `<div style="font-size:12px;color:var(--warn-text);margin-top:8px;">⚠️ De bot kon dit mogelijk niet goed beantwoorden — voeg hieronder de juiste informatie toe.</div>` : ""}
         <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
-          <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Markeert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haalt de markering weg). Testvragen krijgen een 🧪 en zijn apart te filteren.</span></span></span>
-          <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--bad);border-color:var(--bad-border);" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief uit de opslag. Kan niet ongedaan worden gemaakt.</span></span></span>
+          <span class="tip"><button class="btn-sm-red" style="padding:5px 10px;font-size:12px;" onclick="kennisVanuitVraag(${i})">➕ Kennis toevoegen</button><span class="tipbox">Opent de geleide kennis-wizard, voorgevuld met deze vraag en het huidige antwoord.</span></span>
+          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.afgehandeld ? "color:var(--good);border-color:var(--good-border);" : ""}" onclick="markOkGesprek(${i}, ${!row.afgehandeld})">${row.afgehandeld ? "↩️ OK weghalen" : "✅ Markeer als OK"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als afgehandeld (antwoord was goed of kennis toegevoegd). De rij wordt lichtgroen.</span></span>
+          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haal de markering weg).</span></span>
+          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--bad);border-color:var(--bad-border);" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief. Kan niet ongedaan worden gemaakt.</span></span>
         </div>
       </div>
     </div>`
   }).join("")
+  updateBulkBar()
 }
 
 function toggleDetail(i) {
   const d = document.getElementById(`detail-${i}`)
   const c = document.getElementById(`chevron-${i}`)
   if (d) { const open = d.style.display === "block"; d.style.display = open ? "none" : "block"; c.textContent = open ? "›" : "⌄" }
+}
+
+// Context voor de geleide kennis-wizard (gevuld vanuit een vraag)
+let _kennisVraag = "", _kennisAntwoord = ""
+
+// Opent de geleide kennis-wizard, voorgevuld vanuit een (onbeantwoorde/zwakke) vraag.
+function kennisVanuitVraag(i) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const g = row.rep
+  const vraag = (eersteVraagVan(g) || "").trim()
+  let antwoord = g.reply || ""
+  if (!antwoord && g.messages) {
+    const bot = g.messages.filter(m => m.role !== "user")
+    if (bot.length) antwoord = bot[bot.length - 1].content || ""
+  }
+  _kennisVraag = vraag
+  _kennisAntwoord = (antwoord || "").trim()
+  const ta = document.getElementById("upload-omschrijving")
+  if (ta) { ta.value = `Vraag van bezoeker: "${vraag}"\n\nWat moet de bot hierop antwoorden:\n`; ta.style.borderColor = "var(--accent)" }
+  toonStap(1)
+  showTab("upload", null)
+  setTimeout(() => {
+    if (!ta) return
+    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, 60)
+}
+
+// Opent de geleide kennis-wizard leeg (algemene ingang).
+function nieuweKennis() {
+  _kennisVraag = ""; _kennisAntwoord = ""
+  const ta = document.getElementById("upload-omschrijving")
+  if (ta) { ta.value = ""; ta.style.borderColor = "var(--border)" }
+  const inh = document.getElementById("upload-inhoud-typ"); if (inh) inh.value = ""
+  toonStap(1)
+  showTab("upload", null)
+  setTimeout(() => { if (ta) ta.focus() }, 60)
 }
 
 function zoekGesprekken() {
@@ -1798,25 +1873,70 @@ function zoekGesprekken() {
     if (zoek && !g.messages?.some(m => m.content?.toLowerCase().includes(zoek)) && !g.reply?.toLowerCase().includes(zoek)) return false
     if (alleenOnbeantwoord && !botKonNietAntwoorden(g)) return false
     if (alleenTest && !isTestGesprek(g)) return false
+    if (alleenNietOk && isAfgehandeld(g)) return false
     return true
   })
-  document.getElementById("zoek-status").textContent = zoek || van || tot || alleenOnbeantwoord || alleenTest ? `${gefilterd.length} resultaten` : ""
+  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk
+  document.getElementById("zoek-status").textContent = actief ? `${gefilterd.length} resultaten` : ""
+  updateFilterBadge()
   renderGesprekken()
+}
+
+// Een gesprek/vraag is 'OK' (afgehandeld) als de beheerder 'm zo markeerde.
+function isAfgehandeld(g) { return !!g.afgehandeld }
+
+function toggleFilterPanel() {
+  const p = document.getElementById("filter-panel")
+  if (p) p.style.display = p.style.display === "none" ? "block" : "none"
+}
+
+// Datum-snelknoppen: 7/30/90 dagen, dit jaar, alles
+function zetPeriode(p) {
+  const tot = new Date()
+  let van = null
+  if (p === "alles") { van = null }
+  else if (p === "jaar") { van = new Date(tot.getFullYear(), 0, 1) }
+  else { van = new Date(tot); van.setDate(van.getDate() - parseInt(p, 10)) }
+  document.getElementById("zoek-van").value = van ? van.toISOString().split("T")[0] : ""
+  document.getElementById("zoek-tot").value = p === "alles" ? "" : tot.toISOString().split("T")[0]
+  document.querySelectorAll("#datum-presets .dp").forEach(b => setFilterPill(b, b.dataset.p === p))
+  zoekGesprekken()
+}
+
+function setFilterPill(btn, aan) {
+  if (!btn) return
+  if (aan) { btn.style.background = "var(--accent)"; btn.style.color = "#fff"; btn.style.borderColor = "var(--accent)" }
+  else { btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = "" }
+}
+
+function toggleNietOk() {
+  alleenNietOk = !alleenNietOk
+  setFilterPill(document.getElementById("filter-nietok"), alleenNietOk)
+  zoekGesprekken()
+}
+
+function updateFilterBadge() {
+  const van = document.getElementById("zoek-van")?.value
+  const tot = document.getElementById("zoek-tot")?.value
+  let n = 0
+  if (van || tot) n++
+  if (alleenOnbeantwoord) n++
+  if (alleenTest) n++
+  if (alleenNietOk) n++
+  if (!groeperen) n++ // groeperen staat standaard aan
+  const badge = document.getElementById("filter-badge")
+  if (badge) { badge.textContent = n; badge.style.display = n ? "inline-block" : "none" }
 }
 
 function toggleOnbeantwoord() {
   alleenOnbeantwoord = !alleenOnbeantwoord
-  const b = document.getElementById("filter-onbeantwoord")
-  if (alleenOnbeantwoord) { b.style.background = "var(--accent)"; b.style.color = "#fff"; b.style.borderColor = "var(--accent)" }
-  else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
+  setFilterPill(document.getElementById("filter-onbeantwoord"), alleenOnbeantwoord)
   zoekGesprekken()
 }
 
 function toggleTest() {
   alleenTest = !alleenTest
-  const b = document.getElementById("filter-test")
-  if (alleenTest) { b.style.background = "var(--accent)"; b.style.color = "#fff"; b.style.borderColor = "var(--accent)" }
-  else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
+  setFilterPill(document.getElementById("filter-test"), alleenTest)
   zoekGesprekken()
 }
 
@@ -1837,6 +1957,66 @@ async function markTestGesprek(i, isTest) {
   alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.isTest = isTest })
   zoekGesprekken()
 }
+async function markOkGesprek(i, isOk) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const naams = row.naams || []
+  if (!naams.length) return
+  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, afgehandeld: isOk }) } catch {} }
+  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.afgehandeld = isOk })
+  zoekGesprekken()
+}
+
+// ===== Bulk-selectie & bulk-verwijderen =====
+function toggleSelectie(i, checked) {
+  const row = _gesprekRijen[i]; if (!row) return
+  ;(row.naams || []).forEach(n => { if (checked) geselecteerdeNaams.add(n); else geselecteerdeNaams.delete(n) })
+  updateBulkBar()
+}
+function toggleSelectAll(checked) {
+  ;(_gesprekRijen || []).forEach(row => (row.naams || []).forEach(n => { if (checked) geselecteerdeNaams.add(n); else geselecteerdeNaams.delete(n) }))
+  renderGesprekken()
+}
+function updateBulkBar() {
+  const n = geselecteerdeNaams.size
+  const btn = document.getElementById("verwijder-selectie-btn")
+  const cnt = document.getElementById("sel-count")
+  if (cnt) cnt.textContent = n
+  if (btn) btn.style.display = n ? "inline-flex" : "none"
+  // 'Alles selecteren'-vinkje afstemmen op de zichtbare rijen
+  const zichtbaar = (_gesprekRijen || []).flatMap(r => r.naams || [])
+  const alles = zichtbaar.length > 0 && zichtbaar.every(x => geselecteerdeNaams.has(x))
+  const sommige = zichtbaar.some(x => geselecteerdeNaams.has(x))
+  const sa = document.getElementById("select-all")
+  if (sa) { sa.checked = alles; sa.indeterminate = sommige && !alles }
+}
+async function verwijderSelectie() {
+  const naams = [...geselecteerdeNaams]
+  if (!naams.length) return
+  const tekst =
+    "⚠️ LET OP — definitief verwijderen\n\n" +
+    `Je staat op het punt om ${naams.length} gesprek${naams.length === 1 ? "" : "ken"} in één keer definitief te verwijderen uit de opslag.\n\n` +
+    "• Dit kan NIET ongedaan worden gemaakt.\n" +
+    "• De gesprekken verdwijnen uit het dashboard én uit de analyses.\n" +
+    "• Tip: gebruik dit om bijvoorbeeld testvragen op te ruimen.\n\n" +
+    "Weet je zeker dat je doorgaat?"
+  if (!confirm(tekst)) return
+  const btn = document.getElementById("verwijder-selectie-btn")
+  if (btn) { btn.disabled = true; btn.style.opacity = "0.6" }
+  let fout = 0
+  // In batches verwijderen (sneller, maar API niet overspoelen)
+  const CONCURRENCY = 6
+  for (let i = 0; i < naams.length; i += CONCURRENCY) {
+    const deel = naams.slice(i, i + CONCURRENCY)
+    await Promise.all(deel.map(async (naam) => {
+      try { const r = await gesprekActie({ action: "delete", blob: naam }); if (!r.success) fout++ } catch { fout++ }
+    }))
+  }
+  alleGesprekken = alleGesprekken.filter(g => !geselecteerdeNaams.has(g.naam))
+  geselecteerdeNaams.clear()
+  zoekGesprekken()
+  if (btn) { btn.disabled = false; btn.style.opacity = "" }
+  if (fout) alert(`${fout} gesprek(ken) konden niet verwijderd worden. Probeer het opnieuw.`)
+}
 async function deleteGesprek(i) {
   const row = _gesprekRijen[i]; if (!row) return
   const naams = row.naams || []
@@ -1856,10 +2036,13 @@ function resetZoek() {
   document.getElementById("zoek-status").textContent = ""
   alleenOnbeantwoord = false
   alleenTest = false
-  const b = document.getElementById("filter-onbeantwoord")
-  if (b) { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
-  const bt = document.getElementById("filter-test")
-  if (bt) { bt.style.background = ""; bt.style.color = ""; bt.style.borderColor = "" }
+  alleenNietOk = false
+  setFilterPill(document.getElementById("filter-onbeantwoord"), false)
+  setFilterPill(document.getElementById("filter-test"), false)
+  setFilterPill(document.getElementById("filter-nietok"), false)
+  document.querySelectorAll("#datum-presets .dp").forEach(b => setFilterPill(b, false))
+  geselecteerdeNaams.clear()
+  updateFilterBadge()
   gefilterd = [...alleGesprekken]
   renderGesprekken()
 }
@@ -2064,17 +2247,44 @@ function updatePadPreview() {
   if (padEl) padEl.textContent = `kennisbronnen/${map}/${naam}.txt`
 }
 
-function wizardStap2() {
+async function wizardStap2(btn) {
   const omschrijving = document.getElementById("upload-omschrijving").value.trim()
-  if (!omschrijving) { alert("Beschrijf eerst wat je wil toevoegen."); return }
-  const categorie = bepaalCategorie(omschrijving)
-  const bestandsnaam = bepaalBestandsnaam(omschrijving, categorie)
-  document.getElementById("upload-map").value = categorie
-  document.getElementById("upload-bestandsnaam").value = bestandsnaam.replace(".txt", "")
+  if (!omschrijving && !_kennisVraag) { alert("Beschrijf eerst wat je wil toevoegen."); return }
+  const categorieen = [...document.getElementById("upload-map").options].map(o => o.value)
+
+  // Laadstatus tijdens de AI-aanroep
+  let origineel = ""
+  if (btn) { origineel = btn.innerHTML; btn.disabled = true; btn.innerHTML = "⏳ Claude denkt mee…" }
+
+  let suggestie = null
+  try {
+    const resp = await fetch(`${API}/kennis-suggestie`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ omschrijving, vraag: _kennisVraag, antwoord: _kennisAntwoord, categorieen, bedrijf: "Mokum Pool & Darts" }),
+    })
+    if (resp.ok) { const data = await resp.json(); suggestie = data.suggestie }
+  } catch (e) { /* val terug op vaste regels */ }
+  if (btn) { btn.disabled = false; btn.innerHTML = origineel }
+
+  if (suggestie && suggestie.titel) {
+    document.getElementById("upload-map").value = suggestie.categorie
+    document.getElementById("upload-bestandsnaam").value = (suggestie.bestandsnaam || "").replace(/\.txt$/i, "")
+    let inhoud = (suggestie.inhoud || "").trim()
+    if (inhoud && !inhoud.startsWith("#")) inhoud = `# ${suggestie.titel}\n\n${inhoud}`
+    document.getElementById("upload-inhoud-typ").value = inhoud
+  } else {
+    // Fallback: vaste trefwoord-regels (als de AI niet bereikbaar is)
+    const tekst = omschrijving || _kennisVraag
+    const categorie = bepaalCategorie(tekst)
+    const bestandsnaam = bepaalBestandsnaam(tekst, categorie)
+    document.getElementById("upload-map").value = categorie
+    document.getElementById("upload-bestandsnaam").value = bestandsnaam.replace(".txt", "")
+    document.getElementById("upload-inhoud-typ").value = `# ${tekst}\nBijgewerkt: ${new Date().toLocaleDateString("nl-NL")}\n\n`
+  }
   updatePadPreview()
   const el = document.getElementById("datum-voorbeeld")
   if (el) el.textContent = new Date().toLocaleDateString("nl-NL", { day: "2-digit", month: "long", year: "numeric" })
-  document.getElementById("upload-inhoud-typ").value = `# ${omschrijving}\nBijgewerkt: ${new Date().toLocaleDateString("nl-NL")}\n\n`
   toonStap(2)
 }
 
