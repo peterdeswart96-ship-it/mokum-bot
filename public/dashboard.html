@@ -1624,20 +1624,26 @@ function renderChartDagen() {
 // Chart: onderwerpen
 function detecteerOnderwerp(gesprek) {
   const tekst = (gesprek.messages || []).map(m => m.content || "").join(" ").toLowerCase()
+  // Volgorde = prioriteit (eerste match wint). Specifieke onderwerpen eerst.
   const onderwerpen = [
-    { naam: "Toernooien", keywords: ["toernooi", "tournament", "ranking", "inschrijv", "fluke", "mega", "cuescore", "wedstrijd"] },
-    { naam: "Openingstijden", keywords: ["open", "gesloten", "tijden", "hours", "wanneer open", "hoe laat"] },
-    { naam: "Tarieven", keywords: ["kost", "prijs", "tarief", "euro", "betaal", "price", "rate", "goedkoop"] },
-    { naam: "Spelregels", keywords: ["regel", "8-ball", "9-ball", "darts", "501", "cricket", "shuffleboard", "biljart"] },
-    { naam: "Locatie", keywords: ["adres", "route", "parkeer", "ov", "trein", "tram", "amstel", "rijden", "komen"] },
-    { naam: "Pool & Biljart", keywords: ["tafel", "keu", "reserveer", "pool tafel", "beschikbaar", "biljart"] },
-    { naam: "Eten & Drinken", keywords: ["menu", "eten", "drinken", "bier", "snack", "pizza", "koffie", "food", "drink"] },
-    { naam: "Clinics", keywords: ["clinic", "les", "training", "coach", "nick", "privelessen"] },
-    { naam: "Sport kijken", keywords: ["sport", "voetbal", "wedstrijd kijk", "scherm", "champions", "eredivisie"] },
-    { naam: "Algemeen", keywords: ["mokum", "oprichter", "mark", "over", "faciliteit", "bedrijf"] },
+    { naam: "Keu reparatie", keywords: ["reparat", "repair", "pomerans", "ferrule", "renato", "tip vervang"] },
+    { naam: "Keu & Accessoires", keywords: ["keu kopen", "keu shop", "accessoire", "accessor", "krijt", "verkopen jullie", "verkop", "do you sell", "te koop", "keu passen"] },
+    { naam: "Toernooien", keywords: ["toernooi", "tournament", "ranking", "rating", "knbb", "inschrijv", "qualifier", "fluke", "mega", "cuescore", "amsterdam open", "speler", "player", "winnaar", "kampioen", "prijzengeld", "prize money"] },
+    { naam: "Spelregels", keywords: ["regel", "rules", "8-ball", "9-ball", "10-ball", "501", "301", "cricket", "checkout", "one pocket", "straight pool", "blackball", "libre", "driebanden", "bandstoten", "cushion", "shuffleboard", "how do you play", "how to play", "hoe speel je", "how does", "puntentelling", "scoring"] },
+    { naam: "Sport kijken", keywords: ["sport", "voetbal", "football", "champions", "eredivisie", "wedstrijd kijk", "op de schermen", "grote wedstrijd", "big match", "match", "watch", "screen", "scherm"] },
+    { naam: "Clinics", keywords: ["clinic", "privele", "privles", "private lesson", "training", "coach", "lesgeven", "lessen", "les?", "boek een", "book a", "nick van den berg"] },
+    { naam: "Locatie", keywords: ["adres", "address", "route", "parkeer", "parking", "openbaar vervoer", "public transport", "het ov", "trein", "tram", "metro", "amstel", "gevestigd", "located", "how do i get", "waar is mokum", "where is mokum"] },
+    { naam: "Openingstijden", keywords: ["openingstijd", "geopend", "gesloten", "wanneer open", "zijn jullie open", "are you open", "open?", "tijden", "hours", "feestdag", "holiday", "hoe laat", "what time", "last entry", "laatste inloop"] },
+    { naam: "Tarieven", keywords: ["kost", "prijs", "prijz", "tarief", "euro", "betaal", "pinnen", "pay by card", "price", "rate", "cost", "how much", "groepstarie", "group rate"] },
+    { naam: "Eten & Drinken", keywords: ["menu", "eten", "drinken", "bier", "beer", "snack", "pizza", "koffie", "food", "drink", "vegetar", "biertje"] },
+    { naam: "Darts", keywords: ["dart", "pijlen", "winmau", "dartbord"] },
+    { naam: "Spelletjes & Gaming", keywords: ["spelletje", "gaming", "game", "fun4four", "arcade", "console", "gezelschapsspel"] },
+    { naam: "Pool & Biljart", keywords: ["tafel", "table", "keu", "cue", "reserv", "beschikbaar", "available", "biljart", "billiard", "pool", "break"] },
+    { naam: "Algemeen", keywords: ["oprichter", "founder", "over mokum", "about mokum", "faciliteit", "wie zijn jullie"] },
   ]
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   for (const o of onderwerpen) {
-    if (o.keywords.some(kw => tekst.includes(kw))) return o.naam
+    if (o.keywords.some(kw => new RegExp("\\b" + esc(kw)).test(tekst))) return o.naam
   }
   return "Overig"
 }
