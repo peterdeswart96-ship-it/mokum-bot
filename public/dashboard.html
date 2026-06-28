@@ -71,6 +71,14 @@
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
+  /* Sub-navigatie (binnen Analyse) */
+  .subnav-wrap { max-width: 1320px; margin: 0 auto 8px; padding: 0 18px; }
+  .subnav { display: inline-flex; gap: 4px; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 4px; box-shadow: var(--shadow); max-width: 100%; overflow-x: auto; }
+  .subtab { border: none; background: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--muted); white-space: nowrap; min-height: 38px; display: inline-flex; align-items: center; gap: 5px; transition: background 0.15s, color 0.15s; }
+  .subtab:hover { background: var(--nav-hover); color: var(--text-2); }
+  .subtab.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  @media (max-width: 700px) { .subnav-wrap { padding: 0 12px; } .subnav { display: flex; } }
+
   /* Layout */
   main { padding: 10px 22px 44px; max-width: 1320px; margin: 0 auto; }
   .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
@@ -248,13 +256,20 @@
 
   <div class="tab-bar-wrap">
   <div class="tab-bar">
-    <button class="tab active" onclick="showTab('mark', this)">🎱 Analyse</button>
-    <button class="tab" onclick="showTab('sander', this)">🌐 Website tips</button>
+    <button class="tab active" id="toptab-analyse" onclick="showAnalyse('overzicht')">🔍 Analyse</button>
     <button class="tab" onclick="showTab('upload', this)">📁 Kennisbronnen uploaden</button>
     <button class="tab" onclick="showTab('fotos', this)">📷 Foto's</button>
-    <button class="tab" onclick="showTab('gesprekken', this)">💬 Gesprekken</button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
+  </div>
+
+  <!-- Sub-navigatie binnen Analyse -->
+  <div class="subnav-wrap" id="analyse-subnav">
+    <div class="subnav">
+      <button class="subtab active" id="asub-overzicht" onclick="showAnalyse('overzicht')">📊 Overzicht</button>
+      <button class="subtab" id="asub-vragen" onclick="showAnalyse('vragen')">💬 Vragen</button>
+      <button class="subtab" id="asub-website" onclick="showAnalyse('website')">🌐 Website</button>
+    </div>
   </div>
 
   <!-- TAB: MARK & NICK -->
@@ -1001,7 +1016,24 @@ function showTab(name, btn) {
   document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"))
   document.getElementById("tab-" + name).classList.add("active")
   if (btn) btn.classList.add("active")
+  // Analyse-subnav alleen tonen binnen Analyse
+  const subnav = document.getElementById("analyse-subnav")
+  if (subnav) subnav.style.display = "none"
   if (name === "fotos") laadFotos()
+}
+
+// Analyse-groep: submenu Overzicht (mark) / Vragen (gesprekken) / Website (sander)
+function showAnalyse(sub) {
+  const map = { overzicht: "mark", vragen: "gesprekken", website: "sander" }
+  showTab(map[sub] || "mark", null)
+  const top = document.getElementById("toptab-analyse")
+  if (top) top.classList.add("active")
+  const subnav = document.getElementById("analyse-subnav")
+  if (subnav) subnav.style.display = ""
+  ;["overzicht", "vragen", "website"].forEach(s => {
+    const b = document.getElementById("asub-" + s)
+    if (b) b.classList.toggle("active", s === sub)
+  })
 }
 
 // ---- Foto's beheer ----
