@@ -1459,6 +1459,7 @@ async function fotoActie(payload) {
 
 // ===== Geleide foto-wizard (foto kiezen → gezichtscheck → Claude-voorstel → uploaden) =====
 let _fwPrepared = null
+let _fwSeedTriggers = "", _fwSeedVraag = ""
 
 function fwToonStap(stap) {
   document.getElementById("fw-stap-1").style.display = stap === 1 ? "block" : "none"
@@ -1469,12 +1470,16 @@ function fwToonStap(stap) {
   if (l1) l1.classList.toggle("done", stap > 1)
 }
 
-function nieuweFoto() {
+function nieuweFoto(seedTriggers, seedVraag) {
   _fwPrepared = null
+  _fwSeedTriggers = seedTriggers || ""
+  _fwSeedVraag = seedVraag || ""
   const f = document.getElementById("fw-file"); if (f) f.value = ""
   document.getElementById("fw-bestandnaam").textContent = "Geen bestand gekozen"
   document.getElementById("fw-preview").innerHTML = ""
-  document.getElementById("fw-melding").innerHTML = ""
+  document.getElementById("fw-melding").innerHTML = _fwSeedVraag
+    ? `<div style="background:var(--info-soft);border:1px solid var(--info-border);border-radius:10px;padding:9px 13px;font-size:12px;color:var(--info-text);">📌 Je voegt een foto toe bij de vraag: <b>"${fEsc(_fwSeedVraag)}"</b>.${_fwSeedTriggers ? ` Het trigger-label <b>${fEsc(_fwSeedTriggers)}</b> wordt straks vast voorgevuld.` : ""}</div>`
+    : ""
   document.getElementById("fw-categorie").value = ""
   document.getElementById("fw-onderschrift").value = ""
   document.getElementById("fw-triggers").value = ""
@@ -1482,6 +1487,27 @@ function nieuweFoto() {
   const v = document.getElementById("fw-volgende"); if (v) { v.disabled = true; v.style.opacity = "0.5" }
   fwToonStap(1)
   showTab("fotowizard", null)
+}
+
+// Foto toevoegen vanuit een vraag in de review — leidt een trigger-label af uit het onderwerp.
+function nieuweFotoVanuitVraag(i) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const g = row.rep
+  const vraag = (eersteVraagVan(g) || "").trim()
+  const onderwerpNaarTrigger = {
+    "Darts": "darts, dartbord, dartboard",
+    "Pool & Biljart": "pool, poolen, biljart, pool table",
+    "Keu reparatie": "keu reparatie, cue repair, pomerans",
+    "Keu & Accessoires": "keu, cue, accessoires, keu shop",
+    "Sport kijken": "sport, voetbal, scherm, sports, screen",
+    "Eten & Drinken": "eten, drinken, menu, food, drinks, bar",
+    "Spelletjes & Gaming": "spelletjes, gaming, games",
+    "Locatie": "locatie, ingang, gevel, location, entrance",
+    "Toernooien": "toernooi, tournament, prijzen",
+    "Clinics": "clinic, les, coaching, lessons",
+  }
+  const onderwerp = detecteerOnderwerp(g)
+  nieuweFoto(onderwerpNaarTrigger[onderwerp] || "", vraag)
 }
 
 // Foto verkleinen + base64 + gezichtsdetectie (zonder anonimiseren — alleen detecteren)
@@ -1545,6 +1571,15 @@ async function fotoWizardStap2(btn) {
   document.getElementById("fw-categorie").value = suggestie?.categorie || ""
   document.getElementById("fw-onderschrift").value = suggestie?.onderschrift || ""
   document.getElementById("fw-triggers").value = suggestie?.triggerWords || ""
+  // Trigger-label vanuit de vraag (onderwerp) vooraan toevoegen, gededupliceerd.
+  if (_fwSeedTriggers) {
+    const veld = document.getElementById("fw-triggers")
+    const set = new Set(), lijst = []
+    ;[..._fwSeedTriggers.split(","), ...veld.value.split(",")].map(s => s.trim()).filter(Boolean).forEach(s => {
+      const k = s.toLowerCase(); if (!set.has(k)) { set.add(k); lijst.push(s) }
+    })
+    veld.value = lijst.join(", ")
+  }
   document.getElementById("fw-status").innerHTML = suggestie ? "" : '<span style="color:var(--warn-text);">⚠️ Claude kon geen voorstel maken — vul de velden zelf in.</span>'
   fwToonStap(2)
 }
@@ -2119,6 +2154,7 @@ function renderGesprekken() {
         ${row.onbeantwoord ? `<div style="font-size:12px;color:var(--warn-text);margin-top:8px;">⚠️ De bot kon dit mogelijk niet goed beantwoorden — voeg hieronder de juiste informatie toe.</div>` : ""}
         <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
           <span class="tip"><button class="btn-sm-red" style="padding:5px 10px;font-size:12px;" onclick="kennisVanuitVraag(${i})">➕ Kennis toevoegen</button><span class="tipbox">Opent de geleide kennis-wizard, voorgevuld met deze vraag en het huidige antwoord.</span></span>
+          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--info);border-color:var(--info-border);" onclick="nieuweFotoVanuitVraag(${i})">📷 Foto toevoegen</button><span class="tipbox">Opent de foto-wizard om hier een foto bij te uploaden. Het trigger-label voor het onderwerp van deze vraag wordt vast voorgevuld; Claude vult categorie/onderschrift aan.</span></span>
           <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.afgehandeld ? "color:var(--good);border-color:var(--good-border);" : ""}" onclick="markOkGesprek(${i}, ${!row.afgehandeld})">${row.afgehandeld ? "↩️ OK weghalen" : "✅ Markeer als OK"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als afgehandeld (antwoord was goed of kennis toegevoegd). De rij wordt lichtgroen.</span></span>
           <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.teReviewen ? "color:var(--warn-text);border-color:var(--warn);" : ""}" onclick="markReviewGesprek(${i}, ${!row.teReviewen})">${row.teReviewen ? "↩️ Review weghalen" : "🟠 To review"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als 'to review' (nog te beoordelen). De rij wordt oranje met een ❓.</span></span>
           <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.fotoNodig ? "color:var(--info);border-color:var(--info-border);" : ""}" onclick="markFotoNodigGesprek(${i}, ${!row.fotoNodig})">${row.fotoNodig ? "↩️ Foto-markering weg" : "📷 Foto's nodig"}</button><span class="tipbox">Markeer ${row.count > 1 ? `deze vraag` : "dit gesprek"} als 'foto's nodig'. Er verschijnt een 📷-icoon zodat je weet dat hier nog foto's bij moeten.</span></span>
