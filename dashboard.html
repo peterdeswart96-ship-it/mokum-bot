@@ -128,10 +128,17 @@
   .convo-act-ok.on { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
   .convo-act-review.on { background: var(--warn-soft); border-color: var(--warn); color: var(--warn-text); }
   .convo-act-foto.on { background: var(--info-soft); border-color: var(--info-border); color: var(--info); }
-  .convo-item.afgehandeld { background: var(--good-soft); border-radius: 10px; }
-  .convo-item.afgehandeld:hover { background: var(--good-soft); }
-  .convo-item.te-reviewen { background: var(--warn-soft); border-radius: 10px; }
-  .convo-item.te-reviewen:hover { background: var(--warn-soft); }
+  /* Balk-kleur per status (open acties opvallend) */
+  .convo-item.status-ok { background: rgba(46,204,113,0.15); border-radius: 10px; }
+  .convo-item.status-ok:hover { background: rgba(46,204,113,0.21); }
+  .convo-item.status-review { background: rgba(232,150,30,0.15); border-radius: 10px; }
+  .convo-item.status-review:hover { background: rgba(232,150,30,0.21); }
+  .convo-item.status-rood { background: rgba(220,53,69,0.14); border-radius: 10px; }
+  .convo-item.status-rood:hover { background: rgba(220,53,69,0.20); }
+  .status-badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-right: 6px; vertical-align: middle; white-space: nowrap; }
+  .status-badge.status-ok { background: rgba(46,204,113,0.24); color: #1f9d57; }
+  .status-badge.status-review { background: rgba(232,150,30,0.26); color: #c47a12; }
+  .status-badge.status-rood { background: rgba(220,53,69,0.22); color: #d23b3b; }
   .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
   .msg-user { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
   .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.55; color: var(--text); }
@@ -1911,11 +1918,16 @@ function renderGesprekken() {
     const taal = detecteerTaal(g)
     const onderwerp = detecteerOnderwerp(g)
     const countBadge = row.count > 1 ? ` <span class="tag" style="background:var(--border);color:var(--bad);">×${row.count}</span>` : ""
-    return `<div class="convo-item${row.afgehandeld ? " afgehandeld" : row.teReviewen ? " te-reviewen" : ""}" onclick="toggleDetail(${i})">
+    // Status bepaalt de balk-kleur + badge. Prioriteit: OK (groen) > to review/foto nodig (oranje) > geen antwoord (rood).
+    let stKlasse = "", stBadge = ""
+    if (row.afgehandeld) { stKlasse = "status-ok"; stBadge = "✅ OK" }
+    else if (row.teReviewen || row.fotoNodig) { stKlasse = "status-review"; stBadge = [row.teReviewen ? "❓ To review" : "", row.fotoNodig ? "📷 Foto nodig" : ""].filter(Boolean).join(" · ") }
+    else if (row.onbeantwoord) { stKlasse = "status-rood"; stBadge = "⚠️ Geen antwoord" }
+    return `<div class="convo-item${stKlasse ? " " + stKlasse : ""}" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <input type="checkbox" class="convo-check" ${row.naams.length && row.naams.every(n => geselecteerdeNaams.has(n)) ? "checked" : ""} onclick="event.stopPropagation();toggleSelectie(${i}, this.checked)" title="Selecteer voor bulk-actie" style="margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;cursor:pointer;">
         <div style="flex:1;min-width:0;">
-          <div class="convo-title">${row.afgehandeld ? '<span title="Afgehandeld (OK)" style="margin-right:6px;">✅</span>' : ""}${row.teReviewen ? '<span title="To review" style="margin-right:6px;">❓</span>' : ""}${row.fotoNodig ? '<span title="Foto nodig" style="margin-right:6px;">📷</span>' : ""}${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
+          <div class="convo-title">${stBadge ? `<span class="status-badge ${stKlasse}">${stBadge}</span>` : ""}${row.test ? '<span title="Testvraag" style="margin-right:4px;">🧪</span>' : ""}${kort}</div>
           <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}<button class="convo-act convo-act-ok${row.afgehandeld ? " on" : ""}" onclick="event.stopPropagation();markOkGesprek(${i},${!row.afgehandeld})" title="${row.afgehandeld ? "OK-markering weghalen" : "Markeer als OK (afgehandeld)"}">✓</button><button class="convo-act convo-act-review${row.teReviewen ? " on" : ""}" onclick="event.stopPropagation();markReviewGesprek(${i},${!row.teReviewen})" title="${row.teReviewen ? "Review-markering weghalen" : "Markeer als 'to review'"}">?</button><button class="convo-act convo-act-foto${row.fotoNodig ? " on" : ""}" onclick="event.stopPropagation();markFotoNodigGesprek(${i},${!row.fotoNodig})" title="${row.fotoNodig ? "Foto-markering weghalen" : "Markeer: foto's nodig"}">📷</button><button class="convo-act convo-act-test${row.test ? " on" : ""}" onclick="event.stopPropagation();markTestGesprek(${i},${!row.test})" title="${row.test ? "Test-markering weghalen" : "Markeer als testvraag"}">T</button><button class="convo-act convo-act-del" onclick="event.stopPropagation();deleteGesprek(${i})" title="Gesprek verwijderen">×</button></div>
         </div>
         <span style="color:var(--muted-2);font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
