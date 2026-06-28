@@ -17,6 +17,8 @@
     text-transform: uppercase; font-size: 13px; line-height: 1.4; padding: 7px 16px; border-radius: 9px;
     border: 1px solid rgba(244,208,0,0.55); }
   @media (max-width: 700px) { .bouw-lint .label { font-size: 10.5px; padding: 6px 10px; } }
+  /* Inhoud blokkeren tijdens onderhoud (niet klikbaar + gedimd) */
+  .uc-blocked { pointer-events: none; opacity: 0.4; filter: grayscale(0.4); user-select: none; }
 
   /* ============ DESIGN TOKENS — licht + donker thema ============ */
   :root, :root[data-theme="dark"]{
@@ -720,8 +722,8 @@
 
   <!-- TAB: HANDLEIDING -->
   <div id="tab-handleiding" class="tab-content">
-    <div class="bouw-lint"><span class="label">🚧🎱 Onder constructie — Peter &amp; Claude verbouwen het dashboard · niet schrikken als er een balletje los ligt · work in progress 🎱🚧</span></div>
-    <main>
+    <div class="bouw-lint"><span class="label">🚧 Onder constructie — Peter &amp; Claude verbouwen het dashboard 🚧</span></div>
+    <main class="uc-blocked">
 
       <!-- Subtab balk -->
       <div style="display:flex;gap:4px;border-bottom:1px solid var(--input);margin-bottom:24px;flex-wrap:wrap;">
