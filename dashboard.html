@@ -116,7 +116,18 @@
   .convo-item.afgehandeld:hover { background: var(--good-soft); }
   .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
   .msg-user { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
-  .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.5; color: var(--text); }
+  .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.55; color: var(--text); }
+  .msg-bot p { margin: 0 0 6px 0; }
+  .msg-bot > *:last-child { margin-bottom: 0 !important; }
+  .msg-bot strong { color: var(--text); font-weight: 700; }
+  .msg-bot ul, .msg-bot ol { margin: 4px 0; padding-left: 16px; }
+  .msg-bot li { margin: 2px 0; line-height: 1.6; }
+  .msg-bot img { max-width: 100%; max-height: 300px; border-radius: 8px; margin: 6px 0; display: block; cursor: zoom-in; }
+  .msg-bot a { color: var(--accent); }
+  /* Foto-carousel (zoals in het bot-venster) */
+  .mokum-carousel { position: relative; }
+  .mokum-carousel-btn { position: absolute; right: 8px; bottom: 12px; background: rgba(0,0,0,0.62); color: #fff; border: none; border-radius: 999px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer; z-index: 2; }
+  .mokum-carousel-btn:hover { background: rgba(0,0,0,0.8); }
 
   /* Analyse */
   .analyse-item { background: var(--card-2); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: var(--text-2); }
@@ -1515,6 +1526,8 @@ async function laadGesprekken() {
     document.getElementById("datum-tot").value = nu.toISOString().split("T")[0]
 
     updateAlles()
+    // Foto-catalogus laden zodat we in Gesprekken kunnen tonen welke foto's getriggerd zijn
+    zorgFotoCatalogus().then(() => { if (alleFotos.length) renderGesprekken() })
   } catch(e) {
     document.getElementById("gesprekken-lijst").innerHTML = `<div class="empty">Fout bij laden: ${e.message}</div>`
   }
@@ -1753,6 +1766,79 @@ function toggleGroeperen() {
   renderGesprekken()
 }
 
+// ===== Bot-antwoord renderen zoals in het widget-venster =====
+function normalizeTekst(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim()
+}
+function applyInlineDash(text) {
+  return text
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer"><img src="$2" alt="$1" loading="lazy"></a>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+}
+function formatBotHTML(text) {
+  const lines = String(text || "").split("\n")
+  let html = "", inList = false
+  for (const line of lines) {
+    const t = line.trim()
+    if (t.startsWith("- ") || t.startsWith("* ")) {
+      if (!inList) { html += "<ul>"; inList = true }
+      html += `<li>${applyInlineDash(t.substring(2))}</li>`
+    } else {
+      if (inList) { html += "</ul>"; inList = false }
+      if (t === "") html += ""
+      else if (t.match(/^#{1,3} /)) html += `<p><strong>${applyInlineDash(t.replace(/^#+\s/, ""))}</strong></p>`
+      else html += `<p>${applyInlineDash(t)}</p>`
+    }
+  }
+  if (inList) html += "</ul>"
+  return html
+}
+// Meerdere foto's → toon er één + 'meer N/M'-knop om te bladeren (zoals het venster)
+function enhanceCarouselDash(bubble) {
+  const anchors = Array.from(bubble.querySelectorAll("a")).filter(a => a.children.length === 1 && a.children[0].tagName === "IMG")
+  if (anchors.length < 2) return
+  const firstWrap = anchors[0].closest("p") || anchors[0]
+  const car = document.createElement("div")
+  car.className = "mokum-carousel"
+  firstWrap.parentNode.insertBefore(car, firstWrap)
+  anchors.forEach((a, i) => { a.style.display = i === 0 ? "block" : "none"; car.appendChild(a) })
+  Array.from(bubble.querySelectorAll("p")).forEach(p => { if (!p.textContent.trim() && !p.querySelector("img")) p.remove() })
+  const total = anchors.length
+  let idx = 0
+  const b = document.createElement("button")
+  b.type = "button"; b.className = "mokum-carousel-btn"
+  const lab = () => { b.innerHTML = `meer ${idx + 1}/${total} ›` }
+  lab()
+  b.onclick = (e) => { e.preventDefault(); e.stopPropagation(); anchors[idx].style.display = "none"; idx = (idx + 1) % total; anchors[idx].style.display = "block"; lab() }
+  car.appendChild(b)
+}
+function enhanceAlleCarousels() {
+  document.querySelectorAll("#gesprekken-lijst .msg-bot").forEach(enhanceCarouselDash)
+}
+// Foto-catalogus (met trigger words) ook in Gesprekken beschikbaar maken
+async function zorgFotoCatalogus() {
+  if (alleFotos && alleFotos.length) return
+  try { const r = await fetch(`${API}/fotos`); const d = await r.json(); alleFotos = d.fotos || [] } catch {}
+}
+// Welke foto's toonde dit antwoord, en door welke trigger-woorden?
+function fotoTriggerInfo(g) {
+  const reply = g.reply || ""
+  if (!reply || !alleFotos.length) return ""
+  const getoond = alleFotos.filter(f => f.bestand && reply.includes(f.bestand))
+  if (!getoond.length) return ""
+  const vraagNorm = normalizeTekst((g.messages || []).filter(m => m.role === "user").map(m => m.content || "").join(" "))
+  const items = getoond.map(f => {
+    const matched = (f.triggerWords || []).filter(t => t && vraagNorm.includes(normalizeTekst(String(t))))
+    const woorden = matched.length
+      ? matched.map(t => `<span class="tag" style="cursor:default;">${fEsc(t)}</span>`).join(" ")
+      : `<span style="color:var(--muted-2);">(geen exacte match — mogelijk via een eerdere/andere formulering)</span>`
+    return `<div style="margin-bottom:6px;font-size:12px;color:var(--text-2);"><b style="color:var(--text);">📷 ${fEsc(f.onderschrift || f.bestand)}</b> <span style="color:var(--muted-2);">· ${fEsc(f.bestand)}</span><br><span style="color:var(--muted);">getriggerd door:</span> ${woorden}</div>`
+  }).join("")
+  return `<div style="margin-top:10px;border-top:1px solid var(--divider);padding-top:10px;">
+    <div class="foto-lbl" style="margin-bottom:6px;">Getoonde foto's (${getoond.length})</div>${items}</div>`
+}
+
 function renderGesprekken() {
   const lijst = document.getElementById("gesprekken-lijst")
   // groepeer-knop visueel laten kloppen met de status (default aan)
@@ -1806,8 +1892,11 @@ function renderGesprekken() {
       </div>
       <div class="convo-detail" id="detail-${i}">
         ${row.count > 1 ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Deze vraag komt ${row.count}× voor — hieronder het meest complete gesprek.</div>` : ""}
-        ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 500)}${(m.content?.length || 0) > 500 ? "..." : ""}</div>`).join("")}
-        ${g.reply ? `<div class="msg-bot"><strong style="color:var(--accent);font-size:11px;">ANTWOORD:</strong><br>${g.reply.substring(0, 500)}${g.reply.length > 500 ? "..." : ""}</div>` : ""}
+        ${(g.messages || []).map(m => m.role === "user"
+          ? `<div class="msg-user">${fEsc(m.content || "")}</div>`
+          : `<div class="msg-bot">${formatBotHTML(m.content || "")}</div>`).join("")}
+        ${g.reply ? `<div class="msg-bot"><div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:5px;">ANTWOORD — zoals de bezoeker het ziet:</div>${formatBotHTML(g.reply)}</div>` : ""}
+        ${fotoTriggerInfo(g)}
         ${row.onbeantwoord ? `<div style="font-size:12px;color:var(--warn-text);margin-top:8px;">⚠️ De bot kon dit mogelijk niet goed beantwoorden — voeg hieronder de juiste informatie toe.</div>` : ""}
         <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
           <span class="tip"><button class="btn-sm-red" style="padding:5px 10px;font-size:12px;" onclick="kennisVanuitVraag(${i})">➕ Kennis toevoegen</button><span class="tipbox">Opent de geleide kennis-wizard, voorgevuld met deze vraag en het huidige antwoord.</span></span>
@@ -1819,6 +1908,7 @@ function renderGesprekken() {
     </div>`
   }).join("")
   updateBulkBar()
+  enhanceAlleCarousels()
 }
 
 function toggleDetail(i) {
