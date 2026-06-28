@@ -96,7 +96,6 @@ const translations = {
       "eten-drinken": [
         "Wat staat er op het menu?",
         "Hebben jullie vegetarische opties?",
-        "Wat kosten de bieren?",
         "Kunnen jullie pizza's bestellen?",
       ],
       sport: [
@@ -283,7 +282,6 @@ const translations = {
       "eten-drinken": [
         "What's on the menu?",
         "Do you have vegetarian options?",
-        "How much are the beers?",
         "Can we order pizzas?",
       ],
       sport: [

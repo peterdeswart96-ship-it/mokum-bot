@@ -1156,6 +1156,8 @@ app.http("gesprekken", {
         // Alleen meegestuurde vlaggen wijzigen (zodat OK-markering de test-vlag niet wist, en omgekeerd)
         if (cbody.isTest !== undefined) data.isTest = !!cbody.isTest
         if (cbody.afgehandeld !== undefined) data.afgehandeld = !!cbody.afgehandeld
+        if (cbody.teReviewen !== undefined) data.teReviewen = !!cbody.teReviewen
+        if (cbody.fotoNodig !== undefined) data.fotoNodig = !!cbody.fotoNodig
         const newContent = JSON.stringify(data, null, 2)
         const putOpts = {
           hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -1169,7 +1171,7 @@ app.http("gesprekken", {
           },
         }
         await httpsRequest(putOpts, newContent)
-        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest, afgehandeld: data.afgehandeld }) }
+        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest, afgehandeld: data.afgehandeld, teReviewen: data.teReviewen, fotoNodig: data.fotoNodig }) }
       }
       // Opschonen — verwijdert gesprekken vóór een datum. Beveiligd met dashboard-wachtwoord.
       if (action === "cleanup" && request.method === "POST") {
