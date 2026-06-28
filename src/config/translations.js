@@ -102,7 +102,6 @@ const translations = {
         "Welke sportwedstrijden kijken jullie vanavond?",
         "Tonen jullie Champions League / Eredivisie?",
         "Op hoeveel schermen wordt sport getoond?",
-        "Hoe vroeg moet ik er zijn voor een grote wedstrijd?",
       ],
       "keu-reparatie": [
         "Wat kost een nieuwe pomerans (tip)?",
@@ -165,7 +164,6 @@ const translations = {
         "Hoe werkt 501 darts?",
         "Wat zijn de regels van Cricket darts?",
         "Hoe werkt 301 darts?",
-        "Wat is een checkout in darts?",
       ],
       "biljart": [
         "Wat zijn de regels van libre biljart?",
@@ -288,7 +286,6 @@ const translations = {
         "Which sports are you showing tonight?",
         "Do you show Champions League / Eredivisie?",
         "How many screens do you have for sports?",
-        "How early should I arrive for a big match?",
       ],
       "keu-reparatie": [
         "What does a new cue tip cost?",
@@ -351,7 +348,6 @@ const translations = {
         "How does 501 darts work?",
         "What are the rules of Cricket darts?",
         "How does 301 darts work?",
-        "What is a checkout in darts?",
       ],
       "biljart": [
         "What are the rules of libre billiards?",
