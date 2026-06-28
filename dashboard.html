@@ -140,6 +140,10 @@
   .status-badge.status-review { background: rgba(232,150,30,0.26); color: #c47a12; }
   .status-badge.status-rood { background: rgba(220,53,69,0.22); color: #d23b3b; }
   .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
+  /* Gegroepeerde actieknoppen (Toevoegen / Markeren / Verwijderen) */
+  .actie-groep { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .actie-vak { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; border: 1px solid var(--border); border-radius: 12px; padding: 8px; background: var(--card-2); }
+  .actie-label { font-size: 10px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
   .msg-user { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
   .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.55; color: var(--text); }
   .msg-bot p { margin: 0 0 6px 0; }
@@ -2152,14 +2156,29 @@ function renderGesprekken() {
         ${g.reply ? `<div class="msg-bot"><div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:5px;">ANTWOORD — zoals de bezoeker het ziet:</div>${formatBotHTML(g.reply)}</div>` : ""}
         ${fotoTriggerInfo(g)}
         ${row.onbeantwoord ? `<div style="font-size:12px;color:var(--warn-text);margin-top:8px;">⚠️ De bot kon dit mogelijk niet goed beantwoorden — voeg hieronder de juiste informatie toe.</div>` : ""}
-        <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
-          <span class="tip"><button class="btn-sm-red" style="padding:5px 10px;font-size:12px;" onclick="kennisVanuitVraag(${i})">➕ Kennis toevoegen</button><span class="tipbox">Opent de geleide kennis-wizard, voorgevuld met deze vraag en het huidige antwoord.</span></span>
-          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--info);border-color:var(--info-border);" onclick="nieuweFotoVanuitVraag(${i})">📷 Foto toevoegen</button><span class="tipbox">Opent de foto-wizard om hier een foto bij te uploaden. Het trigger-label voor het onderwerp van deze vraag wordt vast voorgevuld; Claude vult categorie/onderschrift aan.</span></span>
-          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.afgehandeld ? "color:var(--good);border-color:var(--good-border);" : ""}" onclick="markOkGesprek(${i}, ${!row.afgehandeld})">${row.afgehandeld ? "↩️ OK weghalen" : "✅ Markeer als OK"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als afgehandeld (antwoord was goed of kennis toegevoegd). De rij wordt lichtgroen.</span></span>
-          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.teReviewen ? "color:var(--warn-text);border-color:var(--warn);" : ""}" onclick="markReviewGesprek(${i}, ${!row.teReviewen})">${row.teReviewen ? "↩️ Review weghalen" : "🟠 To review"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als 'to review' (nog te beoordelen). De rij wordt oranje met een ❓.</span></span>
-          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.fotoNodig ? "color:var(--info);border-color:var(--info-border);" : ""}" onclick="markFotoNodigGesprek(${i}, ${!row.fotoNodig})">${row.fotoNodig ? "↩️ Foto-markering weg" : "📷 Foto's nodig"}</button><span class="tipbox">Markeer ${row.count > 1 ? `deze vraag` : "dit gesprek"} als 'foto's nodig'. Er verschijnt een 📷-icoon zodat je weet dat hier nog foto's bij moeten.</span></span>
-          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haal de markering weg).</span></span>
-          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--bad);border-color:var(--bad-border);" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief. Kan niet ongedaan worden gemaakt.</span></span>
+        <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap;align-items:flex-start;" onclick="event.stopPropagation()">
+          <div class="actie-groep">
+            <div class="actie-vak">
+              <span class="tip"><button class="btn-sm-red" style="padding:5px 10px;font-size:12px;" onclick="kennisVanuitVraag(${i})">➕ Kennis toevoegen</button><span class="tipbox">Opent de geleide kennis-wizard, voorgevuld met deze vraag en het huidige antwoord.</span></span>
+              <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;background:var(--info);color:#fff;border:1px solid var(--info);" onclick="nieuweFotoVanuitVraag(${i})">📷 Foto toevoegen</button><span class="tipbox">Opent de foto-wizard om hier een foto bij te uploaden. Het trigger-label voor het onderwerp van deze vraag wordt vast voorgevuld; Claude vult categorie/onderschrift aan.</span></span>
+            </div>
+            <div class="actie-label">Toevoegen</div>
+          </div>
+          <div class="actie-groep">
+            <div class="actie-vak">
+              <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.afgehandeld ? "color:var(--good);border-color:var(--good-border);" : ""}" onclick="markOkGesprek(${i}, ${!row.afgehandeld})">${row.afgehandeld ? "↩️ OK weghalen" : "✅ Markeer als OK"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als afgehandeld (antwoord was goed of kennis toegevoegd). De rij wordt lichtgroen.</span></span>
+              <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.teReviewen ? "color:var(--warn-text);border-color:var(--warn);" : ""}" onclick="markReviewGesprek(${i}, ${!row.teReviewen})">${row.teReviewen ? "↩️ Review weghalen" : "🟠 To review"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als 'to review' (nog te beoordelen). De rij wordt oranje met een ❓.</span></span>
+              <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.fotoNodig ? "color:var(--info);border-color:var(--info-border);" : ""}" onclick="markFotoNodigGesprek(${i}, ${!row.fotoNodig})">${row.fotoNodig ? "↩️ Foto-markering weg" : "📷 Foto's nodig"}</button><span class="tipbox">Markeer ${row.count > 1 ? `deze vraag` : "dit gesprek"} als 'foto's nodig'. Er verschijnt een 📷-icoon zodat je weet dat hier nog foto's bij moeten.</span></span>
+              <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haal de markering weg).</span></span>
+            </div>
+            <div class="actie-label">Markeren</div>
+          </div>
+          <div class="actie-groep">
+            <div class="actie-vak">
+              <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--bad);border-color:var(--bad-border);" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief. Kan niet ongedaan worden gemaakt.</span></span>
+            </div>
+            <div class="actie-label">Verwijderen</div>
+          </div>
         </div>
       </div>
     </div>`
