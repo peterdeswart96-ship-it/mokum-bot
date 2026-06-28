@@ -732,7 +732,7 @@
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
         <div style="font-size:13px;color:var(--muted);">Zie je een vraag die de bot niet (goed) beantwoordt? Voeg er meteen kennis of een foto voor toe.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn" onclick="nieuweFoto()">📷 Foto toevoegen</button>
+          <button class="btn" style="background:var(--info);color:#fff;border:1px solid var(--info);" onclick="nieuweFoto()">📷 Foto toevoegen</button>
           <button class="btn-sm-red" onclick="nieuweKennis()">➕ Kennis toevoegen</button>
         </div>
       </div>
@@ -754,6 +754,7 @@
         <div id="filter-panel" style="display:none;margin-top:14px;border-top:1px solid var(--divider);padding-top:14px;">
           <div class="foto-lbl" style="margin-bottom:6px;">Periode</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="datum-presets">
+            <button class="btn dp" data-p="vandaag" onclick="zetPeriode('vandaag')" style="padding:6px 12px;font-size:12px;">Vandaag</button>
             <button class="btn dp" data-p="7" onclick="zetPeriode('7')" style="padding:6px 12px;font-size:12px;">Laatste 7 dagen</button>
             <button class="btn dp" data-p="30" onclick="zetPeriode('30')" style="padding:6px 12px;font-size:12px;">30 dagen</button>
             <button class="btn dp" data-p="90" onclick="zetPeriode('90')" style="padding:6px 12px;font-size:12px;">90 dagen</button>
@@ -768,6 +769,7 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <span class="tip"><button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()">⚠️ Onbeantwoord</button><span class="tipbox">Alleen gesprekken waarin de bot waarschijnlijk geen antwoord wist.</span></span>
             <span class="tip"><button class="btn" id="filter-nietok" onclick="toggleNietOk()">🟢 Nog te doen</button><span class="tipbox">Alleen vragen die nog NIET als OK (afgehandeld) zijn gemarkeerd.</span></span>
+            <span class="tip"><button class="btn" id="filter-ok" onclick="toggleOk()">✅ OK</button><span class="tipbox">Alleen vragen die als OK (afgehandeld) zijn gemarkeerd.</span></span>
             <span class="tip"><button class="btn" id="filter-review" onclick="toggleTeReviewen()">🟠 To review</button><span class="tipbox">Alleen vragen die als 'to review' (nog te beoordelen) zijn gemarkeerd.</span></span>
             <span class="tip"><button class="btn" id="filter-foto" onclick="toggleFotoNodig()">📷 Foto nodig</button><span class="tipbox">Alleen vragen die als 'foto's nodig' zijn gemarkeerd.</span></span>
             <span class="tip"><button class="btn" id="filter-test" onclick="toggleTest()">🧪 Testvragen</button><span class="tipbox">Alleen testvragen (#test of handmatig gemarkeerd).</span></span>
@@ -1104,6 +1106,7 @@ let alleenTest = false
 let alleenNietOk = false
 let alleenTeReviewen = false
 let alleenFotoNodig = false
+let alleenOk = false
 let geselecteerdeNaams = new Set()
 let _gesprekRijen = []
 
@@ -2012,7 +2015,12 @@ let groeperen = true
 function eersteVraagVan(g){ return g.messages?.find(m => m.role === "user")?.content || "Geen vraag" }
 function toggleGroeperen() {
   groeperen = !groeperen
-  setFilterPill(document.getElementById("groepeer-btn"), groeperen)
+  // Groeperen is een weergavemodus (geen status-filter) → rood/accent i.p.v. groen.
+  const gb = document.getElementById("groepeer-btn")
+  if (gb) {
+    if (groeperen) { gb.style.background = "var(--accent)"; gb.style.color = "#fff"; gb.style.borderColor = "var(--accent)" }
+    else { gb.style.background = ""; gb.style.color = ""; gb.style.borderColor = "" }
+  }
   updateFilterBadge()
   renderGesprekken()
 }
@@ -2237,14 +2245,18 @@ function zoekGesprekken() {
     if (van && new Date(g.timestamp) < new Date(van)) return false
     if (tot && new Date(g.timestamp) > new Date(tot + "T23:59:59")) return false
     if (zoek && !g.messages?.some(m => m.content?.toLowerCase().includes(zoek)) && !g.reply?.toLowerCase().includes(zoek)) return false
-    if (alleenOnbeantwoord && !botKonNietAntwoorden(g)) return false
-    if (alleenTest && !isTestGesprek(g)) return false
-    if (alleenNietOk && isAfgehandeld(g)) return false
-    if (alleenTeReviewen && !isTeReviewen(g)) return false
-    if (alleenFotoNodig && !isFotoNodig(g)) return false
+    // TONEN-filters cumulatief (OF): bij ≥1 actief status-filter moet de vraag aan minstens één voldoen.
+    const statusChecks = []
+    if (alleenOnbeantwoord) statusChecks.push(botKonNietAntwoorden(g))
+    if (alleenNietOk) statusChecks.push(!isAfgehandeld(g))
+    if (alleenOk) statusChecks.push(isAfgehandeld(g))
+    if (alleenTeReviewen) statusChecks.push(isTeReviewen(g))
+    if (alleenFotoNodig) statusChecks.push(isFotoNodig(g))
+    if (alleenTest) statusChecks.push(isTestGesprek(g))
+    if (statusChecks.length && !statusChecks.some(Boolean)) return false
     return true
   })
-  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk || alleenTeReviewen || alleenFotoNodig
+  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk || alleenOk || alleenTeReviewen || alleenFotoNodig
   document.getElementById("zoek-status").textContent = actief ? `${gefilterd.length} resultaten` : ""
   updateFilterBadge()
   renderGesprekken()
@@ -2265,6 +2277,7 @@ function zetPeriode(p) {
   const tot = new Date()
   let van = null
   if (p === "alles") { van = null }
+  else if (p === "vandaag") { van = new Date(tot) }
   else if (p === "jaar") { van = new Date(tot.getFullYear(), 0, 1) }
   else { van = new Date(tot); van.setDate(van.getDate() - parseInt(p, 10)) }
   document.getElementById("zoek-van").value = van ? van.toISOString().split("T")[0] : ""
@@ -2273,15 +2286,21 @@ function zetPeriode(p) {
   zoekGesprekken()
 }
 
+// Actieve filter-pill: groen (zo zie je welke filters aanstaan).
 function setFilterPill(btn, aan) {
   if (!btn) return
-  if (aan) { btn.style.background = "var(--accent)"; btn.style.color = "#fff"; btn.style.borderColor = "var(--accent)" }
+  if (aan) { btn.style.background = "#2e9d57"; btn.style.color = "#fff"; btn.style.borderColor = "#2e9d57" }
   else { btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = "" }
 }
 
 function toggleNietOk() {
   alleenNietOk = !alleenNietOk
   setFilterPill(document.getElementById("filter-nietok"), alleenNietOk)
+  zoekGesprekken()
+}
+function toggleOk() {
+  alleenOk = !alleenOk
+  setFilterPill(document.getElementById("filter-ok"), alleenOk)
   zoekGesprekken()
 }
 function toggleTeReviewen() {
@@ -2303,6 +2322,7 @@ function updateFilterBadge() {
   if (alleenOnbeantwoord) n++
   if (alleenTest) n++
   if (alleenNietOk) n++
+  if (alleenOk) n++
   if (alleenTeReviewen) n++
   if (alleenFotoNodig) n++
   if (!groeperen) n++ // groeperen staat standaard aan
@@ -2438,11 +2458,13 @@ function resetZoek() {
   alleenOnbeantwoord = false
   alleenTest = false
   alleenNietOk = false
+  alleenOk = false
   alleenTeReviewen = false
   alleenFotoNodig = false
   setFilterPill(document.getElementById("filter-onbeantwoord"), false)
   setFilterPill(document.getElementById("filter-test"), false)
   setFilterPill(document.getElementById("filter-nietok"), false)
+  setFilterPill(document.getElementById("filter-ok"), false)
   setFilterPill(document.getElementById("filter-review"), false)
   setFilterPill(document.getElementById("filter-foto"), false)
   document.querySelectorAll("#datum-presets .dp").forEach(b => setFilterPill(b, false))
