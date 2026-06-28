@@ -16,8 +16,10 @@
   .login-card p { color: #888; font-size: 13px; margin-bottom: 1.5rem; }
   .login-card input { width: 100%; padding: 10px 14px; border-radius: 8px; background: #1f1f1f; border: 1px solid #2a2a2a; color: #fff; font-size: 14px; margin-bottom: 12px; }
   .login-card input:focus { outline: none; border-color: #cc0000; }
-  .btn-red { background: #cc0000; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; }
+  .btn-red { background: #cc0000; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .btn-red:hover { background: #990000; }
+  .btn-red:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-block { width: 100%; }
   #login-error { color: #ff6b6b; font-size: 13px; margin-top: 8px; display: none; }
 
   /* Dashboard */
@@ -37,14 +39,14 @@
   .tab-content.active { display: block; }
 
   /* Layout */
-  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-  .metric { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem; text-align: center; }
-  .metric-val { font-size: 28px; font-weight: 700; color: #fff; }
+  main { padding: 22px 24px; max-width: 1080px; margin: 0 auto; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .metric { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 0.7rem 0.6rem; text-align: center; }
+  .metric-val { font-size: 24px; font-weight: 700; color: #fff; }
   .metric-val.red { color: #cc0000; }
-  .metric-label { font-size: 12px; color: #666; margin-top: 4px; }
-  .card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-  .card-title { font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+  .metric-label { font-size: 12px; color: #888; margin-top: 3px; }
+  .card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 0.9rem 1.05rem; margin-bottom: 0.8rem; }
+  .card-title { font-size: 11.5px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 11px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
@@ -158,8 +160,8 @@
   .foto-inp:focus { outline: none; border-color: #cc0000; }
   .foto-lbl { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
   /* Foto's-tab: compacter (minder hoogte, ruimte effectiever) */
-  #tab-fotos .card { padding: 0.5rem 0.8rem; margin-bottom: 0.35rem; }
-  #tab-fotos .card-title { margin-bottom: 5px; }
+  #tab-fotos .card { padding: 0.7rem 0.9rem; margin-bottom: 0.55rem; }
+  #tab-fotos .card-title { margin-bottom: 7px; }
   #tab-fotos .insight-box { padding: 6px 11px; margin-bottom: 5px; font-size: 12px; line-height: 1.35; }
   #tab-fotos input[type=text], #tab-fotos select { padding: 5px 8px; font-size: 12px; }
   #tab-fotos input[type=file] { font-size: 11.5px; }
@@ -181,7 +183,7 @@
     <h1>MOKUM MAGIC 8 BALL</h1>
     <p>Dashboard — alleen voor beheerders</p>
     <input type="password" id="pwd-input" placeholder="Wachtwoord" onkeydown="if(event.key==='Enter')login()" />
-    <button class="btn-red" onclick="login()">Inloggen</button>
+    <button class="btn-red btn-block" onclick="login()">Inloggen</button>
     <div id="login-error">Verkeerd wachtwoord</div>
   </div>
 </div>
@@ -225,7 +227,7 @@
             <div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Tot</label><input type="date" id="datum-tot" /></div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
-            <button class="btn-sm-red" onclick="filterEnRender()" style="flex:1;">Toepassen</button>
+            <button class="btn" onclick="filterEnRender()" style="flex:1;">Toepassen</button>
             <button class="btn" onclick="resetFilter()" style="flex:1;">Reset</button>
             <button class="btn-sm-red" id="analyse-btn" onclick="startAnalyse('mark')" style="flex:2;">🤖 Analyseer met AI</button>
           </div>
@@ -257,11 +259,11 @@
             <div style="font-size:22px;font-weight:700;" id="kosten-tokens">—</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:11px;color:#666;margin-bottom:4px;">Geschatte kosten (Sonnet 4.6)</div>
+            <div style="font-size:11px;color:#666;margin-bottom:4px;">Geschatte kosten (Haiku 4.5)</div>
             <div style="font-size:22px;font-weight:700;color:#cc0000;" id="kosten-totaal">—</div>
           </div>
         </div>
-        <div style="font-size:11px;color:#444;margin-top:10px;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 3 berichten per gesprek. $3/$15 per 1M tokens.</div>
+        <div style="font-size:11px;color:#444;margin-top:10px;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 3 berichten per gesprek. $1/$5 per 1M tokens (Haiku 4.5).</div>
       </div>
 
       <!-- AI Analyse resultaat -->
@@ -318,7 +320,7 @@
   <div id="tab-upload" class="tab-content">
     <main>
 
-      <div class="card" style="max-width:680px;margin:0 auto;">
+      <div class="card" style="max-width:720px;margin:0 auto;">
         <div style="text-align:center;margin-bottom:24px;">
           <div style="font-size:40px;margin-bottom:8px;">📁</div>
           <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Kennisbron uploaden</div>
@@ -494,7 +496,7 @@
   <!-- TAB: FOTO'S -->
   <div id="tab-fotos" class="tab-content">
     <main>
-      <div style="max-width:780px;margin:0 auto;">
+      <div style="max-width:720px;margin:0 auto;">
         <div class="insight-box" style="margin-bottom:5px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
         <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
@@ -531,7 +533,7 @@
                 <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="venster" /> Apart venster (groot/PDF)</label>
               </div>
             </div>
-            <button class="btn-red" onclick="uploadFoto()" id="foto-upload-btn">Uploaden</button>
+            <button class="btn-sm-red" onclick="uploadFoto()" id="foto-upload-btn" style="align-self:flex-start;">📤 Uploaden</button>
             <div id="foto-status" style="font-size:13px;color:#888;"></div>
           </div>
         </div>
@@ -541,7 +543,7 @@
           <div style="font-size:11.5px;color:#888;margin-bottom:5px;line-height:1.35;">Selecteer meerdere foto's tegelijk. Ze komen binnen als <b>"Te labelen"</b> (nog niet zichtbaar voor bezoekers). Vraag daarna Claude om ze te categoriseren en van trigger words te voorzien.</div>
           <div style="display:flex;flex-direction:column;gap:5px;">
             <input type="file" id="foto-bulk-file" accept="image/*,application/pdf" multiple style="color:#ccc;" />
-            <button class="btn-red" onclick="bulkUploadFotos()" id="foto-bulk-btn">Bulk uploaden</button>
+            <button class="btn-sm-red" onclick="bulkUploadFotos()" id="foto-bulk-btn" style="align-self:flex-start;">📤 Bulk uploaden</button>
             <div id="foto-bulk-status" style="font-size:13px;color:#888;"></div>
           </div>
         </div>
@@ -780,8 +782,8 @@
             <span id="h-val-convos">300</span>
           </div>
           <div class="model-btn-row">
-            <button onclick="setHModel('haiku', this)" id="h-btn-haiku" class="model-btn">Haiku 4.5<br><span style="font-size:11px;color:#666;">Goedkoopst</span></button>
-            <button onclick="setHModel('sonnet', this)" id="h-btn-sonnet" class="model-btn active">Sonnet 4.6<br><span style="font-size:11px;color:#666;">⭐ Aanbevolen</span></button>
+            <button onclick="setHModel('haiku', this)" id="h-btn-haiku" class="model-btn active">Haiku 4.5<br><span style="font-size:11px;color:#666;">✓ In gebruik</span></button>
+            <button onclick="setHModel('sonnet', this)" id="h-btn-sonnet" class="model-btn">Sonnet 4.6<br><span style="font-size:11px;color:#666;">Krachtiger</span></button>
             <button onclick="setHModel('opus', this)" id="h-btn-opus" class="model-btn">Opus 4.7<br><span style="font-size:11px;color:#666;">Meest capabel</span></button>
           </div>
           <div class="total-box">
@@ -795,7 +797,7 @@
         </div>
         <div class="card-title" style="margin-top:20px;">Werkelijk gebruik tot nu toe</div>
         <div class="card">
-          <div class="row"><span class="row-label">Model</span><span class="row-val">Sonnet 4.6</span></div>
+          <div class="row"><span class="row-label">Model</span><span class="row-val">Haiku 4.5</span></div>
           <div class="row"><span class="row-label">Periode</span><span class="row-val">30 mei – 22 jun 2026</span></div>
           <div class="row"><span class="row-label">Totale kosten</span><span class="row-val">$0,68 ≈ €0,62</span></div>
           <div class="row"><span class="row-label">Geschat ~240 gesprekken</span><span class="row-val"><span class="badge badge-green">~$0,003 per gesprek</span></span></div>
@@ -1521,8 +1523,8 @@ function renderKosten() {
   const n = gefilterdEcht().length
   const tokensPerGesprek = 3 * (800 + 600)  // 3 berichten gemiddeld
   const totaalTokens = n * tokensPerGesprek
-  const input = (n * 3 * 800 / 1e6) * 3    // $3 per 1M input tokens
-  const output = (n * 3 * 600 / 1e6) * 15  // $15 per 1M output tokens
+  const input = (n * 3 * 800 / 1e6) * 1    // Haiku 4.5: $1 per 1M input tokens
+  const output = (n * 3 * 600 / 1e6) * 5   // Haiku 4.5: $5 per 1M output tokens
   const totaal = input + output
 
   document.getElementById("kosten-gesprekken").textContent = n
@@ -2103,7 +2105,7 @@ function showHTab(naam) {
   if (naam === "kosten") updateHCalc()
 }
 
-let hCurrentModel = "sonnet"
+let hCurrentModel = "haiku"
 const hModels = {
   haiku:  { input: 1, output: 5, name: "Haiku 4.5" },
   sonnet: { input: 3, output: 15, name: "Sonnet 4.6" },
