@@ -112,8 +112,12 @@
   .convo-act-del { background: var(--bad-soft); border-color: var(--bad-border); color: var(--bad); }
   .convo-act-del:hover { filter: brightness(1.1); }
   .convo-act-ok.on { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
+  .convo-act-review.on { background: var(--warn-soft); border-color: var(--warn); color: var(--warn-text); }
+  .convo-act-foto.on { background: var(--info-soft); border-color: var(--info-border); color: var(--info); }
   .convo-item.afgehandeld { background: var(--good-soft); border-radius: 10px; }
   .convo-item.afgehandeld:hover { background: var(--good-soft); }
+  .convo-item.te-reviewen { background: var(--warn-soft); border-radius: 10px; }
+  .convo-item.te-reviewen:hover { background: var(--warn-soft); }
   .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
   .msg-user { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
   .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.55; color: var(--text); }
@@ -683,6 +687,8 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <span class="tip"><button class="btn" id="filter-onbeantwoord" onclick="toggleOnbeantwoord()">⚠️ Onbeantwoord</button><span class="tipbox">Alleen gesprekken waarin de bot waarschijnlijk geen antwoord wist.</span></span>
             <span class="tip"><button class="btn" id="filter-nietok" onclick="toggleNietOk()">🟢 Nog te doen</button><span class="tipbox">Alleen vragen die nog NIET als OK (afgehandeld) zijn gemarkeerd.</span></span>
+            <span class="tip"><button class="btn" id="filter-review" onclick="toggleTeReviewen()">🟠 To review</button><span class="tipbox">Alleen vragen die als 'to review' (nog te beoordelen) zijn gemarkeerd.</span></span>
+            <span class="tip"><button class="btn" id="filter-foto" onclick="toggleFotoNodig()">📷 Foto nodig</button><span class="tipbox">Alleen vragen die als 'foto's nodig' zijn gemarkeerd.</span></span>
             <span class="tip"><button class="btn" id="filter-test" onclick="toggleTest()">🧪 Testvragen</button><span class="tipbox">Alleen testvragen (#test of handmatig gemarkeerd).</span></span>
             <span class="tip"><button class="btn" id="groepeer-btn" onclick="toggleGroeperen()">🔁 Groeperen</button><span class="tipbox">Voegt identieke vragen samen tot één rij met een ×-teller.</span></span>
           </div>
@@ -1014,6 +1020,8 @@ let gefilterd = []
 let alleenOnbeantwoord = false
 let alleenTest = false
 let alleenNietOk = false
+let alleenTeReviewen = false
+let alleenFotoNodig = false
 let geselecteerdeNaams = new Set()
 let _gesprekRijen = []
 
@@ -1862,7 +1870,7 @@ function renderGesprekken() {
       const key = eersteVraagVan(g).toLowerCase().trim().replace(/\s+/g, " ")
       const cur = map.get(key)
       if (!cur) {
-        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), naams: g.naam ? [g.naam] : [] })
+        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), teReviewen: isTeReviewen(g), fotoNodig: isFotoNodig(g), naams: g.naam ? [g.naam] : [] })
       } else {
         cur.count++
         cur.laatste = Math.max(cur.laatste, new Date(g.timestamp).getTime())
@@ -1870,13 +1878,15 @@ function renderGesprekken() {
         if (botKonNietAntwoorden(g)) cur.onbeantwoord = true
         if (isTestGesprek(g)) cur.test = true
         if (isAfgehandeld(g)) cur.afgehandeld = true
+        if (isTeReviewen(g)) cur.teReviewen = true
+        if (isFotoNodig(g)) cur.fotoNodig = true
         if (g.naam) cur.naams.push(g.naam)
       }
     })
     rijen = [...map.values()].sort((a, b) => b.laatste - a.laatste)
     document.getElementById("lijst-count").textContent = `${rijen.length} unieke vragen · ${gefilterd.length} gesprekken`
   } else {
-    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), naams: g.naam ? [g.naam] : [] }))
+    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), teReviewen: isTeReviewen(g), fotoNodig: isFotoNodig(g), naams: g.naam ? [g.naam] : [] }))
     document.getElementById("lijst-count").textContent = `${gefilterd.length} gesprekken`
   }
   _gesprekRijen = rijen
@@ -1890,12 +1900,12 @@ function renderGesprekken() {
     const taal = detecteerTaal(g)
     const onderwerp = detecteerOnderwerp(g)
     const countBadge = row.count > 1 ? ` <span class="tag" style="background:var(--border);color:var(--bad);">×${row.count}</span>` : ""
-    return `<div class="convo-item${row.afgehandeld ? " afgehandeld" : ""}" onclick="toggleDetail(${i})">
+    return `<div class="convo-item${row.afgehandeld ? " afgehandeld" : row.teReviewen ? " te-reviewen" : ""}" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <input type="checkbox" class="convo-check" ${row.naams.length && row.naams.every(n => geselecteerdeNaams.has(n)) ? "checked" : ""} onclick="event.stopPropagation();toggleSelectie(${i}, this.checked)" title="Selecteer voor bulk-actie" style="margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;cursor:pointer;">
         <div style="flex:1;min-width:0;">
-          <div class="convo-title">${row.afgehandeld ? '<span title="Afgehandeld (OK)" style="margin-right:6px;">✅</span>' : ""}${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
-          <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}<button class="convo-act convo-act-ok${row.afgehandeld ? " on" : ""}" onclick="event.stopPropagation();markOkGesprek(${i},${!row.afgehandeld})" title="${row.afgehandeld ? "OK-markering weghalen" : "Markeer als OK (afgehandeld)"}">✓</button><button class="convo-act convo-act-test${row.test ? " on" : ""}" onclick="event.stopPropagation();markTestGesprek(${i},${!row.test})" title="${row.test ? "Test-markering weghalen" : "Markeer als testvraag"}">T</button><button class="convo-act convo-act-del" onclick="event.stopPropagation();deleteGesprek(${i})" title="Gesprek verwijderen">×</button></div>
+          <div class="convo-title">${row.afgehandeld ? '<span title="Afgehandeld (OK)" style="margin-right:6px;">✅</span>' : ""}${row.teReviewen ? '<span title="To review" style="margin-right:6px;">❓</span>' : ""}${row.fotoNodig ? '<span title="Foto nodig" style="margin-right:6px;">📷</span>' : ""}${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
+          <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}<button class="convo-act convo-act-ok${row.afgehandeld ? " on" : ""}" onclick="event.stopPropagation();markOkGesprek(${i},${!row.afgehandeld})" title="${row.afgehandeld ? "OK-markering weghalen" : "Markeer als OK (afgehandeld)"}">✓</button><button class="convo-act convo-act-review${row.teReviewen ? " on" : ""}" onclick="event.stopPropagation();markReviewGesprek(${i},${!row.teReviewen})" title="${row.teReviewen ? "Review-markering weghalen" : "Markeer als 'to review'"}">?</button><button class="convo-act convo-act-foto${row.fotoNodig ? " on" : ""}" onclick="event.stopPropagation();markFotoNodigGesprek(${i},${!row.fotoNodig})" title="${row.fotoNodig ? "Foto-markering weghalen" : "Markeer: foto's nodig"}">📷</button><button class="convo-act convo-act-test${row.test ? " on" : ""}" onclick="event.stopPropagation();markTestGesprek(${i},${!row.test})" title="${row.test ? "Test-markering weghalen" : "Markeer als testvraag"}">T</button><button class="convo-act convo-act-del" onclick="event.stopPropagation();deleteGesprek(${i})" title="Gesprek verwijderen">×</button></div>
         </div>
         <span style="color:var(--muted-2);font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
       </div>
@@ -1910,6 +1920,8 @@ function renderGesprekken() {
         <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
           <span class="tip"><button class="btn-sm-red" style="padding:5px 10px;font-size:12px;" onclick="kennisVanuitVraag(${i})">➕ Kennis toevoegen</button><span class="tipbox">Opent de geleide kennis-wizard, voorgevuld met deze vraag en het huidige antwoord.</span></span>
           <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.afgehandeld ? "color:var(--good);border-color:var(--good-border);" : ""}" onclick="markOkGesprek(${i}, ${!row.afgehandeld})">${row.afgehandeld ? "↩️ OK weghalen" : "✅ Markeer als OK"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als afgehandeld (antwoord was goed of kennis toegevoegd). De rij wordt lichtgroen.</span></span>
+          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.teReviewen ? "color:var(--warn-text);border-color:var(--warn);" : ""}" onclick="markReviewGesprek(${i}, ${!row.teReviewen})">${row.teReviewen ? "↩️ Review weghalen" : "🟠 To review"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als 'to review' (nog te beoordelen). De rij wordt oranje met een ❓.</span></span>
+          <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;${row.fotoNodig ? "color:var(--info);border-color:var(--info-border);" : ""}" onclick="markFotoNodigGesprek(${i}, ${!row.fotoNodig})">${row.fotoNodig ? "↩️ Foto-markering weg" : "📷 Foto's nodig"}</button><span class="tipbox">Markeer ${row.count > 1 ? `deze vraag` : "dit gesprek"} als 'foto's nodig'. Er verschijnt een 📷-icoon zodat je weet dat hier nog foto's bij moeten.</span></span>
           <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tipbox">Markeer ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haal de markering weg).</span></span>
           <span class="tip"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--bad);border-color:var(--bad-border);" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief. Kan niet ongedaan worden gemaakt.</span></span>
         </div>
@@ -1973,9 +1985,11 @@ function zoekGesprekken() {
     if (alleenOnbeantwoord && !botKonNietAntwoorden(g)) return false
     if (alleenTest && !isTestGesprek(g)) return false
     if (alleenNietOk && isAfgehandeld(g)) return false
+    if (alleenTeReviewen && !isTeReviewen(g)) return false
+    if (alleenFotoNodig && !isFotoNodig(g)) return false
     return true
   })
-  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk
+  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk || alleenTeReviewen || alleenFotoNodig
   document.getElementById("zoek-status").textContent = actief ? `${gefilterd.length} resultaten` : ""
   updateFilterBadge()
   renderGesprekken()
@@ -1983,6 +1997,8 @@ function zoekGesprekken() {
 
 // Een gesprek/vraag is 'OK' (afgehandeld) als de beheerder 'm zo markeerde.
 function isAfgehandeld(g) { return !!g.afgehandeld }
+function isTeReviewen(g) { return !!g.teReviewen }
+function isFotoNodig(g) { return !!g.fotoNodig }
 
 function toggleFilterPanel() {
   const p = document.getElementById("filter-panel")
@@ -2013,6 +2029,16 @@ function toggleNietOk() {
   setFilterPill(document.getElementById("filter-nietok"), alleenNietOk)
   zoekGesprekken()
 }
+function toggleTeReviewen() {
+  alleenTeReviewen = !alleenTeReviewen
+  setFilterPill(document.getElementById("filter-review"), alleenTeReviewen)
+  zoekGesprekken()
+}
+function toggleFotoNodig() {
+  alleenFotoNodig = !alleenFotoNodig
+  setFilterPill(document.getElementById("filter-foto"), alleenFotoNodig)
+  zoekGesprekken()
+}
 
 function updateFilterBadge() {
   const van = document.getElementById("zoek-van")?.value
@@ -2022,6 +2048,8 @@ function updateFilterBadge() {
   if (alleenOnbeantwoord) n++
   if (alleenTest) n++
   if (alleenNietOk) n++
+  if (alleenTeReviewen) n++
+  if (alleenFotoNodig) n++
   if (!groeperen) n++ // groeperen staat standaard aan
   const badge = document.getElementById("filter-badge")
   if (badge) { badge.textContent = n; badge.style.display = n ? "inline-block" : "none" }
@@ -2060,8 +2088,27 @@ async function markOkGesprek(i, isOk) {
   const row = _gesprekRijen[i]; if (!row) return
   const naams = row.naams || []
   if (!naams.length) return
-  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, afgehandeld: isOk }) } catch {} }
-  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.afgehandeld = isOk })
+  // OK en 'to review' sluiten elkaar uit: bij OK zetten we review uit.
+  const payload = isOk ? { afgehandeld: true, teReviewen: false } : { afgehandeld: false }
+  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, ...payload }) } catch {} }
+  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) { g.afgehandeld = isOk; if (isOk) g.teReviewen = false } })
+  zoekGesprekken()
+}
+async function markReviewGesprek(i, val) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const naams = row.naams || []
+  if (!naams.length) return
+  const payload = val ? { teReviewen: true, afgehandeld: false } : { teReviewen: false }
+  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, ...payload }) } catch {} }
+  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) { g.teReviewen = val; if (val) g.afgehandeld = false } })
+  zoekGesprekken()
+}
+async function markFotoNodigGesprek(i, val) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const naams = row.naams || []
+  if (!naams.length) return
+  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, fotoNodig: val }) } catch {} }
+  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.fotoNodig = val })
   zoekGesprekken()
 }
 
@@ -2136,9 +2183,13 @@ function resetZoek() {
   alleenOnbeantwoord = false
   alleenTest = false
   alleenNietOk = false
+  alleenTeReviewen = false
+  alleenFotoNodig = false
   setFilterPill(document.getElementById("filter-onbeantwoord"), false)
   setFilterPill(document.getElementById("filter-test"), false)
   setFilterPill(document.getElementById("filter-nietok"), false)
+  setFilterPill(document.getElementById("filter-review"), false)
+  setFilterPill(document.getElementById("filter-foto"), false)
   document.querySelectorAll("#datum-presets .dp").forEach(b => setFilterPill(b, false))
   geselecteerdeNaams.clear()
   updateFilterBadge()
