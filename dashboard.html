@@ -2733,11 +2733,23 @@ async function voerUploadUit() {
     const data = await resp.json()
     if (data.success) {
       resultaat.style.cssText = "display:block;background:var(--good-soft);border:1px solid var(--good-soft);border-radius:8px;padding:14px;color:var(--good);font-size:14px;margin-bottom:12px;"
-      resultaat.innerHTML = `✅ <strong>Gelukt!</strong> Geüpload naar <code style="background:var(--good-soft);padding:2px 6px;border-radius:4px;">${data.pad}</code><br><br>De bot gebruikt dit direct. Stuur Peter ook even een WhatsApp!`
+      resultaat.innerHTML = `✅ <strong>Gelukt!</strong> Geüpload naar <code style="background:var(--good-soft);padding:2px 6px;border-radius:4px;">${data.pad}</code><br><br>De bot gebruikt dit direct.<div id="upload-en-status" style="margin-top:10px;font-size:13px;color:var(--text-2);">🌐 Engelse versie aanmaken…</div>`
       btn.textContent = "✓ Geüpload"
       const terugBtn = document.getElementById("terug-btn-4")
       terugBtn.textContent = "← Nieuw bestand uploaden"
       terugBtn.onclick = () => wizardReset()
+      // Automatisch een Engelse versie aanmaken zodat EN-bezoekers die direct krijgen.
+      try {
+        const vr = await fetch(`${API}/kennisbron-vertaal`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pad: data.pad }) })
+        const vd = await vr.json()
+        const enStatus = document.getElementById("upload-en-status")
+        if (enStatus) enStatus.innerHTML = vd.success
+          ? `🌐 Engelse versie toegevoegd — Engelse bezoekers krijgen die nu direct.`
+          : `⚠️ Engelse versie kon niet automatisch worden gemaakt (${vd.error || "fout"}). De Nederlandse versie werkt wel; je kunt 't later opnieuw proberen.`
+      } catch (e) {
+        const enStatus = document.getElementById("upload-en-status")
+        if (enStatus) enStatus.innerHTML = "⚠️ Engelse versie kon niet worden gemaakt — de Nederlandse versie werkt wel."
+      }
     } else { throw new Error(data.error || "Onbekende fout") }
   } catch (e) {
     resultaat.style.cssText = "display:block;background:var(--accent-soft);border:1px solid var(--border);border-radius:8px;padding:14px;color:var(--bad);font-size:13px;margin-bottom:12px;"
