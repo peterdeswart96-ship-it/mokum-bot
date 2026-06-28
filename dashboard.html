@@ -6,177 +6,215 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <title>Mokum Bot — Dashboard</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-  body { background: #0a0a0a; color: #fff; min-height: 100vh; }
+  /* ============ DESIGN TOKENS — licht + donker thema ============ */
+  :root, :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0a0a0a; --card:#171717; --card-2:#1f1f1f; --input:#1f1f1f; --border:#2a2a2a; --track:#262626; --divider:#222;
+    --text:#ffffff; --text-2:#d2d2d2; --muted:#909090; --muted-2:#828282; --bar:#4a4a4a;
+    --accent:#cc0000; --accent-hover:#990000; --accent-soft:rgba(204,0,0,0.14);
+    --good:#7bd88f; --good-soft:#15201a; --good-border:#243527; --good-text:#cfe6cb;
+    --warn:#d8aa2a; --warn-soft:#221a08; --warn-text:#e6c560;
+    --bad:#ff6b6b; --bad-soft:#2a1a1a; --bad-border:#5c2b2e;
+    --info:#7aa2f0; --info-soft:#101626; --info-border:#1c2942; --info-text:#c6d3ec;
+    --nav-hover:rgba(255,255,255,0.05); --shadow:0 1px 2px rgba(0,0,0,0.45); --shadow-lg:0 8px 24px rgba(0,0,0,0.7);
+  }
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f3f4f6; --card:#ffffff; --card-2:#f6f7f9; --input:#f1f2f5; --border:#e6e8ec; --track:#e9ebf0; --divider:#eef0f3;
+    --text:#15171c; --text-2:#3c424c; --muted:#5f636c; --muted-2:#6b707a; --bar:#cdd1d8;
+    --accent:#cc0000; --accent-hover:#990000; --accent-soft:rgba(204,0,0,0.08);
+    --good:#1f8a5b; --good-soft:#eaf6ee; --good-border:#cfe9d8; --good-text:#1f6b41;
+    --warn:#a8780f; --warn-soft:#fbf3e0; --warn-text:#8a6410;
+    --bad:#d23b3b; --bad-soft:#fbe9e9; --bad-border:#f3c9c9;
+    --info:#3a6fd0; --info-soft:#eef3fc; --info-border:#d4e0f5; --info-text:#274a86;
+    --nav-hover:rgba(0,0,0,0.045); --shadow:0 1px 3px rgba(16,24,40,0.07); --shadow-lg:0 10px 30px rgba(16,24,40,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  *:not(.chart-bar):not(.bar-fill) { transition: background-color .25s ease, border-color .25s ease, color .2s ease; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
   /* Login */
   #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  .login-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 2rem; width: 100%; max-width: 380px; text-align: center; }
+  .login-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; max-width: 380px; text-align: center; box-shadow: var(--shadow); }
   .login-card h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.06em; margin-bottom: 4px; }
-  .login-card p { color: #888; font-size: 13px; margin-bottom: 1.5rem; }
-  .login-card input { width: 100%; padding: 10px 14px; border-radius: 8px; background: #1f1f1f; border: 1px solid #2a2a2a; color: #fff; font-size: 14px; margin-bottom: 12px; }
-  .login-card input:focus { outline: none; border-color: #cc0000; }
-  .btn-red { background: #cc0000; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-red:hover { background: #990000; }
+  .login-card p { color: var(--muted); font-size: 13px; margin-bottom: 1.5rem; }
+  .login-card input { width: 100%; padding: 11px 14px; border-radius: 10px; background: var(--input); border: 1px solid var(--border); color: var(--text); font-size: 14px; margin-bottom: 12px; }
+  .login-card input:focus { outline: none; border-color: var(--accent); }
+  .btn-red { background: var(--accent); color: #fff; border: 1px solid var(--accent); padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-red:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   .btn-red:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-block { width: 100%; }
-  #login-error { color: #ff6b6b; font-size: 13px; margin-top: 8px; display: none; }
+  #login-error { color: var(--bad); font-size: 13px; margin-top: 8px; display: none; }
 
   /* Dashboard */
   #dashboard { display: none; }
-  header { background: #161616; border-bottom: 1px solid #2a2a2a; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.06em; }
-  header span { color: #cc0000; font-size: 11px; }
-  .logout-btn { background: none; border: 1px solid #2a2a2a; color: #888; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-  .logout-btn:hover { color: #fff; }
+  header { background: var(--bg); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1320px; margin: 0 auto; }
+  .hdr-brand { display: flex; align-items: center; gap: 12px; }
+  .hdr-ball { width: 36px; height: 36px; border-radius: 50%; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  .hdr-ball span { width: 19px; height: 19px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #000; }
+  header h1 { font-size: 15px; font-weight: 800; letter-spacing: 0.11em; color: var(--text); }
+  header .hdr-sub { color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
+  .hdr-actions { display: flex; align-items: center; gap: 10px; }
+  .icon-btn { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); }
+  .icon-btn:hover { border-color: var(--accent); }
+  .logout-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 9px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; box-shadow: var(--shadow); }
+  .logout-btn:hover { border-color: var(--accent); }
 
-  /* Tabs */
-  .tab-bar { background: #111; border-bottom: 1px solid #2a2a2a; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* Tabs — pill-nav in een card */
+  .tab-bar { max-width: 1320px; margin: 0 auto 4px; padding: 6px; display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
+  .tab-bar-wrap { padding: 0 18px; }
   .tab-bar::-webkit-scrollbar { height: 0; }
-  .tab { padding: 12px 18px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #888; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap; transition: color 0.15s; }
-  .tab:hover { color: #ccc; }
-  .tab.active { color: #fff; border-bottom: 2px solid #cc0000; font-weight: 600; }
+  .tab { padding: 10px 16px; font-size: 13.5px; cursor: pointer; border: none; background: none; border-radius: 10px; color: var(--muted); white-space: nowrap; min-height: 42px; display: inline-flex; align-items: center; transition: background 0.15s, color 0.15s; }
+  .tab:hover { background: var(--nav-hover); color: var(--text-2); }
+  .tab.active { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
   /* Layout */
-  main { padding: 22px 24px; max-width: 1280px; margin: 0 auto; }
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
-  .metric { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 0.7rem 0.6rem; text-align: center; }
-  .metric-val { font-size: 24px; font-weight: 700; color: #fff; }
-  .metric-val.red { color: #cc0000; }
-  .metric-label { font-size: 12px; color: #888; margin-top: 3px; }
-  .card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 0.9rem 1.05rem; margin-bottom: 0.8rem; }
-  .card-title { font-size: 11.5px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 11px; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  main { padding: 10px 22px 44px; max-width: 1320px; margin: 0 auto; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .metric { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; box-shadow: var(--shadow); }
+  .metric-val { font-size: 30px; font-weight: 700; line-height: 1; color: var(--text); }
+  .metric-val.red { color: var(--accent); }
+  .metric-label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
 
   /* Controls */
-  input[type=date], input[type=text], select { background: #1f1f1f; border: 1px solid #2a2a2a; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; width: 100%; }
-  input:focus, select:focus { outline: none; border-color: #cc0000; }
-  .btn { background: none; border: 1px solid #2a2a2a; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-  .btn:hover { background: #2a2a2a; }
-  .btn-sm-red { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
-  .btn-sm-red:hover { background: #990000; }
+  input[type=date], input[type=text], input[type=password], select, textarea { background: var(--input); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 13px; width: 100%; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  .btn { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn:hover { border-color: var(--accent); }
+  .btn-sm-red { background: var(--accent); color: #fff; border: 1px solid var(--accent); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-sm-red:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   .btn-sm-red:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* Gesprekken */
-  .convo-item { border-bottom: 1px solid #1f1f1f; padding: 12px 0; cursor: pointer; transition: background 0.1s; }
+  .convo-item { border-bottom: 1px solid var(--divider); padding: 14px 0; cursor: pointer; transition: background 0.1s; }
   .convo-item:last-child { border-bottom: none; }
-  .convo-item:hover { background: #1a1a1a; margin: 0 -1.25rem; padding: 12px 1.25rem; border-radius: 8px; }
-  .convo-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-  .convo-meta { font-size: 12px; color: #666; }
-  .convo-act { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; border-radius: 50%; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid #3a3a3a; background: #222; color: #bbb; margin-left: 6px; vertical-align: middle; padding: 0; line-height: 1; }
+  .convo-item:hover { background: var(--card-2); margin: 0 -14px; padding: 14px; border-radius: 12px; }
+  .convo-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; color: var(--text); }
+  .convo-meta { font-size: 12px; color: var(--muted-2); }
+  .convo-act { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: var(--card-2); color: var(--text-2); margin-left: 6px; vertical-align: middle; padding: 0; line-height: 1; }
   .convo-act:hover { filter: brightness(1.35); }
-  .convo-act.on { background: #143020; border-color: #2f5a36; color: #7bd88f; }
-  .convo-act-del { background: #cc2b2b; border-color: #e05656; color: #fff; }
-  .convo-act-del:hover { background: #e23a3a; }
-  .convo-detail { background: #0f0f0f; border-radius: 8px; padding: 12px; margin-top: 10px; display: none; }
-  .msg-user { background: #cc0000; color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
-  .msg-bot { background: #1f1f1f; border: 1px solid #2a2a2a; padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.5; }
+  .convo-act.on { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
+  .convo-act-del { background: var(--bad-soft); border-color: var(--bad-border); color: var(--bad); }
+  .convo-act-del:hover { filter: brightness(1.1); }
+  .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
+  .msg-user { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin: 4px 0 4px 60px; font-size: 13px; line-height: 1.5; }
+  .msg-bot { background: var(--input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 12px 12px 12px 2px; margin: 4px 60px 4px 0; font-size: 13px; line-height: 1.5; color: var(--text); }
 
   /* Analyse */
-  .analyse-item { background: #1f1f1f; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
-  .analyse-item strong { color: #fff; }
-  .insight-box { background: #1a0a0a; border-left: 3px solid #cc0000; border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; color: #ddd; }
-  .tip-box { background: #0a1a0a; border-left: 3px solid #4caf50; border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; color: #ccc; }
-  .warning-item { background: #1a1000; border-left: 3px solid #cc9900; border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: #cc9900; }
+  .analyse-item { background: var(--card-2); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: var(--text-2); }
+  .analyse-item strong { color: var(--text); }
+  .insight-box { background: var(--accent-soft); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; color: var(--text-2); }
+  .tip-box { background: var(--good-soft); border: 1px solid var(--good-border); border-left: 3px solid var(--good); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; color: var(--good-text); }
+  .warning-item { background: var(--warn-soft); border: 1px solid var(--border); border-left: 3px solid var(--warn); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; color: var(--warn-text); }
 
   /* Progress bars */
   .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .bar-label { font-size: 13px; color: #ccc; min-width: 140px; flex-shrink: 0; }
-  .bar-track { flex: 1; background: #2a2a2a; border-radius: 3px; height: 6px; }
-  .bar-fill { background: #cc0000; height: 6px; border-radius: 3px; transition: width 0.6s ease; }
-  .bar-fill.green { background: #4caf50; }
-  .bar-fill.blue { background: #4d9de0; }
-  .bar-val { font-size: 12px; color: #666; min-width: 32px; text-align: right; }
+  .bar-label { font-size: 13px; color: var(--text-2); min-width: 140px; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--track); border-radius: 999px; height: 7px; overflow: hidden; }
+  .bar-fill { background: var(--accent); height: 7px; border-radius: 999px; transition: width 0.6s ease; }
+  .bar-fill.green { background: var(--good); }
+  .bar-fill.blue { background: var(--info); }
+  .bar-val { font-size: 12px; color: var(--muted); min-width: 32px; text-align: right; }
 
   /* Chart */
   .chart-container { position: relative; height: 180px; margin-top: 8px; }
-  .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-bottom: 20px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-bottom: 20px; }
   .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
-  .chart-bar { width: 100%; background: #cc0000; border-radius: 3px 3px 0 0; transition: height 0.5s ease; min-height: 2px; }
-  .chart-bar-label { font-size: 9px; color: #555; text-align: center; position: absolute; bottom: 0; }
-  .chart-bar-val { font-size: 10px; color: #888; }
+  .chart-bar { width: 100%; background: var(--accent); border-radius: 6px 6px 0 0; transition: height 0.5s ease; min-height: 2px; }
+  .chart-bar-label { font-size: 9px; color: var(--muted-2); text-align: center; position: absolute; bottom: 0; }
+  .chart-bar-val { font-size: 10px; color: var(--muted); }
 
   /* Tags */
-  .tag { display: inline-block; background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 20px; padding: 3px 10px; font-size: 12px; color: #888; margin: 2px; }
-  .tag.red { background: #1a0a0a; border-color: #440000; color: #cc4444; }
-  .tag.green { background: #0a1a0a; border-color: #004400; color: #4caf50; }
-  .tag.blue { background: #0a0f1a; border-color: #002244; color: #4d9de0; }
+  .tag { display: inline-block; background: var(--input); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--text-2); margin: 2px; cursor: pointer; transition: all 0.15s; }
+  .tag:hover { border-color: var(--accent); color: var(--text); }
+  .tag.red { background: var(--accent-soft); border-color: var(--border); color: var(--accent); }
+  .tag.green { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
+  .tag.blue { background: var(--info-soft); border-color: var(--info-border); color: var(--info); }
 
   /* Misc */
-  .empty { text-align: center; padding: 3rem; color: #555; font-size: 13px; }
-  .loading { text-align: center; padding: 2rem; color: #666; font-size: 13px; }
-  .status-ok { color: #4caf50; font-size: 12px; }
-  .status-err { color: #ff6b6b; font-size: 12px; }
-  .divider { height: 1px; background: #1f1f1f; margin: 16px 0; }
-  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
-  .badge-green { background: #0d2e1a; color: #4caf7d; }
-  .badge-red { background: #1a0a0a; color: #cc4444; }
-  .badge-blue { background: #0d1f35; color: #4d9de0; }
-  .badge-gray { background: #222; color: #666; }
-  .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 20px; }
+  .empty { text-align: center; padding: 3rem; color: var(--muted-2); font-size: 13px; }
+  .loading { text-align: center; padding: 2rem; color: var(--muted); font-size: 13px; }
+  .status-ok { color: var(--good); font-size: 12px; }
+  .status-err { color: var(--bad); font-size: 12px; }
+  .divider { height: 1px; background: var(--divider); margin: 16px 0; }
+  .badge { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 999px; }
+  .badge-green { background: var(--good-soft); color: var(--good); border: 1px solid var(--good-border); }
+  .badge-red { background: var(--accent-soft); color: var(--accent); }
+  .badge-blue { background: var(--info-soft); color: var(--info); border: 1px solid var(--info-border); }
+  .badge-gray { background: var(--card-2); color: var(--muted); }
+  .section-label { font-size: 11px; color: var(--muted-2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 20px; }
 
-  .stap-dot { width: 32px; height: 32px; border-radius: 50%; background: #2a2a2a; color: #666; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s; }
-  .stap-dot.active { background: #cc0000; color: #fff; }
-  .stap-dot.done { background: #1a3a1a; color: #4caf50; }
-  .stap-lijn { flex: 1; height: 2px; background: #2a2a2a; margin: 0 6px; transition: background 0.3s; }
-  .stap-lijn.done { background: #cc0000; }
-  .tag { background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #888; cursor: pointer; transition: all 0.15s; }
-  .tag:hover { background: #2a2a2a; color: #fff; border-color: #444; }
-  .highlight-box { background: #0d2e1a; border: 1px solid #1a3a1a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #4caf7d; line-height: 1.6; }
+  .stap-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--input); color: var(--muted-2); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border); transition: all 0.3s; }
+  .stap-dot.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .stap-dot.done { background: var(--good-soft); color: var(--good); border-color: var(--good-border); }
+  .stap-lijn { flex: 1; height: 1px; background: var(--border); margin: 0 6px; transition: background 0.3s; }
+  .stap-lijn.done { background: var(--accent); }
+  .highlight-box { background: var(--good-soft); border: 1px solid var(--good-border); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: var(--good-text); line-height: 1.6; }
   /* Handleiding subtabs — uniforme styling */
-  #tab-handleiding .card-title { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  #tab-handleiding .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
   #tab-handleiding .card { font-size: 13px; }
-  #tab-handleiding .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; font-size: 13px; }
+  #tab-handleiding .row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--divider); font-size: 13px; }
   #tab-handleiding .row:last-child { border-bottom: none; }
-  #tab-handleiding .row-label { color: #aaa; font-size: 13px; font-weight: 400; flex: 1; }
-  #tab-handleiding .row-val { font-size: 13px; font-weight: 400; color: #fff; text-align: right; }
-  #tab-handleiding .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  #tab-handleiding .row-label { color: var(--text); font-size: 14px; font-weight: 400; flex: 1; }
+  #tab-handleiding .row-val { font-size: 13px; font-weight: 400; color: var(--muted); text-align: right; }
+  #tab-handleiding .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
   @media (max-width: 600px) { #tab-handleiding .grid-2 { grid-template-columns: 1fr; } }
 
   @media (max-width: 700px) {
-    main { padding: 14px 12px; }
+    header { padding: 12px 14px; }
+    .tab-bar-wrap { padding: 0 12px; }
+    main { padding: 10px 12px 32px; }
     .metrics { grid-template-columns: 1fr 1fr; gap: 8px; }
     .grid-2 { grid-template-columns: 1fr; }
     .grid-3 { grid-template-columns: 1fr; }
-    .tab { padding: 10px 12px; font-size: 12px; }
-    .tab-bar { padding: 0 12px; }
-    header { padding: 10px 14px; }
+    .tab { padding: 9px 13px; font-size: 12.5px; min-height: 40px; }
   }
   /* Foto-knoppen: opvallende kleuren per actie */
-  .fbtn { font-size: 11px; padding: 4px 9px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; transition: filter .12s; }
+  .fbtn { font-size: 11px; padding: 5px 10px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; transition: filter .12s; }
   .fbtn:hover { filter: brightness(1.28); }
-  .fbtn-save { background: #14324a; border-color: #1f567d; color: #9ecbff; }
-  .fbtn-view { background: #3a2f12; border-color: #6b5320; color: #f0c674; }
-  .fbtn-active { background: #143020; border-color: #2f5a36; color: #7bd88f; }
-  .fbtn-off { background: #2b2b2b; border-color: #4a4a4a; color: #cfcfcf; }
-  .fbtn-del { background: #3a1414; border-color: #6b2626; color: #ff8a8a; }
+  .fbtn-save { background: var(--info-soft); border-color: var(--info-border); color: var(--info); }
+  .fbtn-view { background: var(--warn-soft); border-color: var(--border); color: var(--warn-text); }
+  .fbtn-active { background: var(--good-soft); border-color: var(--good-border); color: var(--good); }
+  .fbtn-off { background: var(--card-2); border-color: var(--border); color: var(--text-2); }
+  .fbtn-del { background: var(--bad-soft); border-color: var(--bad-border); color: var(--bad); }
   /* Info-tooltip bij de knoppen */
   .tip { position: relative; display: inline-flex; align-items: center; }
   .tip .ic { cursor: help; font-style: normal; opacity: .75; font-size: 12px; }
-  .tip .tipbox { visibility: hidden; opacity: 0; position: absolute; bottom: 145%; left: 50%; transform: translateX(-50%); background: #000; color: #eee; border: 1px solid #444; border-radius: 8px; padding: 7px 9px; font-size: 11px; width: 190px; z-index: 200; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.7); pointer-events: none; font-weight: 400; white-space: normal; }
+  .tip .tipbox { visibility: hidden; opacity: 0; position: absolute; bottom: 145%; left: 50%; transform: translateX(-50%); background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 7px 9px; font-size: 11px; width: 190px; z-index: 200; line-height: 1.45; box-shadow: var(--shadow-lg); pointer-events: none; font-weight: 400; white-space: normal; }
   .tip:hover .tipbox { visibility: visible; opacity: 1; }
-  .gezicht-switch { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: #ddd; background: #1f1f1f; border: 1px solid #3a3a3a; border-radius: 7px; padding: 3px 9px; cursor: pointer; }
-  .gezicht-switch input { accent-color: #cc0000; cursor: pointer; }
-  .foto-inp { width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 12px; background: #1f1f1f; border: 1px solid #2a2a2a; border-radius: 6px; color: #fff; }
-  .foto-inp:focus { outline: none; border-color: #cc0000; }
-  .foto-lbl { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .gezicht-switch { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-2); background: var(--input); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  .gezicht-switch input { accent-color: var(--accent); cursor: pointer; }
+  .foto-inp { width: 100%; box-sizing: border-box; padding: 6px 9px; font-size: 12px; background: var(--input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
+  .foto-inp:focus { outline: none; border-color: var(--accent); }
+  .foto-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
   /* Foto's-tab: compacter (minder hoogte, ruimte effectiever) */
-  #tab-fotos .card { padding: 0.7rem 0.9rem; margin-bottom: 0.55rem; }
-  #tab-fotos .card-title { margin-bottom: 7px; }
-  #tab-fotos .insight-box { padding: 6px 11px; margin-bottom: 5px; font-size: 12px; line-height: 1.35; }
-  #tab-fotos input[type=text], #tab-fotos select { padding: 5px 8px; font-size: 12px; }
+  #tab-fotos .card { padding: 0.85rem 1rem; margin-bottom: 0.6rem; }
+  #tab-fotos .card-title { margin-bottom: 8px; }
+  #tab-fotos .insight-box { padding: 8px 12px; margin-bottom: 6px; font-size: 12px; line-height: 1.4; }
+  #tab-fotos input[type=text], #tab-fotos select { padding: 7px 9px; font-size: 12px; }
   #tab-fotos input[type=file] { font-size: 11.5px; }
-  #tab-fotos .btn-red { padding: 6px 14px; font-size: 12.5px; }
-  #tab-fotos .gezicht-switch { padding: 2px 7px; }
+  #tab-fotos .btn-red, #tab-fotos .btn-sm-red { padding: 8px 14px; font-size: 12.5px; }
+  #tab-fotos .gezicht-switch { padding: 3px 8px; }
   /* filterbalk boven het foto-overzicht */
-  .foto-filterbar { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .foto-filterbar { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
   .foto-filterbar select { width: auto; flex: 0 1 auto; max-width: 48%; }
   .foto-filterbar .ffsearch { flex: 1 1 170px; min-width: 130px; width: auto; }
-  .foto-filterbar .ffcount { font-size: 11px; color: #777; margin-left: auto; white-space: nowrap; }
+  .foto-filterbar .ffcount { font-size: 11px; color: var(--muted-2); margin-left: auto; white-space: nowrap; }
 </style>
+<script>
+  // Thema direct zetten (voorkomt flits van verkeerd thema bij laden)
+  (function(){
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('mokum-theme') || 'dark'); }
+    catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+  })();
+</script>
 </head>
 <body>
 
@@ -195,13 +233,20 @@
 <!-- Dashboard -->
 <div id="dashboard">
   <header>
-    <div>
-      <h1>MOKUM MAGIC 8 BALL</h1>
-      <span id="header-sub">Dashboard</span>
+    <div class="hdr-brand">
+      <div class="hdr-ball"><span>8</span></div>
+      <div>
+        <h1>MOKUM MAGIC 8 BALL</h1>
+        <div class="hdr-sub" id="header-sub">Dashboard</div>
+      </div>
     </div>
-    <button class="logout-btn" onclick="logout()">Uitloggen</button>
+    <div class="hdr-actions">
+      <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Licht/donker thema wisselen" aria-label="Thema wisselen"><span id="theme-icon">🌙</span></button>
+      <button class="logout-btn" onclick="logout()">Uitloggen</button>
+    </div>
   </header>
 
+  <div class="tab-bar-wrap">
   <div class="tab-bar">
     <button class="tab active" onclick="showTab('mark', this)">🎱 Analyse</button>
     <button class="tab" onclick="showTab('sander', this)">🌐 Website tips</button>
@@ -209,6 +254,7 @@
     <button class="tab" onclick="showTab('fotos', this)">📷 Foto's</button>
     <button class="tab" onclick="showTab('gesprekken', this)">💬 Gesprekken</button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
+  </div>
   </div>
 
   <!-- TAB: MARK & NICK -->
@@ -227,8 +273,8 @@
         <div class="card-title">Periode & filter</div>
         <div class="grid-2">
           <div style="display:flex;gap:8px;">
-            <div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Van</label><input type="date" id="datum-van" /></div>
-            <div style="flex:1;"><label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Tot</label><input type="date" id="datum-tot" /></div>
+            <div style="flex:1;"><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Van</label><input type="date" id="datum-van" /></div>
+            <div style="flex:1;"><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Tot</label><input type="date" id="datum-tot" /></div>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
             <button class="btn" onclick="filterEnRender()" style="flex:1;">Toepassen</button>
@@ -255,19 +301,19 @@
         <div class="card-title">Geschatte API kosten</div>
         <div class="grid-3" id="kosten-grid">
           <div style="text-align:center;">
-            <div style="font-size:11px;color:#666;margin-bottom:4px;">Totaal gesprekken geanalyseerd</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Totaal gesprekken geanalyseerd</div>
             <div style="font-size:22px;font-weight:700;" id="kosten-gesprekken">—</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:11px;color:#666;margin-bottom:4px;">Geschatte tokens</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Geschatte tokens</div>
             <div style="font-size:22px;font-weight:700;" id="kosten-tokens">—</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-size:11px;color:#666;margin-bottom:4px;">Geschatte kosten (Haiku 4.5)</div>
-            <div style="font-size:22px;font-weight:700;color:#cc0000;" id="kosten-totaal">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Geschatte kosten (Haiku 4.5)</div>
+            <div style="font-size:22px;font-weight:700;color:var(--accent);" id="kosten-totaal">—</div>
           </div>
         </div>
-        <div style="font-size:11px;color:#444;margin-top:10px;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 3 berichten per gesprek. $1/$5 per 1M tokens (Haiku 4.5).</div>
+        <div style="font-size:11px;color:var(--border);margin-top:10px;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 3 berichten per gesprek. $1/$5 per 1M tokens (Haiku 4.5).</div>
       </div>
 
       <!-- AI Analyse resultaat -->
@@ -277,7 +323,7 @@
           <span id="analyse-status-mark" class="status-ok"></span>
         </div>
         <div id="analyse-resultaat-mark">
-          <div style="font-size:13px;color:#555;">Klik op "Analyseer met AI" om een analyse te starten. De AI analyseert de gesprekken en geeft concrete tips om de bot te verbeteren.</div>
+          <div style="font-size:13px;color:var(--muted-2);">Klik op "Analyseer met AI" om een analyse te starten. De AI analyseert de gesprekken en geeft concrete tips om de bot te verbeteren.</div>
         </div>
       </div>
 
@@ -300,9 +346,9 @@
           <div class="card-title" style="margin-bottom:0;">Analyse voor website beheerder</div>
           <button class="btn-sm-red" id="analyse-btn-sander" onclick="startAnalyse('sander')">🤖 Analyseer voor website</button>
         </div>
-        <div style="font-size:13px;color:#555;margin-bottom:14px;">Deze analyse bekijkt welke informatie bezoekers zoeken die <em>niet</em> op de website staat, of onduidelijk is. Gebruik dit om poolen-amsterdam.nl te verbeteren.</div>
+        <div style="font-size:13px;color:var(--muted-2);margin-bottom:14px;">Deze analyse bekijkt welke informatie bezoekers zoeken die <em>niet</em> op de website staat, of onduidelijk is. Gebruik dit om poolen-amsterdam.nl te verbeteren.</div>
         <div id="analyse-resultaat-sander">
-          <div style="font-size:13px;color:#555;">Klik op "Analyseer voor website" om te starten.</div>
+          <div style="font-size:13px;color:var(--muted-2);">Klik op "Analyseer voor website" om te starten.</div>
         </div>
       </div>
 
@@ -328,7 +374,7 @@
         <div style="text-align:center;margin-bottom:24px;">
           <div style="font-size:40px;margin-bottom:8px;">📁</div>
           <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Kennisbron uploaden</div>
-          <div style="font-size:13px;color:#666;">Voeg nieuwe informatie toe aan de bot in 4 stappen</div>
+          <div style="font-size:13px;color:var(--muted);">Voeg nieuwe informatie toe aan de bot in 4 stappen</div>
         </div>
 
         <!-- Stappen indicator -->
@@ -345,12 +391,12 @@
         <!-- Stap 1: Wat wil je toevoegen? -->
         <div id="upload-stap-1">
           <div class="card-title">Stap 1 — Wat voor informatie wil je toevoegen?</div>
-          <div style="font-size:13px;color:#666;margin-bottom:16px;">Beschrijf kort wat je wil toevoegen. De wizard stelt daarna een bestandsnaam en categorie voor.</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Beschrijf kort wat je wil toevoegen. De wizard stelt daarna een bestandsnaam en categorie voor.</div>
           <textarea id="upload-omschrijving"
             placeholder="Bijv: We accepteren nu ook contant geld als betaalmethode naast PIN..."
-            style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;padding:12px 14px;min-height:100px;resize:vertical;font-family:Arial,sans-serif;line-height:1.5;"
-            oninput="this.style.borderColor='#cc0000'"></textarea>
-          <div style="margin-top:8px;font-size:12px;color:#555;">Of kies een categorie om direct mee te beginnen:</div>
+            style="width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:12px 14px;min-height:100px;resize:vertical;font-family:Arial,sans-serif;line-height:1.5;"
+            oninput="this.style.borderColor='var(--accent)'"></textarea>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted-2);">Of kies een categorie om direct mee te beginnen:</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;" id="snelkeuze-knoppen">
             <button class="tag" onclick="snelkeuze('Betaling en betaalmethoden')">💳 Betaling</button>
             <button class="tag" onclick="snelkeuze('Openingstijden en sluitingstijden')">📅 Openingstijden</button>
@@ -371,11 +417,11 @@
         <!-- Stap 2: Voorstel bestandsnaam en categorie -->
         <div id="upload-stap-2" style="display:none;">
           <div class="card-title">Stap 2 — Voorstel bestandsnaam en categorie</div>
-          <div style="font-size:13px;color:#666;margin-bottom:16px;">De wizard heeft een voorstel gemaakt op basis van je omschrijving. Je kunt dit aanpassen.</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">De wizard heeft een voorstel gemaakt op basis van je omschrijving. Je kunt dit aanpassen.</div>
 
           <div style="margin-bottom:14px;">
-            <label style="font-size:12px;color:#888;display:block;margin-bottom:6px;">Categorie (map in Azure Storage)</label>
-            <select id="upload-map" style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;padding:10px 12px;">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Categorie (map in Azure Storage)</label>
+            <select id="upload-map" style="width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 12px;">
               <option value="algemeen">algemeen — Algemene Mokum informatie</option>
               <option value="openingstijden">openingstijden — Openingstijden</option>
               <option value="tarieven">tarieven — Tarieven en prijzen</option>
@@ -394,19 +440,19 @@
           </div>
 
           <div style="margin-bottom:14px;">
-            <label style="font-size:12px;color:#888;display:block;margin-bottom:6px;">Bestandsnaam</label>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Bestandsnaam</label>
             <div style="display:flex;align-items:center;gap:8px;">
               <input type="text" id="upload-bestandsnaam"
-                style="flex:1;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:14px;padding:10px 12px;"
+                style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px 12px;"
                 placeholder="bijv: betaling.txt" />
-              <span style="font-size:12px;color:#555;">.txt</span>
+              <span style="font-size:12px;color:var(--muted-2);">.txt</span>
             </div>
-            <div style="font-size:11px;color:#555;margin-top:4px;">Alleen letters, cijfers en koppeltekens. Geen spaties.</div>
+            <div style="font-size:11px;color:var(--muted-2);margin-top:4px;">Alleen letters, cijfers en koppeltekens. Geen spaties.</div>
           </div>
 
-          <div style="background:#0a1a0a;border:1px solid #1a3a1a;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
-            <div style="font-size:12px;color:#4caf50;margin-bottom:4px;">Volledig bestandspad:</div>
-            <div style="font-size:13px;font-family:monospace;color:#ccc;" id="pad-preview">kennisbronnen/algemeen/betaling.txt</div>
+          <div style="background:var(--good-soft);border:1px solid var(--good-soft);border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+            <div style="font-size:12px;color:var(--good);margin-bottom:4px;">Volledig bestandspad:</div>
+            <div style="font-size:13px;font-family:monospace;color:var(--text-2);" id="pad-preview">kennisbronnen/algemeen/betaling.txt</div>
           </div>
 
           <div style="display:flex;justify-content:space-between;">
@@ -418,17 +464,17 @@
         <!-- Stap 3: Inhoud invoeren -->
         <div id="upload-stap-3" style="display:none;">
           <div class="card-title">Stap 3 — Inhoud van het bestand</div>
-          <div style="font-size:13px;color:#666;margin-bottom:16px;">Typ de tekst die de bot moet gebruiken. Of upload een bestaand .txt bestand.</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Typ de tekst die de bot moet gebruiken. Of upload een bestaand .txt bestand.</div>
 
           <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <button class="btn" id="tab-typ" onclick="switchInvoer('typ')" style="flex:1;border-color:#cc0000;color:#fff;">✏️ Zelf typen</button>
+            <button class="btn" id="tab-typ" onclick="switchInvoer('typ')" style="flex:1;border-color:var(--accent);color:var(--text);">✏️ Zelf typen</button>
             <button class="btn" id="tab-upload-file" onclick="switchInvoer('bestand')" style="flex:1;">📄 Bestand uploaden</button>
           </div>
 
           <!-- Zelf typen -->
           <div id="invoer-typ">
-            <div style="font-size:12px;color:#666;margin-bottom:8px;">Voorbeeld structuur:</div>
-            <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:12px;color:#666;margin-bottom:10px;line-height:1.8;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Voorbeeld structuur:</div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:monospace;font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.8;">
               # Onderwerp<br>
               Bijgewerkt: <span id="datum-voorbeeld"></span><br><br>
               Schrijf hier de informatie die de bot moet weten.<br>
@@ -436,28 +482,28 @@
             </div>
             <textarea id="upload-inhoud-typ"
               placeholder="Typ hier de tekst..."
-              style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:13px;padding:12px 14px;min-height:180px;resize:vertical;font-family:monospace;line-height:1.6;"></textarea>
+              style="width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:12px 14px;min-height:180px;resize:vertical;font-family:monospace;line-height:1.6;"></textarea>
           </div>
 
           <!-- Bestand uploaden -->
           <div id="invoer-bestand" style="display:none;">
-            <div style="border:2px dashed #2a2a2a;border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s;"
+            <div style="border:2px dashed var(--border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s;"
               id="drop-zone"
-              ondragover="event.preventDefault();this.style.borderColor='#cc0000'"
-              ondragleave="this.style.borderColor='#2a2a2a'"
+              ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+              ondragleave="this.style.borderColor='var(--border)'"
               ondrop="handleDrop(event)">
               <div style="font-size:32px;margin-bottom:8px;">📄</div>
-              <div style="font-size:14px;color:#888;margin-bottom:8px;">Sleep een .txt bestand hierheen</div>
-              <div style="font-size:12px;color:#555;margin-bottom:12px;">of</div>
-              <label style="background:#cc0000;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+              <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">Sleep een .txt bestand hierheen</div>
+              <div style="font-size:12px;color:var(--muted-2);margin-bottom:12px;">of</div>
+              <label style="background:var(--accent);color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
                 Bestand kiezen
                 <input type="file" accept=".txt,.md" style="display:none;" onchange="handleBestand(this)" />
               </label>
             </div>
-            <div id="bestand-naam" style="font-size:13px;color:#4caf50;margin-top:10px;display:none;"></div>
+            <div id="bestand-naam" style="font-size:13px;color:var(--good);margin-top:10px;display:none;"></div>
             <textarea id="upload-inhoud-bestand"
               placeholder="Bestandsinhoud wordt hier getoond..."
-              style="width:100%;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-size:13px;padding:12px 14px;min-height:120px;resize:vertical;font-family:monospace;line-height:1.6;margin-top:10px;display:none;"></textarea>
+              style="width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:12px 14px;min-height:120px;resize:vertical;font-family:monospace;line-height:1.6;margin-top:10px;display:none;"></textarea>
           </div>
 
           <div style="display:flex;justify-content:space-between;margin-top:16px;">
@@ -469,16 +515,16 @@
         <!-- Stap 4: Preview en bevestigen -->
         <div id="upload-stap-4" style="display:none;">
           <div class="card-title">Stap 4 — Preview en bevestigen</div>
-          <div style="font-size:13px;color:#666;margin-bottom:16px;">Controleer de informatie voordat je uploadt.</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Controleer de informatie voordat je uploadt.</div>
 
-          <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:8px;padding:14px;margin-bottom:14px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-              <span style="font-size:12px;color:#666;">Bestandspad</span>
-              <span style="font-size:12px;font-family:monospace;color:#ccc;" id="preview-pad"></span>
+              <span style="font-size:12px;color:var(--muted);">Bestandspad</span>
+              <span style="font-size:12px;font-family:monospace;color:var(--text-2);" id="preview-pad"></span>
             </div>
-            <div style="height:1px;background:#222;margin-bottom:8px;"></div>
-            <div style="font-size:12px;color:#666;margin-bottom:6px;">Inhoud preview:</div>
-            <pre id="preview-inhoud" style="font-size:12px;color:#aaa;line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;"></pre>
+            <div style="height:1px;background:var(--divider);margin-bottom:8px;"></div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Inhoud preview:</div>
+            <pre id="preview-inhoud" style="font-size:12px;color:var(--text-2);line-height:1.6;white-space:pre-wrap;max-height:200px;overflow-y:auto;"></pre>
           </div>
 
           <div class="highlight-box" style="margin-bottom:16px;">
@@ -502,53 +548,53 @@
     <main>
       <div style="max-width:1032px;margin:0 auto;">
         <div class="insight-box" style="margin-bottom:5px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
-        <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
+        <div style="font-size:10px;color:var(--muted-2);text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:var(--muted-2);">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
         <div class="card" style="margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
-            <div style="font-size:13px;color:#ccc;flex:1;min-width:220px;">🛡️ <b>Gezichten anonimiseren</b> (AVG). Bij het uploaden worden herkende gezichten automatisch afgedekt. <span style="color:#888;">Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet.</span></div>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#fff;white-space:nowrap;"><input type="checkbox" id="foto-anon-toggle" onchange="setFotoAnon(this.checked)"> Aan</label>
+            <div style="font-size:13px;color:var(--text-2);flex:1;min-width:220px;">🛡️ <b>Gezichten anonimiseren</b> (AVG). Bij het uploaden worden herkende gezichten automatisch afgedekt. <span style="color:var(--muted);">Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet.</span></div>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text);white-space:nowrap;"><input type="checkbox" id="foto-anon-toggle" onchange="setFotoAnon(this.checked)"> Aan</label>
           </div>
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid #2a2a2a;">
-            <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#ccc;">Stijl:
-              <select id="foto-anonstijl" onchange="setAnonStijl(this.value)" style="background:#222;color:#fff;border:1px solid #444;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--border);">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2);">Stijl:
+              <select id="foto-anonstijl" onchange="setAnonStijl(this.value)" style="background:var(--divider);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;">
                 <option value="blur">Blur (vervagen)</option>
                 <option value="pixelate">Pixelate (mozaïek)</option>
                 <option value="zwart">Zwart vlak</option>
                 <option value="smiley">Smiley</option>
               </select>
             </label>
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#ccc;" title="Toont vóór elke upload een venster waarin je zelf gemiste gezichten kunt toevoegen (slepen) of valse verwijderen."><input type="checkbox" id="foto-correctie-toggle" onchange="setCorrectie(this.checked)"> 🖊️ Controleren vóór upload (gemiste gezichten toevoegen)</label>
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text-2);" title="Toont vóór elke upload een venster waarin je zelf gemiste gezichten kunt toevoegen (slepen) of valse verwijderen."><input type="checkbox" id="foto-correctie-toggle" onchange="setCorrectie(this.checked)"> 🖊️ Controleren vóór upload (gemiste gezichten toevoegen)</label>
           </div>
         </div>
 
         <div class="card" style="margin-bottom:16px;">
           <div class="card-title">Foto uploaden</div>
           <div style="display:flex;flex-direction:column;gap:5px;">
-            <input type="file" id="foto-file" accept="image/*,application/pdf" style="color:#ccc;" />
+            <input type="file" id="foto-file" accept="image/*,application/pdf" style="color:var(--text-2);" />
             <label class="gezicht-switch" style="align-self:flex-start;"><input type="checkbox" id="foto-claude-label" checked onchange="toggleClaudeLabel()"> 🤖 Door Claude laten labelen (categorie + onderschrift + trigger words)</label>
             <div id="foto-velden" style="display:none;flex-direction:column;gap:10px;">
               <input type="text" id="foto-categorie" placeholder="Categorie (bijv. Eten & drinken, Pool, Darts)" />
               <input type="text" id="foto-onderschrift" placeholder="Onderschrift (bijv. Menukaart Mokum)" />
               <input type="text" id="foto-triggers" placeholder="Trigger words, komma-gescheiden (menu, eten, drinken, kaart)" />
-              <div style="display:flex;gap:18px;align-items:center;font-size:13px;color:#ccc;flex-wrap:wrap;">
+              <div style="display:flex;gap:18px;align-items:center;font-size:13px;color:var(--text-2);flex-wrap:wrap;">
                 <span>Weergave:</span>
                 <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="inline" checked /> Inline (klein in chat)</label>
                 <label style="cursor:pointer;"><input type="radio" name="foto-weergave" value="venster" /> Apart venster (groot/PDF)</label>
               </div>
             </div>
             <button class="btn-sm-red" onclick="uploadFoto()" id="foto-upload-btn" style="align-self:flex-start;">📤 Uploaden</button>
-            <div id="foto-status" style="font-size:13px;color:#888;"></div>
+            <div id="foto-status" style="font-size:13px;color:var(--muted);"></div>
           </div>
         </div>
 
         <div class="card" style="margin-bottom:16px;">
           <div class="card-title">Bulk uploaden</div>
-          <div style="font-size:11.5px;color:#888;margin-bottom:5px;line-height:1.35;">Selecteer meerdere foto's tegelijk. Ze komen binnen als <b>"Te labelen"</b> (nog niet zichtbaar voor bezoekers). Vraag daarna Claude om ze te categoriseren en van trigger words te voorzien.</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-bottom:5px;line-height:1.35;">Selecteer meerdere foto's tegelijk. Ze komen binnen als <b>"Te labelen"</b> (nog niet zichtbaar voor bezoekers). Vraag daarna Claude om ze te categoriseren en van trigger words te voorzien.</div>
           <div style="display:flex;flex-direction:column;gap:5px;">
-            <input type="file" id="foto-bulk-file" accept="image/*,application/pdf" multiple style="color:#ccc;" />
+            <input type="file" id="foto-bulk-file" accept="image/*,application/pdf" multiple style="color:var(--text-2);" />
             <button class="btn-sm-red" onclick="bulkUploadFotos()" id="foto-bulk-btn" style="align-self:flex-start;">📤 Bulk uploaden</button>
-            <div id="foto-bulk-status" style="font-size:13px;color:#888;"></div>
+            <div id="foto-bulk-status" style="font-size:13px;color:var(--muted);"></div>
           </div>
         </div>
 
@@ -560,7 +606,7 @@
             <input type="text" id="foto-filter-zoek" class="ffsearch" placeholder="🔎 Zoek in categorie, onderschrift, trigger words…" oninput="renderFotos()">
             <span class="ffcount" id="foto-filter-count"></span>
           </div>
-          <div id="foto-overzicht" style="font-size:13px;color:#888;">Laden...</div>
+          <div id="foto-overzicht" style="font-size:13px;color:var(--muted);">Laden...</div>
         </div>
       </div>
     </main>
@@ -583,13 +629,13 @@
             <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" onclick="resetZoek()">Reset</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Wist het zoekveld, de datums en alle actieve filters (onbeantwoord/test).</span></span></span>
           </div>
         </div>
-        <div style="font-size:12px;color:#555;margin-top:8px;" id="zoek-status"></div>
+        <div style="font-size:12px;color:var(--muted-2);margin-top:8px;" id="zoek-status"></div>
       </div>
 
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div class="card-title" style="margin-bottom:0;">Gesprekken</div>
-          <span style="font-size:12px;color:#555;" id="lijst-count"></span>
+          <span style="font-size:12px;color:var(--muted-2);" id="lijst-count"></span>
         </div>
         <div id="gesprekken-lijst"><div class="loading">Laden...</div></div>
       </div>
@@ -602,20 +648,20 @@
     <main>
 
       <!-- Subtab balk -->
-      <div style="display:flex;gap:4px;border-bottom:1px solid #1f1f1f;margin-bottom:24px;flex-wrap:wrap;">
-        <button class="btn" id="htab-btn-overzicht" onclick="showHTab('overzicht')" style="border-radius:0;border-bottom:2px solid #cc0000;color:#fff;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🏠 Overzicht</button>
-        <button class="btn" id="htab-btn-talen" onclick="showHTab('talen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🌐 Talen</button>
-        <button class="btn" id="htab-btn-kennisbronnen" onclick="showHTab('kennisbronnen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📁 Kennisbronnen</button>
-        <button class="btn" id="htab-btn-fotos" onclick="showHTab('fotos')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📷 Foto's</button>
-        <button class="btn" id="htab-btn-kosten" onclick="showHTab('kosten')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">💶 API kosten</button>
-        <button class="btn" id="htab-btn-rubrieken" onclick="showHTab('rubrieken')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📋 Rubrieken</button>
-        <button class="btn" id="htab-btn-problemen" onclick="showHTab('problemen')" style="border-radius:0;border-bottom:2px solid transparent;color:#666;background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🔧 Problemen</button>
+      <div style="display:flex;gap:4px;border-bottom:1px solid var(--input);margin-bottom:24px;flex-wrap:wrap;">
+        <button class="btn" id="htab-btn-overzicht" onclick="showHTab('overzicht')" style="border-radius:0;border-bottom:2px solid var(--accent);color:var(--text);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🏠 Overzicht</button>
+        <button class="btn" id="htab-btn-talen" onclick="showHTab('talen')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🌐 Talen</button>
+        <button class="btn" id="htab-btn-kennisbronnen" onclick="showHTab('kennisbronnen')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📁 Kennisbronnen</button>
+        <button class="btn" id="htab-btn-fotos" onclick="showHTab('fotos')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📷 Foto's</button>
+        <button class="btn" id="htab-btn-kosten" onclick="showHTab('kosten')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">💶 API kosten</button>
+        <button class="btn" id="htab-btn-rubrieken" onclick="showHTab('rubrieken')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📋 Rubrieken</button>
+        <button class="btn" id="htab-btn-problemen" onclick="showHTab('problemen')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🔧 Problemen</button>
       </div>
 
       <!-- SUBTAB: OVERZICHT -->
       <div id="htab-overzicht">
         <div class="insight-box" style="margin-bottom:16px;">✅ De Mokum Magic 8 Ball is live op <strong>poolen-amsterdam.nl</strong>. Bezoekers zien de bot rechtsonder op elke pagina.</div>
-        <div class="insight-box" style="margin-bottom:16px;background:#0a1420;border-left-color:#2b6cb0;">🧪 <strong>Aan het testen?</strong> Begin je vraag met <code style="background:#11243a;padding:1px 6px;border-radius:4px;">#test</code> (bijv. <em>"#test hoeveel pooltafels zijn er?"</em>). De bot antwoordt gewoon, maar het gesprek krijgt in het dashboard (tab <strong>Gesprekken</strong>) een 🧪-markering en blijft zo apart van de echte bezoekersvragen. Geef dit ook door aan Nick & Mark als zij testen. Je kunt gesprekken daar ook handmatig als test markeren of verwijderen.</div>
+        <div class="insight-box" style="margin-bottom:16px;background:var(--info-soft);border-left-color:var(--info);">🧪 <strong>Aan het testen?</strong> Begin je vraag met <code style="background:var(--info-border);padding:1px 6px;border-radius:4px;">#test</code> (bijv. <em>"#test hoeveel pooltafels zijn er?"</em>). De bot antwoordt gewoon, maar het gesprek krijgt in het dashboard (tab <strong>Gesprekken</strong>) een 🧪-markering en blijft zo apart van de echte bezoekersvragen. Geef dit ook door aan Nick & Mark als zij testen. Je kunt gesprekken daar ook handmatig als test markeren of verwijderen.</div>
         <div class="card-title">Hoe werkt het?</div>
         <div class="card">
           <div class="row"><span class="row-label">🌐 WordPress site</span><span class="row-val" style="font-size:13px;">Bot laadt automatisch via één script tag</span></div>
@@ -627,24 +673,24 @@
         <div class="card-title" style="margin-top:20px;">Wat kan de bot?</div>
         <div class="grid-2">
           <div class="card" style="padding:.875rem 1rem;">
-            <div style="font-size:13px;color:#888;margin-bottom:8px;">Voor bezoekers</div>
-            <div style="font-size:13px;color:#666;line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren<br>📷 Foto's & Menukaarten</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Voor bezoekers</div>
+            <div style="font-size:13px;color:var(--muted);line-height:2;">🎱 Pool & Biljart<br>🎯 Darts<br>📅 Openingstijden<br>💶 Tarieven<br>🏆 Toernooien<br>📖 Spelregels<br>🍺 Eten & Drinken<br>📺 Sport kijken<br>🔧 Keu reparatie<br>🛒 Keu & Accessoires<br>🎓 Clinics & Coaching<br>🕹️ Spelletjes & Gaming<br>📍 Locatie & Parkeren<br>📷 Foto's & Menukaarten</div>
           </div>
           <div class="card" style="padding:.875rem 1rem;">
-            <div style="font-size:13px;color:#888;margin-bottom:8px;">Intern (met wachtwoord)</div>
-            <div style="font-size:13px;color:#666;line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info</div>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #222;">
-              <div style="font-size:12px;color:#666;margin-bottom:4px;">Intern wachtwoord:</div>
-              <div style="font-size:13px;color:#888;">Vraag het wachtwoord op bij Peter</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Intern (met wachtwoord)</div>
+            <div style="font-size:13px;color:var(--muted);line-height:2;">🔒 Werkroosters<br>🔒 Keukeninstructies<br>🔒 Kassa-instructies<br>🔒 Overige interne info</div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--divider);">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Intern wachtwoord:</div>
+              <div style="font-size:13px;color:var(--muted);">Vraag het wachtwoord op bij Peter</div>
             </div>
           </div>
         </div>
         <div class="card-title" style="margin-top:20px;">Handige links</div>
         <div class="card">
-          <div class="row"><span class="row-label">🤖 De bot</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl" style="color:#cc4444;" target="_blank">mokum-bot.pdscloud.nl</a></span></div>
-          <div class="row"><span class="row-label">📷 Fotolijst (afvinkbaar)</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/foto-checklist.html" style="color:#cc4444;" target="_blank">foto-checklist</a></span></div>
-          <div class="row"><span class="row-label">🏆 Toernooien</span><span class="row-val"><a href="https://cuescore.com/mokumpooldarts/tournaments" style="color:#cc4444;" target="_blank">cuescore.com</a></span></div>
-          <div class="row"><span class="row-label">🎓 Clinics</span><span class="row-val"><a href="https://nickvandenberg.com" style="color:#cc4444;" target="_blank">nickvandenberg.com</a></span></div>
+          <div class="row"><span class="row-label">🤖 De bot</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl" style="color:var(--accent);" target="_blank">mokum-bot.pdscloud.nl</a></span></div>
+          <div class="row"><span class="row-label">📷 Fotolijst (afvinkbaar)</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/foto-checklist.html" style="color:var(--accent);" target="_blank">foto-checklist</a></span></div>
+          <div class="row"><span class="row-label">🏆 Toernooien</span><span class="row-val"><a href="https://cuescore.com/mokumpooldarts/tournaments" style="color:var(--accent);" target="_blank">cuescore.com</a></span></div>
+          <div class="row"><span class="row-label">🎓 Clinics</span><span class="row-val"><a href="https://nickvandenberg.com" style="color:var(--accent);" target="_blank">nickvandenberg.com</a></span></div>
         </div>
       </div>
 
@@ -673,12 +719,12 @@
 
       <!-- SUBTAB: KENNISBRONNEN -->
       <div id="htab-kennisbronnen" style="display:none;">
-        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="showTab('upload', document.querySelector('[onclick*=upload]'))" style="background:none;border:none;color:#cc4444;cursor:pointer;font-size:13px;text-decoration:underline;">📁 Kennisbronnen uploaden wizard</button> — de bot gebruikt het direct.</div>
+        <div class="insight-box" style="margin-bottom:16px;">📁 Jullie beheren zelf de informatie van de bot. Upload een bestand via de <button onclick="showTab('upload', document.querySelector('[onclick*=upload]'))" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;text-decoration:underline;">📁 Kennisbronnen uploaden wizard</button> — de bot gebruikt het direct.</div>
 
         <div class="card-title">Hoe werkt het?</div>
         <div class="card">
           <div class="row"><span class="row-label">Uploaden via</span><span class="row-val">Wizard in dit dashboard (tab Kennisbronnen uploaden)</span></div>
-          <div class="row"><span class="row-label">Bestandsformaat</span><span class="row-val"><code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.txt</code> of <code style="background:#222;padding:1px 6px;border-radius:4px;font-size:12px;">.md</code></span></div>
+          <div class="row"><span class="row-label">Bestandsformaat</span><span class="row-val"><code style="background:var(--divider);padding:1px 6px;border-radius:4px;font-size:12px;">.txt</code> of <code style="background:var(--divider);padding:1px 6px;border-radius:4px;font-size:12px;">.md</code></span></div>
           <div class="row"><span class="row-label">Effect na uploaden</span><span class="row-val"><span class="badge badge-green">Direct actief</span></span></div>
           <div class="row"><span class="row-label">Bestand bijwerken</span><span class="row-val">Opnieuw uploaden met dezelfde naam</span></div>
           <div class="row"><span class="row-label">Bestandsnaam</span><span class="row-val">Alleen letters, cijfers en koppeltekens — geen spaties</span></div>
@@ -687,46 +733,46 @@
         <div class="card-title" style="margin-top:20px;">Stap-voor-stap uitleg</div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 1 — Beschrijf wat je wil toevoegen</div>
-          <div style="font-size:13px;color:#888;margin-bottom:10px;">Typ een omschrijving of klik op een snelkeuze categorie. De wizard stelt automatisch een bestandsnaam en map voor.</div>
-          <img src="wizard-stap1.png" alt="Stap 1 — Omschrijving invoeren" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 1 — Beschrijf wat je wil toevoegen</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Typ een omschrijving of klik op een snelkeuze categorie. De wizard stelt automatisch een bestandsnaam en map voor.</div>
+          <img src="wizard-stap1.png" alt="Stap 1 — Omschrijving invoeren" style="width:100%;border-radius:8px;border:1px solid var(--border);">
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 2 — Controleer bestandsnaam en categorie</div>
-          <div style="font-size:13px;color:#888;margin-bottom:10px;">De wizard stelt een logische bestandsnaam en categorie voor. Je kunt dit aanpassen. Spaties en speciale tekens worden automatisch vervangen.</div>
-          <img src="wizard-stap2.png" alt="Stap 2 — Bestandsnaam en categorie" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 2 — Controleer bestandsnaam en categorie</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">De wizard stelt een logische bestandsnaam en categorie voor. Je kunt dit aanpassen. Spaties en speciale tekens worden automatisch vervangen.</div>
+          <img src="wizard-stap2.png" alt="Stap 2 — Bestandsnaam en categorie" style="width:100%;border-radius:8px;border:1px solid var(--border);">
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 3 — Voer de inhoud in</div>
-          <div style="font-size:13px;color:#888;margin-bottom:10px;">Typ de tekst die de bot moet gebruiken. Er staat al een template klaar met de juiste structuur. Je kunt ook een bestaand .txt bestand uploaden.</div>
-          <img src="wizard-stap3.png" alt="Stap 3 — Inhoud invoeren" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 3 — Voer de inhoud in</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Typ de tekst die de bot moet gebruiken. Er staat al een template klaar met de juiste structuur. Je kunt ook een bestaand .txt bestand uploaden.</div>
+          <img src="wizard-stap3.png" alt="Stap 3 — Inhoud invoeren" style="width:100%;border-radius:8px;border:1px solid var(--border);">
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 4 — Bekijk de preview en upload</div>
-          <div style="font-size:13px;color:#888;margin-bottom:10px;">Controleer het bestandspad en de inhoud. Klik op Uploaden om het bestand naar de juiste map te sturen.</div>
-          <img src="wizard-stap4.png" alt="Stap 4 — Preview en uploaden" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 4 — Bekijk de preview en upload</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Controleer het bestandspad en de inhoud. Klik op Uploaden om het bestand naar de juiste map te sturen.</div>
+          <img src="wizard-stap4.png" alt="Stap 4 — Preview en uploaden" style="width:100%;border-radius:8px;border:1px solid var(--border);">
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 5 — Bevestiging</div>
-          <div style="font-size:13px;color:#888;margin-bottom:10px;">Na het uploaden zie je een groene bevestiging. Het bestand is direct actief — de bot gebruikt de nieuwe informatie meteen.</div>
-          <img src="wizard-stap5.png" alt="Stap 5 — Bevestiging upload" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 5 — Bevestiging</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Na het uploaden zie je een groene bevestiging. Het bestand is direct actief — de bot gebruikt de nieuwe informatie meteen.</div>
+          <img src="wizard-stap5.png" alt="Stap 5 — Bevestiging upload" style="width:100%;border-radius:8px;border:1px solid var(--border);">
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 6 — Test de bot</div>
-          <div style="font-size:13px;color:#888;margin-bottom:10px;">Test direct of de bot de nieuwe informatie gebruikt door een relevante vraag te stellen. De bot pikt het meteen op.</div>
-          <img src="wizard-stap6.png" alt="Stap 6 — Bot test" style="width:100%;border-radius:8px;border:1px solid #2a2a2a;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 6 — Test de bot</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Test direct of de bot de nieuwe informatie gebruikt door een relevante vraag te stellen. De bot pikt het meteen op.</div>
+          <img src="wizard-stap6.png" alt="Stap 6 — Bot test" style="width:100%;border-radius:8px;border:1px solid var(--border);">
         </div>
 
       </div>
 
       <!-- SUBTAB: FOTO'S -->
       <div id="htab-fotos" style="display:none;">
-        <div class="insight-box" style="margin-bottom:16px;">📷 De bot kan <strong>foto's en menukaarten</strong> tonen bij een antwoord. Je beheert ze in de tab <button onclick="showTab('fotos', document.querySelector('.tab[onclick*=fotos]'))" style="background:none;border:none;color:#cc4444;cursor:pointer;font-size:13px;text-decoration:underline;padding:0;">📷 Foto's</button>. Per foto kies je <b>wanneer</b> hij verschijnt (trigger words) en <b>hoe</b> hij verschijnt (inline of apart venster).</div>
+        <div class="insight-box" style="margin-bottom:16px;">📷 De bot kan <strong>foto's en menukaarten</strong> tonen bij een antwoord. Je beheert ze in de tab <button onclick="showTab('fotos', document.querySelector('.tab[onclick*=fotos]'))" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;text-decoration:underline;padding:0;">📷 Foto's</button>. Per foto kies je <b>wanneer</b> hij verschijnt (trigger words) en <b>hoe</b> hij verschijnt (inline of apart venster).</div>
 
         <div class="card-title">Hoe werkt het?</div>
         <div class="card">
@@ -741,28 +787,28 @@
         <div class="card-title" style="margin-top:20px;">Stap-voor-stap</div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 1 — Foto kiezen en uploaden</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Kies in de tab <b>📷 Foto's</b> een afbeelding of PDF (bijv. een menukaart) en klik op <b>Uploaden</b>. Grote foto's worden automatisch verkleind, ook HEIC-foto's van de iPhone. Heb je er veel? Gebruik <b>Bulk uploaden</b> om in één keer meerdere te selecteren.</div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 1 — Foto kiezen en uploaden</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Kies in de tab <b>📷 Foto's</b> een afbeelding of PDF (bijv. een menukaart) en klik op <b>Uploaden</b>. Grote foto's worden automatisch verkleind, ook HEIC-foto's van de iPhone. Heb je er veel? Gebruik <b>Bulk uploaden</b> om in één keer meerdere te selecteren.</div>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 2 — Door Claude laten labelen (aanbevolen)</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Laat het vinkje <b>🤖 Door Claude laten labelen</b> aanstaan. De foto komt dan binnen onder <b>"Te labelen"</b> en is nog niet zichtbaar voor bezoekers. Vraag daarna Claude (via Peter) om hem te categoriseren en van trigger words te voorzien — of vul de velden zelf in. Zet je het vinkje uit, dan vul je categorie, onderschrift en trigger words meteen zelf in.</div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 2 — Door Claude laten labelen (aanbevolen)</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Laat het vinkje <b>🤖 Door Claude laten labelen</b> aanstaan. De foto komt dan binnen onder <b>"Te labelen"</b> en is nog niet zichtbaar voor bezoekers. Vraag daarna Claude (via Peter) om hem te categoriseren en van trigger words te voorzien — of vul de velden zelf in. Zet je het vinkje uit, dan vul je categorie, onderschrift en trigger words meteen zelf in.</div>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 3 — Trigger words en weergave instellen</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">In het <b>Foto-overzicht</b> pas je per foto de <b>trigger words</b> aan (komma-gescheiden, bijv. <i>menu, eten, drinken, kaart</i>) en kies je de <b>weergave</b>: inline (klein in de chat) of apart venster (een grote foto/PDF die in een nieuw tabblad opent — handig voor menukaarten). Klik op <b>💾 Opslaan</b>. Een "Te labelen"-foto gaat automatisch live zodra je hem labelt en opslaat.</div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 3 — Trigger words en weergave instellen</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">In het <b>Foto-overzicht</b> pas je per foto de <b>trigger words</b> aan (komma-gescheiden, bijv. <i>menu, eten, drinken, kaart</i>) en kies je de <b>weergave</b>: inline (klein in de chat) of apart venster (een grote foto/PDF die in een nieuw tabblad opent — handig voor menukaarten). Klik op <b>💾 Opslaan</b>. Een "Te labelen"-foto gaat automatisch live zodra je hem labelt en opslaat.</div>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:#cc0000;font-weight:600;margin-bottom:8px;">STAP 4 — Beheren</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Per foto kun je: <b>↔ weergave wisselen</b>, <b>⏸ deactiveren</b> (tijdelijk verbergen zonder te verwijderen) of <b>✓ activeren</b>, en <b>🗑 verwijderen</b>. Twijfel je over een knop? Houd je muis op het <b>ℹ️</b> naast de knop voor uitleg.</div>
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 4 — Beheren</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Per foto kun je: <b>↔ weergave wisselen</b>, <b>⏸ deactiveren</b> (tijdelijk verbergen zonder te verwijderen) of <b>✓ activeren</b>, en <b>🗑 verwijderen</b>. Twijfel je over een knop? Houd je muis op het <b>ℹ️</b> naast de knop voor uitleg.</div>
         </div>
 
         <div class="card-title" style="margin-top:20px;">🙂 Privacy — gezichten (AVG)</div>
         <div class="card">
-          <div style="font-size:13px;color:#888;line-height:1.7;margin-bottom:10px;">Bij het uploaden worden herkende gezichten automatisch afgedekt met een smiley. Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet. De smiley-optie staat standaard aan (bovenaan de Foto's-tab).</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px;">Bij het uploaden worden herkende gezichten automatisch afgedekt met een smiley. Alleen de geanonimiseerde foto wordt opgeslagen — het origineel verlaat je computer niet. De smiley-optie staat standaard aan (bovenaan de Foto's-tab).</div>
           <div class="row"><span class="row-label">Standaard</span><span class="row-val"><span class="badge badge-green">🙂 Smilies aan</span></span></div>
           <div class="row"><span class="row-label">Echte gezichten tonen</span><span class="row-val" style="font-size:13px;">Alleen met toestemming (bijv. eigen medewerkers)</span></div>
           <div class="row"><span class="row-label">Lukt anonimiseren niet?</span><span class="row-val" style="font-size:13px;">Dan wordt de foto niet geüpload</span></div>
@@ -770,14 +816,14 @@
 
         <div class="card-title" style="margin-top:20px;">📋 Welke foto's maken?</div>
         <div class="card">
-          <div style="font-size:13px;color:#888;line-height:1.7;">Er is een handige afvinkbare fotolijst die laat zien welke foto's leuk zijn om te maken voor de bot. Open hem op je telefoon — je vinkjes blijven bewaard.</div>
-          <div class="row" style="margin-top:8px;"><span class="row-label">📷 Fotolijst</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/foto-checklist.html" style="color:#cc4444;" target="_blank">foto-checklist</a></span></div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Er is een handige afvinkbare fotolijst die laat zien welke foto's leuk zijn om te maken voor de bot. Open hem op je telefoon — je vinkjes blijven bewaard.</div>
+          <div class="row" style="margin-top:8px;"><span class="row-label">📷 Fotolijst</span><span class="row-val"><a href="https://mokum-bot.pdscloud.nl/foto-checklist.html" style="color:var(--accent);" target="_blank">foto-checklist</a></span></div>
         </div>
       </div>
 
       <!-- SUBTAB: API KOSTEN -->
       <div id="htab-kosten" style="display:none;">
-        <div style="background:#0d1a2e;border:1px solid #1a3a5a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4d9de0;">💡 De bot gebruikt Claude AI van Anthropic. Je betaalt per bericht (token). Hieronder kun je berekenen wat het kost bij jouw verwachte gebruik.</div>
+        <div style="background:var(--info-soft);border:1px solid var(--info-border);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--info);">💡 De bot gebruikt Claude AI van Anthropic. Je betaalt per bericht (token). Hieronder kun je berekenen wat het kost bij jouw verwachte gebruik.</div>
         <div class="card-title">Interactieve calculator</div>
         <div class="card">
           <div class="slider-row">
@@ -786,18 +832,18 @@
             <span id="h-val-convos">300</span>
           </div>
           <div class="model-btn-row">
-            <button onclick="setHModel('haiku', this)" id="h-btn-haiku" class="model-btn active">Haiku 4.5<br><span style="font-size:11px;color:#666;">✓ In gebruik</span></button>
-            <button onclick="setHModel('sonnet', this)" id="h-btn-sonnet" class="model-btn">Sonnet 4.6<br><span style="font-size:11px;color:#666;">Krachtiger</span></button>
-            <button onclick="setHModel('opus', this)" id="h-btn-opus" class="model-btn">Opus 4.7<br><span style="font-size:11px;color:#666;">Meest capabel</span></button>
+            <button onclick="setHModel('haiku', this)" id="h-btn-haiku" class="model-btn active">Haiku 4.5<br><span style="font-size:11px;color:var(--muted);">✓ In gebruik</span></button>
+            <button onclick="setHModel('sonnet', this)" id="h-btn-sonnet" class="model-btn">Sonnet 4.6<br><span style="font-size:11px;color:var(--muted);">Krachtiger</span></button>
+            <button onclick="setHModel('opus', this)" id="h-btn-opus" class="model-btn">Opus 4.7<br><span style="font-size:11px;color:var(--muted);">Meest capabel</span></button>
           </div>
           <div class="total-box">
             <div>
-              <div style="font-size:13px;color:#888;">Geschatte maandkosten Claude API</div>
-              <div style="font-size:11px;color:#666;margin-top:2px;" id="h-calc-detail"></div>
+              <div style="font-size:13px;color:var(--muted);">Geschatte maandkosten Claude API</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="h-calc-detail"></div>
             </div>
             <div style="font-size:26px;font-weight:500;" id="h-calc-total">$0.00</div>
           </div>
-          <div style="font-size:11px;color:#555;margin-top:4px;line-height:1.6;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 4 berichten per gesprek.</div>
+          <div style="font-size:11px;color:var(--muted-2);margin-top:4px;line-height:1.6;">Gebaseerd op ~800 input + ~600 output tokens per bericht, gemiddeld 4 berichten per gesprek.</div>
         </div>
         <div class="card-title" style="margin-top:20px;">Werkelijk gebruik tot nu toe</div>
         <div class="card">
@@ -810,36 +856,36 @@
 
       <!-- SUBTAB: RUBRIEKEN -->
       <div id="htab-rubrieken" style="display:none;">
-        <div style="background:#0d1a2e;border:1px solid #1a3a5a;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#4d9de0;">📋 Elke rubriek heeft een bijbehorend bestand in de kennisbronnen. Upload een nieuw bestand via de wizard om de bot-informatie bij te werken.</div>
+        <div style="background:var(--info-soft);border:1px solid var(--info-border);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--info);">📋 Elke rubriek heeft een bijbehorend bestand in de kennisbronnen. Upload een nieuw bestand via de wizard om de bot-informatie bij te werken.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎱</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Pool & Biljart</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/pool-biljart/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎱</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Pool & Biljart</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/pool-biljart/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎯</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Darts</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/darts/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎯</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Darts</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/darts/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📅</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Openingstijden</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/openingstijden/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📅</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Openingstijden</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/openingstijden/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">💶</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Tarieven</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/tarieven/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">💶</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Tarieven</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/tarieven/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🏆</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Toernooien</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/toernooien/</div><span class="badge badge-green">+ Cuescore automatisch</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🏆</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Toernooien</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/toernooien/</div><span class="badge badge-green">+ Cuescore automatisch</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📖</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Spelregels</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/spelregels/</div><span class="badge badge-green">Al ingevuld</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📖</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Spelregels</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/spelregels/</div><span class="badge badge-green">Al ingevuld</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🍺</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Eten & Drinken</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/eten-drinken/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🍺</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Eten & Drinken</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/eten-drinken/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📺</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Sport kijken</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/sport-evenementen/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📺</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Sport kijken</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/sport-evenementen/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔧</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Keu reparatie</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/keu-reparatie/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔧</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Keu reparatie</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/keu-reparatie/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🛒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Keu & Accessoires</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/keu-shop/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🛒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Keu & Accessoires</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/keu-shop/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎓</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Clinics & Coaching</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/clinics-coaching/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🎓</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Clinics & Coaching</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/clinics-coaching/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🕹️</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Spelletjes & Gaming</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/spelletjes-gaming/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🕹️</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Spelletjes & Gaming</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/spelletjes-gaming/</div><span class="badge badge-red">Nog in te vullen</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📍</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Locatie & Parkeren</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/locatie/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">📍</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Locatie & Parkeren</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/locatie/</div><span class="badge badge-blue">Aanpasbaar</span></div></div></div>
 
-          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Intern</div><div style="font-size:11px;color:#555;font-family:monospace;margin-bottom:4px;">kennisbronnen/intern/</div><span class="badge badge-gray">Wachtwoord via Peter</span></div></div></div>
+          <div class="card" style="padding:.875rem;margin-bottom:0;"><div style="display:flex;align-items:flex-start;gap:10px;"><div style="font-size:20px;">🔒</div><div><div style="font-size:13px;font-weight:600;margin-bottom:3px;">Intern</div><div style="font-size:11px;color:var(--muted-2);font-family:monospace;margin-bottom:4px;">kennisbronnen/intern/</div><span class="badge badge-gray">Wachtwoord via Peter</span></div></div></div>
 
         </div>
       </div>
@@ -848,33 +894,33 @@
       <div id="htab-problemen" style="display:none;">
         <div class="card-title">Veelvoorkomende situaties</div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🤔 De bot geeft verkeerde of verouderde informatie</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Gebruik de <strong style="color:#fff;">📁 Kennisbron uploaden</strong> wizard om een bestand bij te werken. De bot gebruikt het direct.</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">🤔 De bot geeft verkeerde of verouderde informatie</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Gebruik de <strong style="color:var(--text);">📁 Kennisbron uploaden</strong> wizard om een bestand bij te werken. De bot gebruikt het direct.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">❓ De bot zegt dat hij iets niet weet</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Er is nog geen kennisbron bestand voor dat onderwerp. Maak één aan via de wizard.</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">❓ De bot zegt dat hij iets niet weet</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Er is nog geen kennisbron bestand voor dat onderwerp. Maak één aan via de wizard.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">📷 De bot toont een foto niet (of de verkeerde)</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Controleer in de tab <strong style="color:#fff;">📷 Foto's</strong> of de foto <strong style="color:#fff;">actief</strong> staat en de juiste <strong style="color:#fff;">trigger words</strong> heeft. Staat de foto nog onder <em>"Te labelen"</em>, dan is hij nog niet zichtbaar — label en sla op om hem live te zetten.</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">📷 De bot toont een foto niet (of de verkeerde)</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Controleer in de tab <strong style="color:var(--text);">📷 Foto's</strong> of de foto <strong style="color:var(--text);">actief</strong> staat en de juiste <strong style="color:var(--text);">trigger words</strong> heeft. Staat de foto nog onder <em>"Te labelen"</em>, dan is hij nog niet zichtbaar — label en sla op om hem live te zetten.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🌐 De bot is niet zichtbaar op de website</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Ververs de pagina met Ctrl+Shift+R. Werkt het nog niet? Neem contact op met Peter.</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">🌐 De bot is niet zichtbaar op de website</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Ververs de pagina met Ctrl+Shift+R. Werkt het nog niet? Neem contact op met Peter.</div>
         </div>
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:13px;color:#ccc;margin-bottom:6px;">🔑 Wachtwoord intern werkt niet</div>
-          <div style="font-size:13px;color:#888;line-height:1.7;">Neem contact op met Peter voor het interne wachtwoord.</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">🔑 Wachtwoord intern werkt niet</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Neem contact op met Peter voor het interne wachtwoord.</div>
         </div>
         <div class="divider"></div>
         <div class="card-title">Contact</div>
         <div class="card" style="display:flex;align-items:center;gap:16px;">
-          <div style="width:48px;height:48px;background:#cc0000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👨‍💻</div>
+          <div style="width:48px;height:48px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👨‍💻</div>
           <div>
             <div style="font-size:15px;font-weight:600;">Peter de Swart</div>
-            <div style="font-size:13px;color:#666;margin-top:4px;">Ontwikkelaar Mokum Magic 8 Ball</div>
-            <div style="font-size:12px;color:#555;margin-top:6px;">Voor technische problemen, nieuwe functies of aanpassingen aan de bot.</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px;">Ontwikkelaar Mokum Magic 8 Ball</div>
+            <div style="font-size:12px;color:var(--muted-2);margin-top:6px;">Voor technische problemen, nieuwe functies of aanpassingen aan de bot.</div>
           </div>
         </div>
       </div>
@@ -886,6 +932,21 @@
 
 <script>
 const API = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net/api"
+
+// ===== Licht/donker thema =====
+function applyThemeIcon() {
+  const t = document.documentElement.getAttribute("data-theme") || "dark"
+  const el = document.getElementById("theme-icon")
+  if (el) el.textContent = t === "dark" ? "🌙" : "☀️"
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme") || "dark"
+  const next = cur === "dark" ? "light" : "dark"
+  document.documentElement.setAttribute("data-theme", next)
+  try { localStorage.setItem("mokum-theme", next) } catch (e) {}
+  applyThemeIcon()
+}
+document.addEventListener("DOMContentLoaded", applyThemeIcon)
 
 let alleGesprekken = []
 let gefilterd = []
@@ -998,9 +1059,9 @@ function reviewFacesModal(srcCanvas, boxes, filename){
     const ov = document.createElement("div")
     ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px;"
     const panel = document.createElement("div")
-    panel.style.cssText = "background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;max-width:95vw;max-height:95vh;overflow:auto;"
-    panel.innerHTML = `<div style="font-size:14px;color:#fff;font-weight:600;margin-bottom:4px;">Controleer de gezichten${filename?" — "+fEsc(filename):""}</div>
-      <div style="font-size:12px;color:#aaa;margin-bottom:10px;max-width:560px;">Sleep over een <b>gemist gezicht</b> om een vlak toe te voegen. Klik op een vlak (×) om het te verwijderen. Stijl: <b style="color:#ddd;">${anonStijl()}</b>.</div>`
+    panel.style.cssText = "background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:16px;max-width:95vw;max-height:95vh;overflow:auto;"
+    panel.innerHTML = `<div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:4px;">Controleer de gezichten${filename?" — "+fEsc(filename):""}</div>
+      <div style="font-size:12px;color:var(--text-2);margin-bottom:10px;max-width:560px;">Sleep over een <b>gemist gezicht</b> om een vlak toe te voegen. Klik op een vlak (×) om het te verwijderen. Stijl: <b style="color:var(--text-2);">${anonStijl()}</b>.</div>`
     const stage = document.createElement("div")
     stage.style.cssText = `position:relative;width:${DISPLAY_W}px;height:${dispH}px;margin:0 auto;cursor:crosshair;touch-action:none;user-select:none;`
     const imgEl = document.createElement("canvas"); imgEl.width = srcCanvas.width; imgEl.height = srcCanvas.height
@@ -1022,16 +1083,16 @@ function reviewFacesModal(srcCanvas, boxes, filename){
     }
     let start = null, ghost = null
     const pt = (e) => { const r = stage.getBoundingClientRect(); const t = e.touches && e.touches[0]; const px = (t?t.clientX:e.clientX)-r.left, py = (t?t.clientY:e.clientY)-r.top; return { x:Math.max(0,Math.min(DISPLAY_W,px)), y:Math.max(0,Math.min(dispH,py)) } }
-    const down = (e) => { if (e.target.classList.contains("rev-box")) return; start = pt(e); ghost = document.createElement("div"); ghost.style.cssText="position:absolute;border:2px dashed #ffd54f;background:rgba(255,213,79,0.15);border-radius:6px;box-sizing:border-box;pointer-events:none;"; stage.appendChild(ghost); e.preventDefault() }
+    const down = (e) => { if (e.target.classList.contains("rev-box")) return; start = pt(e); ghost = document.createElement("div"); ghost.style.cssText="position:absolute;border:2px dashed var(--warn);background:rgba(255,213,79,0.15);border-radius:6px;box-sizing:border-box;pointer-events:none;"; stage.appendChild(ghost); e.preventDefault() }
     const move = (e) => { if(!start)return; const p=pt(e); ghost.style.left=Math.min(start.x,p.x)+"px"; ghost.style.top=Math.min(start.y,p.y)+"px"; ghost.style.width=Math.abs(p.x-start.x)+"px"; ghost.style.height=Math.abs(p.y-start.y)+"px"; e.preventDefault() }
     const up = (e) => { if(!start)return; const p=pt(e); const x=Math.min(start.x,p.x),y=Math.min(start.y,p.y),w=Math.abs(p.x-start.x),h=Math.abs(p.y-start.y); if(ghost){ghost.remove();ghost=null} if(w>8&&h>8){ cur.push({ x:x/scale, y:y/scale, width:w/scale, height:h/scale }); renderBoxes() } start=null }
     stage.addEventListener("mousedown",down); window.addEventListener("mousemove",move); window.addEventListener("mouseup",up)
     stage.addEventListener("touchstart",down,{passive:false}); stage.addEventListener("touchmove",move,{passive:false}); stage.addEventListener("touchend",up)
     panel.appendChild(stage)
     const bar = document.createElement("div"); bar.style.cssText="display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;"
-    const counter = document.createElement("span"); counter.style.cssText="margin-right:auto;font-size:12px;color:#888;"
-    const cancel = document.createElement("button"); cancel.textContent="Overslaan"; cancel.style.cssText="padding:8px 14px;border-radius:8px;border:1px solid #444;background:#222;color:#ccc;cursor:pointer;"
-    const ok = document.createElement("button"); ok.textContent="Toepassen & uploaden"; ok.style.cssText="padding:8px 14px;border-radius:8px;border:none;background:#7bd88f;color:#000;font-weight:700;cursor:pointer;"
+    const counter = document.createElement("span"); counter.style.cssText="margin-right:auto;font-size:12px;color:var(--muted);"
+    const cancel = document.createElement("button"); cancel.textContent="Overslaan"; cancel.style.cssText="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--divider);color:var(--text-2);cursor:pointer;"
+    const ok = document.createElement("button"); ok.textContent="Toepassen & uploaden"; ok.style.cssText="padding:8px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;"
     const cleanup = () => { window.removeEventListener("mousemove",move); window.removeEventListener("mouseup",up); ov.remove() }
     cancel.onclick = () => { cleanup(); resolve(null) }
     ok.onclick = () => { cleanup(); resolve(cur) }
@@ -1161,7 +1222,7 @@ function onFotoCatChange() { populateOndFilter(); renderFotos() }
 function renderFotos() {
   const el = document.getElementById("foto-overzicht")
   if (!el) return
-  if (!alleFotos.length) { el.innerHTML = "<div style='color:#666;'>Nog geen foto's. Upload er hierboven een.</div>"; return }
+  if (!alleFotos.length) { el.innerHTML = "<div style='color:var(--muted);'>Nog geen foto's. Upload er hierboven een.</div>"; return }
   const fCat = (document.getElementById("foto-filter-cat") || {}).value || ""
   const fOnd = (document.getElementById("foto-filter-ond") || {}).value || ""
   const fZoek = ((document.getElementById("foto-filter-zoek") || {}).value || "").trim().toLowerCase()
@@ -1176,20 +1237,20 @@ function renderFotos() {
   })
   const cnt = document.getElementById("foto-filter-count")
   if (cnt) cnt.textContent = lijst.length === alleFotos.length ? `${alleFotos.length} foto's` : `${lijst.length} van ${alleFotos.length}`
-  if (!lijst.length) { el.innerHTML = "<div style='color:#666;padding:6px 0;'>Geen foto's voor deze filter.</div>"; return }
+  if (!lijst.length) { el.innerHTML = "<div style='color:var(--muted);padding:6px 0;'>Geen foto's voor deze filter.</div>"; return }
   const groepen = {}
   lijst.forEach(f => { const c = f.categorie || "Overig"; (groepen[c] = groepen[c] || []).push(f) })
   let html = ""
   Object.keys(groepen).sort().forEach(cat => {
-    html += `<div style="margin:7px 0 3px;font-weight:700;color:#fff;font-size:13px;">${fEsc(cat)}</div>`
+    html += `<div style="margin:7px 0 3px;font-weight:700;color:var(--text);font-size:13px;">${fEsc(cat)}</div>`
     groepen[cat].forEach(f => {
       const isPdf = /\.pdf$/i.test(f.bestand || "")
       const preview = isPdf
-        ? `<div style="width:46px;height:46px;border-radius:8px;background:#1f1f1f;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>`
-        : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid #2a2a2a;flex-shrink:0;" loading="lazy"></a>`
+        ? `<div style="width:46px;height:46px;border-radius:8px;background:var(--input);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>`
+        : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;" loading="lazy"></a>`
       const weergaveLabel = f.weergave === "venster" ? "🪟 Apart venster" : "🖼️ Inline"
-      const statusLabel = f.actief === false ? "<span style='color:#ff6b6b;'>uit</span>" : "<span style='color:#7bd88f;'>actief</span>"
-      const gezichtLabel = f.heeftGezichten ? (f.toonEcht ? " · <span style='color:#ffae6b;'>😶 echte gezichten</span>" : " · <span style='color:#7bd88f;'>🛡️ geanonimiseerd</span>") : ""
+      const statusLabel = f.actief === false ? "<span style='color:var(--bad);'>uit</span>" : "<span style='color:var(--good);'>actief</span>"
+      const gezichtLabel = f.heeftGezichten ? (f.toonEcht ? " · <span style='color:var(--warn);'>😶 echte gezichten</span>" : " · <span style='color:var(--good);'>🛡️ geanonimiseerd</span>") : ""
       const triggers = (f.triggerWords || []).join(", ")
       const b = fJs(f.bestand)
       const btn = (cls, onclick, label, tip) =>
@@ -1200,16 +1261,16 @@ function renderFotos() {
              <span class="tip"><span class="ic">ℹ️</span><span class="tipbox">AVG: standaard zijn gezichten geanonimiseerd (blur). Zet dit alleen aan als de afgebeelde personen toestemming hebben gegeven (bijv. eigen medewerkers).</span></span>
            </div>`
         : ""
-      html += `<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border:1px solid #2a2a2a;border-radius:9px;margin-bottom:4px;background:#161616;">
+      html += `<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border:1px solid var(--border);border-radius:9px;margin-bottom:4px;background:var(--card);">
         ${preview}
         <div style="flex:1;min-width:0;">
-          <div style="color:#fff;font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:#888;font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
-          <div style="font-size:11px;color:#888;margin:2px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
-          ${f.gelabeldDoorClaude ? '<div style="font-size:10px;color:#9ecbff;background:#14324a;border:1px solid #1f567d;border-radius:6px;padding:1px 7px;display:inline-block;margin:1px 0;">🤖 Door Claude gelabeld — pas hieronder gerust handmatig aan</div>' : ""}
+          <div style="color:var(--text);font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:var(--muted);font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
+          <div style="font-size:11px;color:var(--muted);margin:2px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
+          ${f.gelabeldDoorClaude ? '<div style="font-size:10px;color:var(--info);background:var(--info-soft);border:1px solid var(--info-border);border-radius:6px;padding:1px 7px;display:inline-block;margin:1px 0;">🤖 Door Claude gelabeld — pas hieronder gerust handmatig aan</div>' : ""}
           <div style="display:flex;flex-direction:column;gap:4px;margin-top:3px;">
             <div><div class="foto-lbl">Categorie</div><input type="text" value="${fAttr(f.categorie || "")}" id="cat-${fAttr(f.bestand)}" placeholder="bijv. Pool, Darts, Bar & lounge" class="foto-inp"></div>
             <div><div class="foto-lbl">Onderschrift</div><input type="text" value="${fAttr(f.onderschrift || "")}" id="ond-${fAttr(f.bestand)}" placeholder="bijv. De bar van Mokum" class="foto-inp"></div>
-            <div><div class="foto-lbl">Trigger words <span style="color:#666;font-weight:400;">(komma-gescheiden)</span></div><input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="bijv. bar, borrel, biertje, tap" class="foto-inp"></div>
+            <div><div class="foto-lbl">Trigger words <span style="color:var(--muted);font-weight:400;">(komma-gescheiden)</span></div><input type="text" value="${fAttr(triggers)}" id="trg-${fAttr(f.bestand)}" placeholder="bijv. bar, borrel, biertje, tap" class="foto-inp"></div>
           </div>
           ${gezichtSwitch}
           <div style="display:flex;gap:7px;margin-top:5px;flex-wrap:wrap;align-items:center;">
@@ -1236,11 +1297,11 @@ async function uploadFoto() {
   const status = document.getElementById("foto-status")
   const file = fileEl.files[0]
   if (!file) { status.textContent = "Kies eerst een bestand."; return }
-  status.style.color = "#888"; status.textContent = file.type.startsWith("image/") ? "Foto verwerken..." : "Uploaden..."
+  status.style.color = "var(--muted)"; status.textContent = file.type.startsWith("image/") ? "Foto verwerken..." : "Uploaden..."
   try {
     const p = await prepareUpload(file, correctieAan() ? { reviewBoxes: reviewFacesModal } : {})
-    if (p.faces === -1) { status.style.color = "#ff6b6b"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de anonimisatie uit en probeer opnieuw)."; return }
-    if (p.faces === -2) { status.style.color = "#888"; status.textContent = "Overgeslagen (niet geüpload)."; return }
+    if (p.faces === -1) { status.style.color = "var(--bad)"; status.textContent = "Gezichts-anonimisatie mislukt — niet geüpload (zet evt. de anonimisatie uit en probeer opnieuw)."; return }
+    if (p.faces === -2) { status.style.color = "var(--muted)"; status.textContent = "Overgeslagen (niet geüpload)."; return }
     status.textContent = "Uploaden..."
     // Door Claude laten labelen (default) -> 'Te labelen' + inactief, velden genegeerd.
     const teLabelen = document.getElementById("foto-claude-label").checked
@@ -1260,17 +1321,17 @@ async function uploadFoto() {
       heeftGezichten: p.faces > 0 && !!p.smileyB64,
     })
     if (r.success) {
-      status.style.color = "#7bd88f"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen". Vraag Claude om te labelen, of bewerk hem in het overzicht.' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) afgedekt — ${anonStijl()}; origineel verborgen bewaard)` : "")
+      status.style.color = "var(--good)"; status.textContent = "✓ Geüpload!" + (teLabelen ? ' — staat onder "Te labelen". Vraag Claude om te labelen, of bewerk hem in het overzicht.' : "") + (p.faces > 0 ? ` (${p.faces} gezicht(en) afgedekt — ${anonStijl()}; origineel verborgen bewaard)` : "")
       fileEl.value = ""
       document.getElementById("foto-categorie").value = ""
       document.getElementById("foto-onderschrift").value = ""
       document.getElementById("foto-triggers").value = ""
       laadFotos()
     } else {
-      status.style.color = "#ff6b6b"; status.textContent = "Fout: " + (r.error || "onbekend")
+      status.style.color = "var(--bad)"; status.textContent = "Fout: " + (r.error || "onbekend")
     }
   } catch (e) {
-    status.style.color = "#ff6b6b"; status.textContent = "Fout: " + e.message
+    status.style.color = "var(--bad)"; status.textContent = "Fout: " + e.message
   }
 }
 
@@ -1279,13 +1340,13 @@ async function bulkUploadFotos() {
   const status = document.getElementById("foto-bulk-status")
   const btn = document.getElementById("foto-bulk-btn")
   const files = Array.from(fileEl.files || [])
-  if (!files.length) { status.style.color = "#888"; status.textContent = "Kies eerst bestanden."; return }
+  if (!files.length) { status.style.color = "var(--muted)"; status.textContent = "Kies eerst bestanden."; return }
   btn.disabled = true
   let ok = 0, fout = 0, totFaces = 0, anonFout = 0, overgeslagen = 0
   const review = correctieAan() ? { reviewBoxes: reviewFacesModal } : {}
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
-    status.style.color = "#888"
+    status.style.color = "var(--muted)"
     status.textContent = `${file.type.startsWith("image/") ? "Verwerken + uploaden" : "Uploaden"} ${i + 1}/${files.length}: ${file.name}...`
     try {
       const p = await prepareUpload(file, review)
@@ -1302,7 +1363,7 @@ async function bulkUploadFotos() {
   }
   btn.disabled = false
   fileEl.value = ""
-  status.style.color = ok ? "#7bd88f" : "#ff6b6b"
+  status.style.color = ok ? "var(--good)" : "var(--bad)"
   status.textContent = `Klaar: ${ok} geüpload${totFaces ? `, ${totFaces} gezicht(en) afgedekt` : ""}${overgeslagen ? `, ${overgeslagen} overgeslagen` : ""}${fout ? `, ${fout} mislukt${anonFout ? ` (waarvan ${anonFout} door mislukte anonimisatie)` : ""}` : ""}. Ze staan onder "Te labelen" — vraag Claude om ze te labelen.`
   laadFotos()
 }
@@ -1460,9 +1521,9 @@ function renderChartDagen() {
     <div style="display:flex;align-items:flex-end;gap:3px;height:140px;padding-bottom:24px;position:relative;">
       ${vals.map((v, i) => `
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;">
-          <div style="font-size:9px;color:#555;">${v > 0 ? v : ""}</div>
-          <div style="width:100%;background:#cc0000;border-radius:2px 2px 0 0;height:${Math.round((v/max)*100)}%;min-height:${v > 0 ? 3 : 0}px;opacity:0.85;"></div>
-          <div style="font-size:8px;color:#444;white-space:nowrap;transform:rotate(-45deg);transform-origin:top left;margin-top:2px;">${labels[i]}</div>
+          <div style="font-size:9px;color:var(--muted-2);">${v > 0 ? v : ""}</div>
+          <div style="width:100%;background:var(--accent);border-radius:2px 2px 0 0;height:${Math.round((v/max)*100)}%;min-height:${v > 0 ? 3 : 0}px;opacity:0.85;"></div>
+          <div style="font-size:8px;color:var(--border);white-space:nowrap;transform:rotate(-45deg);transform-origin:top left;margin-top:2px;">${labels[i]}</div>
         </div>
       `).join("")}
     </div>
@@ -1556,7 +1617,7 @@ function renderTaalverdeling() {
       <div class="bar-track"><div class="bar-fill blue" style="width:${enPct}%;"></div></div>
       <div class="bar-val">${enPct}%</div>
     </div>
-    <div style="font-size:12px;color:#555;margin-top:12px;">${nl} NL gesprekken · ${en} EN gesprekken · ${totaal} totaal</div>
+    <div style="font-size:12px;color:var(--muted-2);margin-top:12px;">${nl} NL gesprekken · ${en} EN gesprekken · ${totaal} totaal</div>
   `
 }
 
@@ -1614,7 +1675,7 @@ function toggleGroeperen() {
   groeperen = !groeperen
   const b = document.getElementById("groepeer-btn")
   if (b) {
-    if (groeperen) { b.style.background = "#cc0000"; b.style.color = "#fff"; b.style.borderColor = "#cc0000" }
+    if (groeperen) { b.style.background = "var(--accent)"; b.style.color = "#fff"; b.style.borderColor = "var(--accent)" }
     else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
   }
   renderGesprekken()
@@ -1624,7 +1685,7 @@ function renderGesprekken() {
   const lijst = document.getElementById("gesprekken-lijst")
   // groepeer-knop visueel laten kloppen met de status (default aan)
   const gb = document.getElementById("groepeer-btn")
-  if (gb && groeperen) { gb.style.background = "#cc0000"; gb.style.color = "#fff"; gb.style.borderColor = "#cc0000" }
+  if (gb && groeperen) { gb.style.background = "var(--accent)"; gb.style.color = "#fff"; gb.style.borderColor = "var(--accent)" }
   if (gefilterd.length === 0) { document.getElementById("lijst-count").textContent = "0 gesprekken"; lijst.innerHTML = '<div class="empty">Geen gesprekken gevonden</div>'; return }
 
   let rijen
@@ -1660,22 +1721,22 @@ function renderGesprekken() {
     const aantalBerichten = g.messages?.length || 0
     const taal = detecteerTaal(g)
     const onderwerp = detecteerOnderwerp(g)
-    const countBadge = row.count > 1 ? ` <span class="tag" style="background:#3a2a2a;color:#ff9b9b;">×${row.count}</span>` : ""
+    const countBadge = row.count > 1 ? ` <span class="tag" style="background:var(--border);color:var(--bad);">×${row.count}</span>` : ""
     return `<div class="convo-item" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div style="flex:1;">
           <div class="convo-title">${row.onbeantwoord ? '<span title="De bot kon deze vraag mogelijk niet beantwoorden" style="margin-right:6px;">⚠️</span>' : ""}${row.test ? '<span title="Testvraag" style="margin-right:6px;">🧪</span>' : ""}${kort}</div>
           <div class="convo-meta">${row.count > 1 ? "laatste: " : ""}${datumStr} &nbsp;·&nbsp; ${aantalBerichten} berichten &nbsp;·&nbsp; <span class="tag">${onderwerp}</span> <span class="tag">${taal === "nl" ? "🇳🇱 NL" : "🇬🇧 EN"}</span>${countBadge}<button class="convo-act convo-act-test${row.test ? " on" : ""}" onclick="event.stopPropagation();markTestGesprek(${i},${!row.test})" title="${row.test ? "Test-markering weghalen" : "Markeer als testvraag"}">T</button><button class="convo-act convo-act-del" onclick="event.stopPropagation();deleteGesprek(${i})" title="Gesprek verwijderen">×</button></div>
         </div>
-        <span style="color:#555;font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
+        <span style="color:var(--muted-2);font-size:18px;margin-left:8px;" id="chevron-${i}">›</span>
       </div>
       <div class="convo-detail" id="detail-${i}">
-        ${row.count > 1 ? `<div style="font-size:11px;color:#888;margin-bottom:6px;">Deze vraag komt ${row.count}× voor — hieronder het meest complete gesprek.</div>` : ""}
+        ${row.count > 1 ? `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Deze vraag komt ${row.count}× voor — hieronder het meest complete gesprek.</div>` : ""}
         ${(g.messages || []).map(m => `<div class="${m.role === "user" ? "msg-user" : "msg-bot"}">${(m.content || "").substring(0, 500)}${(m.content?.length || 0) > 500 ? "..." : ""}</div>`).join("")}
-        ${g.reply ? `<div class="msg-bot"><strong style="color:#cc0000;font-size:11px;">ANTWOORD:</strong><br>${g.reply.substring(0, 500)}${g.reply.length > 500 ? "..." : ""}</div>` : ""}
+        ${g.reply ? `<div class="msg-bot"><strong style="color:var(--accent);font-size:11px;">ANTWOORD:</strong><br>${g.reply.substring(0, 500)}${g.reply.length > 500 ? "..." : ""}</div>` : ""}
         <div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;" onclick="event.stopPropagation()">
           <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="markTestGesprek(${i}, ${!row.test})">${row.test ? "↩️ Test-markering weg" : "🧪 Markeer als test"}</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Markeert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} als testvraag (of haalt de markering weg). Testvragen krijgen een 🧪 en zijn apart te filteren.</span></span></span>
-          <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;color:#ff8a8a;border-color:#6b2626;" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief uit de opslag. Kan niet ongedaan worden gemaakt.</span></span></span>
+          <span style="display:inline-flex;align-items:center;gap:3px;"><button class="btn" style="padding:5px 10px;font-size:12px;color:var(--bad);border-color:var(--bad-border);" onclick="deleteGesprek(${i})">🗑 Verwijderen</button><span class="tip"><span class="ic">ℹ️</span><span class="tipbox">Verwijdert ${row.count > 1 ? `alle ${row.count} gesprekken van deze vraag` : "dit gesprek"} definitief uit de opslag. Kan niet ongedaan worden gemaakt.</span></span></span>
         </div>
       </div>
     </div>`
@@ -1707,7 +1768,7 @@ function zoekGesprekken() {
 function toggleOnbeantwoord() {
   alleenOnbeantwoord = !alleenOnbeantwoord
   const b = document.getElementById("filter-onbeantwoord")
-  if (alleenOnbeantwoord) { b.style.background = "#cc0000"; b.style.color = "#fff"; b.style.borderColor = "#cc0000" }
+  if (alleenOnbeantwoord) { b.style.background = "var(--accent)"; b.style.color = "#fff"; b.style.borderColor = "var(--accent)" }
   else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
   zoekGesprekken()
 }
@@ -1715,7 +1776,7 @@ function toggleOnbeantwoord() {
 function toggleTest() {
   alleenTest = !alleenTest
   const b = document.getElementById("filter-test")
-  if (alleenTest) { b.style.background = "#cc0000"; b.style.color = "#fff"; b.style.borderColor = "#cc0000" }
+  if (alleenTest) { b.style.background = "var(--accent)"; b.style.color = "#fff"; b.style.borderColor = "var(--accent)" }
   else { b.style.background = ""; b.style.color = ""; b.style.borderColor = "" }
   zoekGesprekken()
 }
@@ -1802,7 +1863,7 @@ async function startAnalyse(type) {
     }
 
   } catch(e) {
-    resultaat.innerHTML = `<div style="color:#ff6b6b;font-size:13px;">Analyse mislukt: ${e.message}</div>`
+    resultaat.innerHTML = `<div style="color:var(--bad);font-size:13px;">Analyse mislukt: ${e.message}</div>`
   }
 
   btn.disabled = false
@@ -1827,11 +1888,11 @@ function renderAnalyseMark(a) {
       <div>
         <div class="section-label">Fouten & verbeteringen in bot antwoorden</div>
         ${(a.fouten_of_verbeteringen || []).length === 0
-          ? '<div style="font-size:13px;color:#4caf50;">✓ Geen duidelijke fouten gevonden</div>'
+          ? '<div style="font-size:13px;color:var(--good);">✓ Geen duidelijke fouten gevonden</div>'
           : (a.fouten_of_verbeteringen || []).map(f => `
             <div class="warning-item">
               <strong>⚠️ ${f.probleem}</strong><br>
-              <span style="color:#888;font-size:12px;">→ ${f.suggestie}</span>
+              <span style="color:var(--muted);font-size:12px;">→ ${f.suggestie}</span>
             </div>
           `).join("")
         }
@@ -1846,12 +1907,12 @@ function renderAnalyseMark(a) {
       <div>
         <div class="section-label">Mogelijke nieuwe rubrieken</div>
         ${(a.nieuwe_rubrieken || []).map(r => `<div class="analyse-item">📌 ${r}</div>`).join("")}
-        ${(a.nieuwe_rubrieken || []).length === 0 ? '<div style="font-size:13px;color:#4caf50;">✓ Alle rubrieken lijken gedekt</div>' : ""}
+        ${(a.nieuwe_rubrieken || []).length === 0 ? '<div style="font-size:13px;color:var(--good);">✓ Alle rubrieken lijken gedekt</div>' : ""}
       </div>
     </div>
 
     <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:12px;color:#555;">Prioriteit:</span>
+      <span style="font-size:12px;color:var(--muted-2);">Prioriteit:</span>
       <span class="badge ${a.prioriteit === 'hoog' ? 'badge-red' : a.prioriteit === 'middel' ? 'badge-blue' : 'badge-gray'}">${a.prioriteit || "—"}</span>
     </div>
   `
@@ -1868,7 +1929,7 @@ function renderAnalyseSander(a) {
         ${(a.ontbrekende_info || []).map(o => `
           <div class="analyse-item">
             <strong>${o.onderwerp}</strong>
-            <div style="font-size:12px;color:#888;margin-top:4px;">${o.beschrijving}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">${o.beschrijving}</div>
             <div style="margin-top:6px;"><span class="badge ${o.prioriteit === 'hoog' ? 'badge-red' : o.prioriteit === 'middel' ? 'badge-blue' : 'badge-gray'}">${o.prioriteit}</span></div>
           </div>
         `).join("")}
@@ -1891,8 +1952,8 @@ function renderAnalyseSander(a) {
       `).join("")}
     </div>
 
-    <div class="insight-box" style="border-color:#4d9de0;background:#0a0f1a;">
-      <strong style="color:#4d9de0;">📋 Actiepunten voor Sander:</strong><br>
+    <div class="insight-box" style="border-color:var(--info);background:var(--info-soft);">
+      <strong style="color:var(--info);">📋 Actiepunten voor Sander:</strong><br>
       ${a.samenvatting || ""}
     </div>
   `
@@ -1933,7 +1994,7 @@ let wizardInvoerModus = "typ"
 
 function snelkeuze(tekst) {
   document.getElementById("upload-omschrijving").value = tekst
-  document.getElementById("upload-omschrijving").style.borderColor = "#cc0000"
+  document.getElementById("upload-omschrijving").style.borderColor = "var(--accent)"
 }
 
 function bepaalCategorie(tekst) {
@@ -2017,8 +2078,8 @@ function switchInvoer(modus) {
   wizardInvoerModus = modus
   document.getElementById("invoer-typ").style.display = modus === "typ" ? "block" : "none"
   document.getElementById("invoer-bestand").style.display = modus === "bestand" ? "block" : "none"
-  document.getElementById("tab-typ").style.cssText += modus === "typ" ? ";border-color:#cc0000;color:#fff" : ";border-color:#2a2a2a;color:#888"
-  document.getElementById("tab-upload-file").style.cssText += modus === "bestand" ? ";border-color:#cc0000;color:#fff" : ";border-color:#2a2a2a;color:#888"
+  document.getElementById("tab-typ").style.cssText += modus === "typ" ? ";border-color:var(--accent);color:var(--text)" : ";border-color:var(--border);color:var(--muted)"
+  document.getElementById("tab-upload-file").style.cssText += modus === "bestand" ? ";border-color:var(--accent);color:var(--text)" : ";border-color:var(--border);color:var(--muted)"
 }
 
 function getInhoud() {
@@ -2042,7 +2103,7 @@ function handleBestand(input) {
 
 function handleDrop(e) {
   e.preventDefault()
-  document.getElementById("drop-zone").style.borderColor = "#2a2a2a"
+  document.getElementById("drop-zone").style.borderColor = "var(--border)"
   const file = e.dataTransfer.files[0]
   if (!file || (!file.name.endsWith(".txt") && !file.name.endsWith(".md"))) { alert("Alleen .txt of .md bestanden."); return }
   const reader = new FileReader()
@@ -2072,15 +2133,15 @@ async function voerUploadUit() {
     })
     const data = await resp.json()
     if (data.success) {
-      resultaat.style.cssText = "display:block;background:#0d2e1a;border:1px solid #1a3a1a;border-radius:8px;padding:14px;color:#4caf7d;font-size:14px;margin-bottom:12px;"
-      resultaat.innerHTML = `✅ <strong>Gelukt!</strong> Geüpload naar <code style="background:#0a1a0a;padding:2px 6px;border-radius:4px;">${data.pad}</code><br><br>De bot gebruikt dit direct. Stuur Peter ook even een WhatsApp!`
+      resultaat.style.cssText = "display:block;background:var(--good-soft);border:1px solid var(--good-soft);border-radius:8px;padding:14px;color:var(--good);font-size:14px;margin-bottom:12px;"
+      resultaat.innerHTML = `✅ <strong>Gelukt!</strong> Geüpload naar <code style="background:var(--good-soft);padding:2px 6px;border-radius:4px;">${data.pad}</code><br><br>De bot gebruikt dit direct. Stuur Peter ook even een WhatsApp!`
       btn.textContent = "✓ Geüpload"
       const terugBtn = document.getElementById("terug-btn-4")
       terugBtn.textContent = "← Nieuw bestand uploaden"
       terugBtn.onclick = () => wizardReset()
     } else { throw new Error(data.error || "Onbekende fout") }
   } catch (e) {
-    resultaat.style.cssText = "display:block;background:#1a0a0a;border:1px solid #440000;border-radius:8px;padding:14px;color:#ff6b6b;font-size:13px;margin-bottom:12px;"
+    resultaat.style.cssText = "display:block;background:var(--accent-soft);border:1px solid var(--border);border-radius:8px;padding:14px;color:var(--bad);font-size:13px;margin-bottom:12px;"
     resultaat.textContent = `❌ Upload mislukt: ${e.message}`
     btn.disabled = false
     btn.textContent = "📤 Opnieuw proberen"
@@ -2102,8 +2163,8 @@ function showHTab(naam) {
     const btn = document.getElementById(`htab-btn-${t}`)
     if (el) el.style.display = t === naam ? "block" : "none"
     if (btn) {
-      btn.style.borderBottomColor = t === naam ? "#cc0000" : "transparent"
-      btn.style.color = t === naam ? "#fff" : "#666"
+      btn.style.borderBottomColor = t === naam ? "var(--accent)" : "transparent"
+      btn.style.color = t === naam ? "var(--text)" : "var(--muted)"
     }
   })
   if (naam === "kosten") updateHCalc()
