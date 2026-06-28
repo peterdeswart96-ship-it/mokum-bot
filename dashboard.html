@@ -31,7 +31,8 @@
   .logout-btn:hover { color: #fff; }
 
   /* Tabs */
-  .tab-bar { background: #111; border-bottom: 1px solid #2a2a2a; padding: 0 24px; display: flex; gap: 4px; }
+  .tab-bar { background: #111; border-bottom: 1px solid #2a2a2a; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab-bar::-webkit-scrollbar { height: 0; }
   .tab { padding: 12px 18px; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #888; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap; transition: color 0.15s; }
   .tab:hover { color: #ccc; }
   .tab.active { color: #fff; border-bottom: 2px solid #cc0000; font-weight: 600; }
@@ -39,7 +40,7 @@
   .tab-content.active { display: block; }
 
   /* Layout */
-  main { padding: 22px 24px; max-width: 1080px; margin: 0 auto; }
+  main { padding: 22px 24px; max-width: 1280px; margin: 0 auto; }
   .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
   .metric { background: #161616; border: 1px solid #2a2a2a; border-radius: 8px; padding: 0.7rem 0.6rem; text-align: center; }
   .metric-val { font-size: 24px; font-weight: 700; color: #fff; }
@@ -136,10 +137,13 @@
   @media (max-width: 600px) { #tab-handleiding .grid-2 { grid-template-columns: 1fr; } }
 
   @media (max-width: 700px) {
-    .metrics { grid-template-columns: 1fr 1fr; }
+    main { padding: 14px 12px; }
+    .metrics { grid-template-columns: 1fr 1fr; gap: 8px; }
     .grid-2 { grid-template-columns: 1fr; }
     .grid-3 { grid-template-columns: 1fr; }
     .tab { padding: 10px 12px; font-size: 12px; }
+    .tab-bar { padding: 0 12px; }
+    header { padding: 10px 14px; }
   }
   /* Foto-knoppen: opvallende kleuren per actie */
   .fbtn { font-size: 11px; padding: 4px 9px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; transition: filter .12s; }
@@ -320,7 +324,7 @@
   <div id="tab-upload" class="tab-content">
     <main>
 
-      <div class="card" style="max-width:720px;margin:0 auto;">
+      <div class="card" style="max-width:1032px;margin:0 auto;">
         <div style="text-align:center;margin-bottom:24px;">
           <div style="font-size:40px;margin-bottom:8px;">📁</div>
           <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Kennisbron uploaden</div>
@@ -496,7 +500,7 @@
   <!-- TAB: FOTO'S -->
   <div id="tab-fotos" class="tab-content">
     <main>
-      <div style="max-width:720px;margin:0 auto;">
+      <div style="max-width:1032px;margin:0 auto;">
         <div class="insight-box" style="margin-bottom:5px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
         <div style="font-size:10px;color:#555;text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:#777;">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
