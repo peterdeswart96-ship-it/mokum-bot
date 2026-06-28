@@ -63,7 +63,7 @@
 
   /* Dashboard */
   #dashboard { display: none; }
-  header { background: var(--bg); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1320px; margin: 0 auto; }
+  header { background: var(--bg); padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1320px; margin: 0 auto; }
   .hdr-brand { display: flex; align-items: center; gap: 12px; }
   .hdr-ball { width: 36px; height: 36px; border-radius: 50%; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
   .hdr-ball span { width: 19px; height: 19px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #000; }
@@ -76,8 +76,8 @@
   .logout-btn:hover { border-color: var(--accent); }
 
   /* Tabs — pill-nav in een card */
-  .tab-bar { max-width: 1320px; margin: 0 auto 4px; padding: 6px; display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
-  .tab-bar-wrap { padding: 0 18px; }
+  .tab-bar { margin: 0 0 4px; padding: 6px; display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
+  .tab-bar-wrap { max-width: 1320px; margin: 0 auto; padding: 0 22px; }
   .tab-bar::-webkit-scrollbar { height: 0; }
   .tab { padding: 10px 16px; font-size: 13.5px; cursor: pointer; border: none; background: none; border-radius: 10px; color: var(--muted); white-space: nowrap; min-height: 42px; display: inline-flex; align-items: center; transition: background 0.15s, color 0.15s; }
   .tab:hover { background: var(--nav-hover); color: var(--text-2); }
@@ -86,7 +86,7 @@
   .tab-content.active { display: block; }
 
   /* Sub-navigatie (binnen Analyse) */
-  .subnav-wrap { max-width: 1320px; margin: 0 auto 8px; padding: 0 18px; }
+  .subnav-wrap { max-width: 1320px; margin: 0 auto 8px; padding: 0 22px; }
   .subnav { display: inline-flex; gap: 4px; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 4px; box-shadow: var(--shadow); max-width: 100%; overflow-x: auto; }
   .subtab { border: none; background: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--muted); white-space: nowrap; min-height: 38px; display: inline-flex; align-items: center; gap: 5px; transition: background 0.15s, color 0.15s; }
   .subtab:hover { background: var(--nav-hover); color: var(--text-2); }
@@ -95,12 +95,12 @@
 
   /* Layout */
   main { padding: 10px 22px 44px; max-width: 1320px; margin: 0 auto; }
-  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 16px; }
   .metric { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; box-shadow: var(--shadow); }
   .metric-val { font-size: 30px; font-weight: 700; line-height: 1; color: var(--text); }
   .metric-val.red { color: var(--accent); }
   .metric-label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
   .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
   .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
   .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
@@ -215,7 +215,7 @@
   @media (max-width: 600px) { #tab-handleiding .grid-2 { grid-template-columns: 1fr; } }
 
   @media (max-width: 700px) {
-    header { padding: 12px 14px; }
+    header { padding: 12px 12px; }
     .tab-bar-wrap { padding: 0 12px; }
     main { padding: 10px 12px 32px; }
     .metrics { grid-template-columns: 1fr 1fr; gap: 8px; }
