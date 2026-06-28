@@ -135,6 +135,9 @@
   .status-badge.status-ok { background: rgba(46,204,113,0.24); color: #1f9d57; }
   /* Open-actie-labels: elk apart in een eigen rood kader */
   .status-badge.status-kader { background: rgba(220,53,69,0.10); color: #e06b75; border: 1.5px solid rgba(220,53,69,0.85); }
+  /* Uitsluit-checkboxes (OK/test verbergen) */
+  .excl-check { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-2); cursor: pointer; user-select: none; white-space: nowrap; }
+  .excl-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; }
   .convo-detail { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
   /* Gegroepeerde actieknoppen (Toevoegen / Markeren / Verwijderen) */
   .actie-groep { display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -770,6 +773,10 @@
             <span class="tip"><button class="btn" id="filter-foto" onclick="toggleFotoNodig()">📷 Foto nodig</button><span class="tipbox">Alleen vragen die als 'foto's nodig' zijn gemarkeerd.</span></span>
             <span class="tip"><button class="btn" id="filter-test" onclick="toggleTest()">🧪 Testvragen</button><span class="tipbox">Alleen testvragen (#test of handmatig gemarkeerd).</span></span>
             <span class="tip"><button class="btn" id="groepeer-btn" onclick="toggleGroeperen()">🔁 Groeperen</button><span class="tipbox">Voegt identieke vragen samen tot één rij met een ×-teller.</span></span>
+            <span style="margin-left:auto;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+              <label class="excl-check"><input type="checkbox" id="verberg-ok" onchange="zoekGesprekken()"> OK-vragen niet weergeven</label>
+              <label class="excl-check"><input type="checkbox" id="verberg-test" onchange="zoekGesprekken()"> Test-vragen niet weergeven</label>
+            </span>
           </div>
         </div>
         <div style="font-size:12px;color:var(--muted-2);margin-top:8px;" id="zoek-status"></div>
@@ -2242,10 +2249,15 @@ function zoekGesprekken() {
   const zoek = document.getElementById("zoek-input").value.toLowerCase().trim()
   const van = document.getElementById("zoek-van").value
   const tot = document.getElementById("zoek-tot").value
+  const verbergOk = document.getElementById("verberg-ok")?.checked
+  const verbergTest = document.getElementById("verberg-test")?.checked
   gefilterd = alleGesprekken.filter(g => {
     if (van && new Date(g.timestamp) < new Date(van)) return false
     if (tot && new Date(g.timestamp) > new Date(tot + "T23:59:59")) return false
     if (zoek && !g.messages?.some(m => m.content?.toLowerCase().includes(zoek)) && !g.reply?.toLowerCase().includes(zoek)) return false
+    // Uitsluit-filters: gemarkeerd als OK of test juist verbergen.
+    if (verbergOk && isAfgehandeld(g)) return false
+    if (verbergTest && isTestGesprek(g)) return false
     // TONEN-filters cumulatief (OF): bij ≥1 actief status-filter moet de vraag aan minstens één voldoen.
     const statusChecks = []
     if (alleenOnbeantwoord) statusChecks.push(botKonNietAntwoorden(g))
@@ -2257,7 +2269,7 @@ function zoekGesprekken() {
     if (statusChecks.length && !statusChecks.some(Boolean)) return false
     return true
   })
-  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk || alleenOk || alleenTeReviewen || alleenFotoNodig
+  const actief = zoek || van || tot || alleenOnbeantwoord || alleenTest || alleenNietOk || alleenOk || alleenTeReviewen || alleenFotoNodig || verbergOk || verbergTest
   document.getElementById("zoek-status").textContent = actief ? `${gefilterd.length} resultaten` : ""
   updateFilterBadge()
   renderGesprekken()
@@ -2326,6 +2338,8 @@ function updateFilterBadge() {
   if (alleenOk) n++
   if (alleenTeReviewen) n++
   if (alleenFotoNodig) n++
+  if (document.getElementById("verberg-ok")?.checked) n++
+  if (document.getElementById("verberg-test")?.checked) n++
   if (!groeperen) n++ // groeperen staat standaard aan
   const badge = document.getElementById("filter-badge")
   if (badge) { badge.textContent = n; badge.style.display = n ? "inline-block" : "none" }
@@ -2468,6 +2482,8 @@ function resetZoek() {
   setFilterPill(document.getElementById("filter-ok"), false)
   setFilterPill(document.getElementById("filter-review"), false)
   setFilterPill(document.getElementById("filter-foto"), false)
+  const vo = document.getElementById("verberg-ok"); if (vo) vo.checked = false
+  const vt = document.getElementById("verberg-test"); if (vt) vt.checked = false
   document.querySelectorAll("#datum-presets .dp").forEach(b => setFilterPill(b, false))
   geselecteerdeNaams.clear()
   updateFilterBadge()
