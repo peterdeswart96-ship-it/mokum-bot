@@ -1495,6 +1495,71 @@ ${omschrijving || "(geen extra omschrijving — leid het af uit de vraag)"}`
   },
 })
 
+// AI-suggestie voor de foto-wizard: bekijkt de foto (vision) en stelt
+// categorie + onderschrift + trigger words voor. Verzint niets.
+app.http("foto-suggestie", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
+    const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
+    try {
+      const body = await request.json()
+      const b64 = body.contentBase64
+      const mediaType = body.contentType || "image/jpeg"
+      const categorieen = Array.isArray(body.categorieen) && body.categorieen.length ? body.categorieen : ["Overig"]
+      const bedrijf = (body.bedrijf || "deze zaak").toString().trim()
+      if (!b64) return json(400, { error: "contentBase64 vereist" })
+
+      const system = `Je helpt een beheerder een foto labelen voor de chatbot van ${bedrijf}. Bekijk de foto en stel voor:
+- CATEGORIE: kies exact één uit de gegeven lijst die het beste past bij wat je ziet.
+- ONDERSCHRIFT: een korte, natuurlijke beschrijving in het Nederlands (bijv. "De dartborden bij Mokum").
+- TRIGGERWORDS: woorden/zinnen waarbij de bot deze foto moet tonen, in het Nederlands ÉN Engels, komma-gescheiden (bijv. "dartbord, dartborden, darts, dartboard").
+
+Baseer je UITSLUITEND op wat je echt op de foto ziet — verzin geen details.
+Antwoord ALLEEN met geldig JSON, zonder markdown:
+{"categorie":"één-uit-de-lijst","onderschrift":"...","triggerWords":"komma,gescheiden,woorden"}`
+
+      const userContent = [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+        { type: "text", text: `Toegestane categorieën: ${categorieen.join(", ")}\n\nLabel deze foto volgens de instructies.` },
+      ]
+
+      const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
+      const response = await client.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 600,
+        system,
+        messages: [{ role: "user", content: userContent }],
+      })
+
+      let text = (response.content[0]?.text || "").replace(/```json|```/g, "").trim()
+      let s
+      try {
+        s = JSON.parse(text)
+      } catch (e) {
+        let c = text
+        if (c.endsWith(",")) c = c.slice(0, -1)
+        const ob = (c.match(/\{/g) || []).length - (c.match(/\}/g) || []).length
+        for (let i = 0; i < ob; i++) c += "}"
+        try { s = JSON.parse(c) } catch (e2) { s = null }
+      }
+      if (!s || !s.categorie) return json(502, { error: "AI-suggestie kon niet worden gelezen" })
+      if (!categorieen.includes(s.categorie)) s.categorie = categorieen[0]
+      if (Array.isArray(s.triggerWords)) s.triggerWords = s.triggerWords.join(", ")
+      return json(200, { suggestie: s })
+    } catch (error) {
+      context.log("foto-suggestie error:", error)
+      return json(500, { error: error.message })
+    }
+  },
+})
+
 // Auth endpoint — wachtwoord verificatie server-side
 // Hash staat alleen op de server, nooit in de frontend
 app.http("auth", {
