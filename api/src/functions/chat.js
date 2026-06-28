@@ -269,6 +269,18 @@ async function listAllBlobs(sasToken) {
   }
 }
 
+// Grove taaldetectie van de bezoekersvraag: "nl" of "en" (en = Engels of overige talen → EN-kennisbron).
+function detecteerVraagTaal(messages) {
+  const tekst = " " + (messages || []).filter(m => m.role === "user").map(m => m.content || "").join(" ").toLowerCase() + " "
+  if (tekst.trim().length < 2) return "nl"
+  const nlW = [" de ", " het ", " een ", " zijn ", " jullie ", " ik ", " wat ", " hoe ", " kan ", " niet ", " van ", " voor ", " met ", " hebben ", " heb ", " mijn ", " ook ", " wij ", " welke ", " kunnen ", " moet "]
+  const enW = [" the ", " are ", " you ", " what ", " how ", " can ", " do ", " does ", " with ", " have ", " your ", " we ", " which ", " when ", " where ", " there ", " they ", " is there "]
+  let nl = 0, en = 0
+  for (const w of nlW) nl += tekst.split(w).length - 1
+  for (const w of enW) en += tekst.split(w).length - 1
+  return en > nl ? "en" : "nl"
+}
+
 async function getKennisbronContext(messages, sasToken) {
   if (!sasToken) {
     console.log("Geen SAS token — kennisbron overgeslagen")
@@ -282,21 +294,30 @@ async function getKennisbronContext(messages, sasToken) {
       console.log("Geen bestanden gevonden in kennisbronnen container")
       return null
     }
-    const sections = []
+    // Taal van de vraag bepalen → per kennisbron alleen de juiste taalversie laden (geen verdubbeling).
+    const vraagTaal = detecteerVraagTaal(messages)
+    const basisMap = new Map()
     for (const blobPath of alleBlobs) {
-      const mapNaam = blobPath.split("/")[0]
+      if (!blobPath.endsWith(".txt") && !blobPath.endsWith(".md")) continue
+      const isEn = /\.en\.(txt|md)$/i.test(blobPath)
+      const basis = blobPath.replace(/\.en\.(txt|md)$/i, ".$1")
+      if (!basisMap.has(basis)) basisMap.set(basis, {})
+      basisMap.get(basis)[isEn ? "en" : "nl"] = blobPath
+    }
+    const sections = []
+    for (const [basis, varianten] of basisMap) {
+      const mapNaam = basis.split("/")[0]
       if (BEVEILIGDE_MAPPEN.includes(mapNaam) && !internOntgrendeld) {
-        console.log(`Beveiligde map overgeslagen: ${blobPath}`)
+        console.log(`Beveiligde map overgeslagen: ${basis}`)
         continue
       }
-      if (!blobPath.endsWith(".txt") && !blobPath.endsWith(".md")) {
-        console.log(`Niet-tekstbestand overgeslagen: ${blobPath}`)
-        continue
-      }
-      const content = await fetchBlobContent(blobPath, sasToken)
+      // EN-vraag → EN-versie (fallback NL); NL-vraag → NL-versie (fallback EN).
+      const gekozen = vraagTaal === "en" ? (varianten.en || varianten.nl) : (varianten.nl || varianten.en)
+      if (!gekozen) continue
+      const content = await fetchBlobContent(gekozen, sasToken)
       if (content && content.trim().length > 0) {
-        sections.push(`### ${blobPath}\n\n${content}`)
-        console.log(`Kennisbron geladen: ${blobPath}`)
+        sections.push(`### ${gekozen}\n\n${content}`)
+        console.log(`Kennisbron geladen (${vraagTaal}): ${gekozen}`)
       }
     }
     if (sections.length === 0) return null
@@ -1555,6 +1576,67 @@ Antwoord ALLEEN met geldig JSON, zonder markdown:
       return json(200, { suggestie: s })
     } catch (error) {
       context.log("foto-suggestie error:", error)
+      return json(500, { error: error.message })
+    }
+  },
+})
+
+// Vertaalt een kennisbron naar een andere taal en slaat 'm op als <basis>.en.txt.
+// Zo krijgt een EN-bezoeker direct de EN-versie i.p.v. een live-vertaling.
+app.http("kennisbron-vertaal", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
+    const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
+    try {
+      const body = await request.json()
+      const pad = (body.pad || "").toString().trim()
+      const doel = (body.doelTaal || "en").toString().trim()
+      if (!pad || /\.en\.(txt|md)$/i.test(pad)) return json(400, { error: "geldig bron-pad vereist (geen .en-bestand)" })
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) return json(500, { error: "Geen SAS token" })
+      const inhoud = await fetchBlobContent(pad, sasToken)
+      if (inhoud === null || !inhoud.trim()) return json(404, { error: "Bron niet gevonden of leeg" })
+
+      const taalNaam = doel === "en" ? "Engels" : doel
+      const system = `Je bent een professionele vertaler voor de chatbot van Mokum Pool & Darts. Vertaal de gegeven kennisbron-tekst naar het ${taalNaam}.
+Regels:
+- Behoud de structuur exact: markdown-koppen (#), opsommingen (-, *), lege regels en scheidingslijnen (---).
+- Vertaal NIET: eigennamen/merknamen (Mokum, pomerans, Winmau, straat- en persoonsnamen), prijzen, tijden, getallen, URL's en e-mailadressen.
+- Vertaal natuurlijk en VOLLEDIG — laat geen woorden in de brontaal staan.
+- Geef ALLEEN de vertaalde tekst terug, zonder uitleg en zonder markdown-codeblokken.`
+
+      const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY })
+      const response = await client.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        system,
+        messages: [{ role: "user", content: inhoud }],
+      })
+      const vertaald = (response.content[0]?.text || "").trim()
+      if (!vertaald) return json(502, { error: "Lege vertaling" })
+
+      const enPad = pad.replace(/\.(txt|md)$/i, ".en.$1")
+      const slash = enPad.indexOf("/")
+      const map = slash > 0 ? enPad.slice(0, slash) : ""
+      const bestand = slash > 0 ? enPad.slice(slash + 1) : enPad
+      const contentBytes = Buffer.from(vertaald, "utf-8")
+      const result = await httpsRequest({
+        hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+        path: `/${CONTAINER}/${map ? encodeURIComponent(map) + "/" : ""}${encodeURIComponent(bestand)}?${sasToken}`,
+        method: "PUT",
+        headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Length": contentBytes.length, "x-ms-blob-type": "BlockBlob", "x-ms-version": "2020-04-08" },
+      }, contentBytes)
+      if (result.status === 201) { context.log(`Vertaling opgeslagen: ${enPad}`); return json(200, { success: true, pad: enPad }) }
+      return json(500, { error: `Opslaan mislukt: HTTP ${result.status}` })
+    } catch (error) {
+      context.log("kennisbron-vertaal error:", error)
       return json(500, { error: error.message })
     }
   },
