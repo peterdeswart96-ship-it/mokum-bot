@@ -1550,7 +1550,7 @@ Antwoord ALLEEN met geldig JSON, zonder markdown:
         try { s = JSON.parse(c) } catch (e2) { s = null }
       }
       if (!s || !s.categorie) return json(502, { error: "AI-suggestie kon niet worden gelezen" })
-      if (!categorieen.includes(s.categorie)) s.categorie = categorieen[0]
+      // Foto-categorieën zijn vrije tekst — Claude mag een bestaande categorie kiezen of een passende nieuwe voorstellen.
       if (Array.isArray(s.triggerWords)) s.triggerWords = s.triggerWords.join(", ")
       return json(200, { suggestie: s })
     } catch (error) {
