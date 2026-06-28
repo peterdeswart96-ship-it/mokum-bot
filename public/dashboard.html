@@ -1496,7 +1496,10 @@ async function laadGesprekken() {
   try {
     const resp = await fetch(`${API}/gesprekken?action=list`)
     const data = await resp.json()
-    const namen = data.namen || []
+    // Azure geeft de blob-namen alfabetisch (oudste eerst). De namen beginnen met
+    // de timestamp, dus aflopend sorteren = nieuwste eerst. Zo laden we de 200
+    // MEEST RECENTE gesprekken i.p.v. de oudste 200.
+    const namen = (data.namen || []).slice().sort().reverse()
 
     // Gesprekken parallel ophalen in batches (sneller dan één voor één),
     // met een concurrency-limiet zodat we de API niet overspoelen.
