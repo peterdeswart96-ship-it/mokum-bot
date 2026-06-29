@@ -244,8 +244,7 @@
   .foto-inp { width: 100%; box-sizing: border-box; padding: 6px 9px; font-size: 12px; background: var(--input); border: 1px solid var(--border); border-radius: 8px; color: var(--text); }
   .foto-inp:focus { outline: none; border-color: var(--accent); }
   .foto-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
-  /* Foto's-tab: compacter (minder hoogte, ruimte effectiever) */
-  #tab-fotos .card { padding: 0.85rem 1rem; margin-bottom: 0.6rem; }
+  /* Foto's-tab: zelfde card-stijl als Analyse (standaard .card-padding/marges) */
   #tab-fotos .card-title { margin-bottom: 8px; }
   #tab-fotos .insight-box { padding: 8px 12px; margin-bottom: 6px; font-size: 12px; line-height: 1.4; }
   #tab-fotos input[type=text], #tab-fotos select { padding: 7px 9px; font-size: 12px; }
@@ -658,7 +657,7 @@
   <!-- TAB: FOTO'S -->
   <div id="tab-fotos" class="tab-content">
     <main>
-      <div style="max-width:1032px;margin:0 auto;">
+      <div>
         <div class="insight-box" style="margin-bottom:5px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
         <div style="font-size:10px;color:var(--muted-2);text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:var(--muted-2);">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
 
