@@ -31,6 +31,11 @@ jobs:
           publish_branch: ${{ github.ref_name == 'main' && 'gh-pages' || 'gh-pages-develop' }}
   deploy-backend:
     runs-on: ubuntu-latest
+    # Serialiseer backend-deploys: develop en main deployen naar dezelfde Function App.
+    # Gelijktijdige 'func publish'-runs botsen ("Deployment in progress") → in de wachtrij zetten.
+    concurrency:
+      group: deploy-backend-mokum-bot-api
+      cancel-in-progress: false
     permissions:
       id-token: write # vereist voor OIDC token exchange met Azure
       contents: read
