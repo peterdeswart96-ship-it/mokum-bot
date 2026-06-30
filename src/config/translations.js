@@ -154,6 +154,7 @@ const translations = {
         "Wat zijn de regels van 10-ball?",
         "Hoe werkt Straight Pool?",
         "Wat zijn de regels van One Pocket?",
+        "Hoe speel je K-Ball?",
       ],
       "english-pool": [
         "Wat zijn de regels van English Pool?",
@@ -338,6 +339,7 @@ const translations = {
         "What are the rules of 10-ball?",
         "How does Straight Pool work?",
         "What are the rules of One Pocket?",
+        "How do you play K-Ball?",
       ],
       "english-pool": [
         "What are the rules of English Pool?",

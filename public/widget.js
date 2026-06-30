@@ -117,7 +117,7 @@
         { id: 'shuffleboard', emoji: '🛝', label: 'Shuffleboard' },
       ],
       spelregelsQuestions: {
-        'american-pool': ['Wat zijn de regels van 8-ball?', 'Hoe speel je 9-ball?', 'Wat zijn de regels van 10-ball?', 'Hoe werkt Straight Pool?', 'Wat zijn de regels van One Pocket?'],
+        'american-pool': ['Wat zijn de regels van 8-ball?', 'Hoe speel je 9-ball?', 'Wat zijn de regels van 10-ball?', 'Hoe werkt Straight Pool?', 'Wat zijn de regels van One Pocket?', 'Hoe speel je K-Ball?'],
         'english-pool': ['Wat zijn de regels van English Pool?', 'Wat is het verschil tussen American en English pool?', 'Welke ballen gebruik je bij English Pool?'],
         'darts': ['Hoe werkt 501 darts?', 'Wat zijn de regels van Cricket darts?', 'Hoe werkt 301 darts?'],
         'biljart': ['Wat zijn de regels van libre biljart?', 'Hoe werkt bandstoten?', 'Wat zijn de regels van driebanden?'],
@@ -190,7 +190,7 @@
         { id: 'shuffleboard', emoji: '🛝', label: 'Shuffleboard' },
       ],
       spelregelsQuestions: {
-        'american-pool': ['What are the rules of 8-ball?', 'How do you play 9-ball?', 'What are the rules of 10-ball?', 'How does Straight Pool work?', 'What are the rules of One Pocket?'],
+        'american-pool': ['What are the rules of 8-ball?', 'How do you play 9-ball?', 'What are the rules of 10-ball?', 'How does Straight Pool work?', 'What are the rules of One Pocket?', 'How do you play K-Ball?'],
         'english-pool': ['What are the rules of English Pool?', 'What is the difference between American and English pool?', 'Which balls are used in English Pool?'],
         'darts': ['How does 501 darts work?', 'What are the rules of Cricket darts?', 'How does 301 darts work?'],
         'biljart': ['What are the rules of libre billiards?', 'How does cushion billiards work?', 'What are the rules of three-cushion billiards?'],
