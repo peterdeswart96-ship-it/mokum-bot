@@ -622,9 +622,9 @@
         body.appendChild(wrap)
       }
 
-      // Terug knop in chat (+ in testmodus: terugbel-knop)
+      // Terug knop in chat (+ terugbel-knop als vangnet)
       if (state.stage === 'chat' && !state.loading) {
-        if (testModusAan()) body.appendChild(chip(`📞 ${t.cbCta}`, () => { state.stage = 'terugbel'; state.callbackSent = false; state.callbackError = ''; render() }, true))
+        if (magTerugbelTonen()) body.appendChild(chip(`📞 ${t.cbCta}`, () => { state.stage = 'terugbel'; state.callbackSent = false; state.callbackError = ''; render() }, true))
         body.appendChild(btn(t.backToTopics, () => { resetChat(); render() }, null, 'mokum-back-btn'))
       }
 
@@ -711,6 +711,17 @@
       state.stage = 'questions'
     } else { state.internPwdError = true }
     render()
+  }
+
+  // Terugbel-knop alleen als vangnet: bij een expliciete bel-vraag, of als het gesprek lang wordt
+  // (bezoeker komt er met de chatbot niet uit). Niet proactief tonen.
+  function magTerugbelTonen() {
+    const userMsgs = state.messages.filter(m => m.role === 'user')
+    if (!userMsgs.length) return false
+    const laatste = (userMsgs[userMsgs.length - 1].content || '').toLowerCase()
+    if (/terugbel|terug bel|gebeld|opbel|bellen|telefonisch|call me|call ?back|phone me|callback/.test(laatste)) return true
+    if (userMsgs.length >= 5) return true
+    return false
   }
 
   async function submitCallback() {
