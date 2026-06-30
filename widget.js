@@ -588,15 +588,19 @@
       const CTRL = `box-sizing:border-box;height:30px;width:64px;flex:0 0 64px;border-radius:8px;`
       const sendBtnEl = btn('→', () => sendMessage(), `${CTRL}display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;color:${C.white};background:${C.red};border:none;opacity:${state.loading ? 0.5 : 1};`)
       sendBtnEl.disabled = state.loading
-      const sizeOpts = [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'MAX']]
-      const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
-      const sizeSelect = el('select', `${CTRL}-webkit-appearance:none;appearance:none;background:${C.blackInput} url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='8'%20height='5'%20viewBox='0%200%208%205'%3E%3Cpath%20d='M0%200l4%205%204-5z'%20fill='%23aaaaaa'/%3E%3C/svg%3E") no-repeat right 6px center;border:1px solid ${C.border};color:${C.white};font-size:11.5px;text-align:center;text-align-last:center;padding:0 13px 0 5px;cursor:pointer;`, optsHtml)
-      sizeSelect.value = state.size
-      sizeSelect.onchange = e => { state.size = e.target.value; render() }
-
-      // → en dropdown als strak groepje (minimale ruimte ertussen)
+      // → en (op desktop) de venster-kiezer als strak groepje.
       const ctrlGroup = el('div', 'display:flex;gap:3px;align-items:stretch;flex-shrink:0;')
-      ctrlGroup.append(sendBtnEl, sizeSelect)
+      ctrlGroup.append(sendBtnEl)
+      // Venster-kiezer alleen op desktop: op mobiel is de chat altijd schermvullend,
+      // dus daar zou de kiezer niets doen (zie getWidth/getHeight). Vandaar verbergen.
+      if (window.innerWidth >= 480) {
+        const sizeOpts = [['klein', 'Small'], ['middel', 'Medium'], ['groot', 'MAX']]
+        const optsHtml = sizeOpts.map(([v, l]) => `<option value="${v}"${state.size === v ? ' selected' : ''}>${l}</option>`).join('')
+        const sizeSelect = el('select', `${CTRL}-webkit-appearance:none;appearance:none;background:${C.blackInput} url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='8'%20height='5'%20viewBox='0%200%208%205'%3E%3Cpath%20d='M0%200l4%205%204-5z'%20fill='%23aaaaaa'/%3E%3C/svg%3E") no-repeat right 6px center;border:1px solid ${C.border};color:${C.white};font-size:11.5px;text-align:center;text-align-last:center;padding:0 13px 0 5px;cursor:pointer;`, optsHtml)
+        sizeSelect.value = state.size
+        sizeSelect.onchange = e => { state.size = e.target.value; render() }
+        ctrlGroup.append(sizeSelect)
+      }
       inputRow.append(input, ctrlGroup)
       inputArea.append(inputRow)
 
