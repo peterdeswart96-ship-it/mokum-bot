@@ -1819,10 +1819,11 @@ app.http("terugbelverzoek", {
         headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(content), "x-ms-blob-type": "BlockBlob", "x-ms-version": "2020-04-08" },
       }, content)
 
-      // Meldingen (NTFY-push + e-mail) — mogen het opslaan niet blokkeren.
-      const notify = await stuurTerugbelNotificatie(terugbelData)
+      // Meldingen (NTFY-push + e-mail). Await zodat het in Azure Functions zeker afrondt
+      // vóór de response (en de status gelogd wordt); blokkeert het opslaan verder niet.
+      await stuurTerugbelNotificatie(terugbelData)
 
-      return json(200, body.debug ? { success: true, notify } : { success: true })
+      return json(200, { success: true })
     } catch (error) {
       context.log("terugbelverzoek error:", error)
       return json(500, { error: error.message })
