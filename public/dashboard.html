@@ -17,6 +17,7 @@
     --warn:#d8aa2a; --warn-soft:#221a08; --warn-text:#e6c560;
     --bad:#ff6b6b; --bad-soft:#2a1a1a; --bad-border:#5c2b2e;
     --info:#7aa2f0; --info-soft:#101626; --info-border:#1c2942; --info-text:#c6d3ec;
+    --tertiary:#b07cff; --tertiary-soft:rgba(176,124,255,0.15); --tertiary-border:#5a3d8c;
     --nav-hover:rgba(255,255,255,0.05); --shadow:0 1px 2px rgba(0,0,0,0.45); --shadow-lg:0 8px 24px rgba(0,0,0,0.7);
   }
   :root[data-theme="light"]{
@@ -28,6 +29,7 @@
     --warn:#a8780f; --warn-soft:#fbf3e0; --warn-text:#8a6410;
     --bad:#d23b3b; --bad-soft:#fbe9e9; --bad-border:#f3c9c9;
     --info:#3a6fd0; --info-soft:#eef3fc; --info-border:#d4e0f5; --info-text:#274a86;
+    --tertiary:#7c3aed; --tertiary-soft:#f1ecfe; --tertiary-border:#ddd0f7;
     --nav-hover:rgba(0,0,0,0.045); --shadow:0 1px 3px rgba(16,24,40,0.07); --shadow-lg:0 10px 30px rgba(16,24,40,0.14);
   }
 
@@ -122,6 +124,10 @@
   .status-badge.status-ok { background: rgba(46,204,113,0.24); color: #1f9d57; }
   /* Open-actie-labels: elk apart in een eigen rood kader */
   .status-badge.status-kader { background: rgba(220,53,69,0.10); color: #e06b75; border: 1.5px solid rgba(220,53,69,0.85); }
+  /* Terugbelverzoek: paarse markering */
+  .status-badge.status-terugbel { background: var(--tertiary-soft); color: var(--tertiary); border: 1.5px solid var(--tertiary-border); }
+  .convo-item.status-terugbel { background: var(--tertiary-soft); border-radius: 10px; }
+  .convo-item.status-terugbel:hover { filter: brightness(1.08); }
   /* Uitsluit-checkboxes (OK/test verbergen) */
   .excl-check { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-2); cursor: pointer; user-select: none; white-space: nowrap; }
   .excl-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; }
@@ -2163,7 +2169,7 @@ function renderGesprekken() {
       const key = eersteVraagVan(g).toLowerCase().trim().replace(/\s+/g, " ")
       const cur = map.get(key)
       if (!cur) {
-        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), teReviewen: isTeReviewen(g), fotoNodig: isFotoNodig(g), naams: g.naam ? [g.naam] : [] })
+        map.set(key, { rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), teReviewen: isTeReviewen(g), fotoNodig: isFotoNodig(g), terugbel: isTerugbel(g), terugbelData: g.terugbelData || null, terugbelAfgehandeld: isTerugbelAfgehandeld(g), naams: g.naam ? [g.naam] : [] })
       } else {
         cur.count++
         cur.laatste = Math.max(cur.laatste, new Date(g.timestamp).getTime())
@@ -2179,7 +2185,7 @@ function renderGesprekken() {
     rijen = [...map.values()].sort((a, b) => b.laatste - a.laatste)
     document.getElementById("lijst-count").textContent = `${rijen.length} unieke vragen · ${gefilterd.length} gesprekken`
   } else {
-    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), teReviewen: isTeReviewen(g), fotoNodig: isFotoNodig(g), naams: g.naam ? [g.naam] : [] }))
+    rijen = gefilterd.map(g => ({ rep: g, count: 1, laatste: new Date(g.timestamp).getTime(), onbeantwoord: botKonNietAntwoorden(g), test: isTestGesprek(g), afgehandeld: isAfgehandeld(g), teReviewen: isTeReviewen(g), fotoNodig: isFotoNodig(g), terugbel: isTerugbel(g), terugbelData: g.terugbelData || null, terugbelAfgehandeld: isTerugbelAfgehandeld(g), naams: g.naam ? [g.naam] : [] }))
     document.getElementById("lijst-count").textContent = `${gefilterd.length} gesprekken`
   }
   _gesprekRijen = rijen
@@ -2196,12 +2202,14 @@ function renderGesprekken() {
     // Status bepaalt de balk-kleur + badge. Prioriteit: OK (groen) > to review/foto nodig (oranje) > geen antwoord (rood).
     // Alleen de OK-balk krijgt een (groene) kleur; open-acties tonen losse labels in een rood kader.
     let stKlasse = "", badges = []
+    if (row.terugbel) badges.push({ txt: row.terugbelAfgehandeld ? "📞 Teruggebeld" : "📞 Terugbelverzoek", kl: "status-terugbel" })
     if (row.afgehandeld) { stKlasse = "status-ok"; badges.push({ txt: "✅ OK", kl: "status-ok" }) }
     else {
       if (row.teReviewen) badges.push({ txt: "❓ To review", kl: "status-kader" })
       if (row.fotoNodig) badges.push({ txt: "📷 Foto nodig", kl: "status-kader" })
       if (!row.teReviewen && !row.fotoNodig && row.onbeantwoord) badges.push({ txt: "⚠️ Geen antwoord", kl: "status-kader" })
     }
+    if (row.terugbel && !row.terugbelAfgehandeld) stKlasse = "status-terugbel" // paars heeft voorrang op de balk-kleur
     const stBadge = badges.map(bd => `<span class="status-badge ${bd.kl}">${bd.txt}</span>`).join("")
     return `<div class="convo-item${stKlasse ? " " + stKlasse : ""}" onclick="toggleDetail(${i})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -2219,6 +2227,21 @@ function renderGesprekken() {
           : `<div class="msg-bot">${formatBotHTML(m.content || "")}</div>`).join("")}
         ${g.reply ? `<div class="msg-bot"><div style="color:var(--accent);font-size:11px;font-weight:700;margin-bottom:5px;">ANTWOORD — zoals de bezoeker het ziet:</div>${formatBotHTML(g.reply)}</div>` : ""}
         ${fotoTriggerInfo(g)}
+        ${row.terugbel ? `<div style="margin-top:10px;padding:12px;border:1.5px solid var(--tertiary-border);background:var(--tertiary-soft);border-radius:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--tertiary);margin-bottom:8px;">📞 Terugbelverzoek</div>
+          ${(row.terugbelData && row.terugbelData.verlopen)
+            ? `<div style="font-size:12px;color:var(--muted);">Persoonsgegevens verwijderd (na 30 dagen).</div>`
+            : (row.terugbelData ? `<div style="font-size:13px;color:var(--text-2);line-height:1.8;">
+                <div><b>Naam:</b> ${fEsc(row.terugbelData.naam || "-")}</div>
+                <div><b>Telefoon:</b> <a href="tel:${fEsc((row.terugbelData.telefoon || "").replace(/[^0-9+]/g, ""))}" style="color:var(--accent);">${fEsc(row.terugbelData.telefoon || "-")}</a></div>
+                ${row.terugbelData.onderwerp ? `<div><b>Onderwerp:</b> ${fEsc(row.terugbelData.onderwerp)}</div>` : ""}
+                ${row.terugbelData.voorkeurstijd ? `<div><b>Voorkeur:</b> ${fEsc(row.terugbelData.voorkeurstijd)}</div>` : ""}
+                <div style="color:var(--muted);font-size:11px;margin-top:4px;">Aangevraagd: ${row.terugbelData.aangevraagdOp ? new Date(row.terugbelData.aangevraagdOp).toLocaleString("nl-NL") : "?"}</div>
+              </div>` : "")}
+          <div style="margin-top:10px;" onclick="event.stopPropagation()">
+            <button class="btn" style="padding:5px 10px;font-size:12px;${row.terugbelAfgehandeld ? "color:var(--good);border-color:var(--good-border);" : ""}" onclick="markTerugbelAfgehandeld(${i}, ${!row.terugbelAfgehandeld})">${row.terugbelAfgehandeld ? "↩️ Toch niet teruggebeld" : "✅ Teruggebeld"}</button>
+          </div>
+        </div>` : ""}
         ${row.onbeantwoord ? `<div style="font-size:12px;color:var(--warn-text);margin-top:8px;">⚠️ De bot kon dit mogelijk niet goed beantwoorden — voeg hieronder de juiste informatie toe.</div>` : ""}
         <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap;align-items:flex-start;" onclick="event.stopPropagation()">
           <div class="actie-groep">
@@ -2327,6 +2350,8 @@ function zoekGesprekken() {
 function isAfgehandeld(g) { return !!g.afgehandeld }
 function isTeReviewen(g) { return !!g.teReviewen }
 function isFotoNodig(g) { return !!g.fotoNodig }
+function isTerugbel(g) { return !!g.terugbelVerzoek }
+function isTerugbelAfgehandeld(g) { return !!g.terugbelAfgehandeld }
 
 function toggleFilterPanel() {
   const p = document.getElementById("filter-panel")
@@ -2447,6 +2472,15 @@ async function markFotoNodigGesprek(i, val) {
   if (!naams.length) return
   for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, fotoNodig: val }) } catch {} }
   alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.fotoNodig = val })
+  zoekGesprekken()
+}
+
+async function markTerugbelAfgehandeld(i, val) {
+  const row = _gesprekRijen[i]; if (!row) return
+  const naams = row.naams || []
+  if (!naams.length) return
+  for (const naam of naams) { try { await gesprekActie({ action: "mark", blob: naam, terugbelAfgehandeld: val }) } catch {} }
+  alleGesprekken.forEach(g => { if (naams.includes(g.naam)) g.terugbelAfgehandeld = val })
   zoekGesprekken()
 }
 

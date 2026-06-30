@@ -66,6 +66,17 @@
       internPwdPrompt: 'Dit is een beveiligde rubriek. Voer het wachtwoord in:',
       internPwdError: 'Verkeerd wachtwoord',
       internPwdBtn: 'Toegang',
+      cbCta: 'Laat je terugbellen',
+      cbTitle: 'Laat je terugbellen',
+      cbName: 'Naam',
+      cbPhone: 'Telefoonnummer',
+      cbTopic: 'Waar gaat het over? (optioneel)',
+      cbWhen: 'Wanneer mogen we bellen? (optioneel)',
+      cbPrivacy: 'We gebruiken je gegevens alleen om je terug te bellen. Je gegevens worden na 30 dagen automatisch verwijderd.',
+      cbSubmit: 'Verstuur verzoek',
+      cbThanks: 'Bedankt! We bellen je zo snel mogelijk terug.',
+      cbRequired: 'Vul je naam en telefoonnummer in.',
+      cbError: 'Er ging iets mis. Probeer het later opnieuw.',
       hoverTitle: 'IK WEET ALLES OVER:',
       hoverInfo: ['🕐 Openingstijden', '💶 Tarieven & activiteiten', '🏆 Toernooien & inschrijven', '📍 Route & parkeren', '🎯 Darts, biljart & shuffleboard', '🏢 Bedrijfsuitjes & groepen'],
       beginnerInfo: '👋 Nieuw hier? Stel je vraag direct onderaan in de balk, of bekijk hieronder voorbeeldvragen per rubriek.',
@@ -139,6 +150,17 @@
       internPwdPrompt: 'This is a secured section. Please enter the password:',
       internPwdError: 'Incorrect password',
       internPwdBtn: 'Access',
+      cbCta: 'Request a callback',
+      cbTitle: 'Request a callback',
+      cbName: 'Name',
+      cbPhone: 'Phone number',
+      cbTopic: "What's it about? (optional)",
+      cbWhen: 'When can we call you? (optional)',
+      cbPrivacy: 'We only use your details to call you back. Your details are automatically deleted after 30 days.',
+      cbSubmit: 'Send request',
+      cbThanks: "Thanks! We'll call you back as soon as possible.",
+      cbRequired: 'Please enter your name and phone number.',
+      cbError: 'Something went wrong. Please try again later.',
       hoverTitle: 'I KNOW ALL ABOUT:',
       hoverInfo: ['🕐 Opening hours', '💶 Rates & activities', '🏆 Tournaments & sign-up', '📍 Route & parking', '🎯 Darts, billiards & more', '🏢 Corporate events'],
       beginnerInfo: '👋 New here? Ask your question directly in the bar below, or browse example questions per category.',
@@ -217,6 +239,10 @@
     sendTimes: [],
     lastSentQuestion: '',
     dupTimes: [],
+    conversationId: null,
+    callback: { naam: '', telefoon: '', onderwerp: '', voorkeurstijd: '' },
+    callbackError: '',
+    callbackSent: false,
   }
 
   function tr() { return TRANSLATIONS[state.lang] }
@@ -540,6 +566,32 @@
         setTimeout(() => pwdInput.focus(), 100)
       }
 
+      // Stage: terugbelverzoek (formulier)
+      if (state.stage === 'terugbel' && !state.loading) {
+        const wrap = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:4px;')
+        if (state.callbackSent) {
+          wrap.appendChild(el('div', `font-size:14px;color:${C.white};line-height:1.5;`, `✅ ${t.cbThanks}`))
+          wrap.appendChild(btn(t.backToTopics, () => { state.callbackSent = false; resetChat(); render() }, null, 'mokum-back-btn'))
+        } else {
+          wrap.appendChild(el('div', `font-size:13px;color:${C.white};font-weight:700;`, `📞 ${t.cbTitle}`))
+          const mkField = (key, ph, type) => {
+            const inp = el('input', `padding:9px 12px;border-radius:8px;font-size:14px;color:${C.white};background:${C.blackInput};border:1px solid ${C.border};`, null, { type: type || 'text', placeholder: ph })
+            inp.value = state.callback[key]
+            inp.oninput = e => { state.callback[key] = e.target.value }
+            return inp
+          }
+          wrap.appendChild(mkField('naam', t.cbName + ' *'))
+          wrap.appendChild(mkField('telefoon', t.cbPhone + ' *', 'tel'))
+          wrap.appendChild(mkField('onderwerp', t.cbTopic))
+          wrap.appendChild(mkField('voorkeurstijd', t.cbWhen))
+          wrap.appendChild(el('div', `font-size:11px;color:${C.gray};line-height:1.4;`, t.cbPrivacy))
+          if (state.callbackError) wrap.appendChild(el('div', `font-size:12px;color:${C.red};`, state.callbackError))
+          wrap.appendChild(chip(t.cbSubmit, submitCallback, true))
+          wrap.appendChild(btn(t.backButton, () => { state.stage = 'topics'; state.callbackError = ''; render() }, null, 'mokum-back-btn'))
+        }
+        body.appendChild(wrap)
+      }
+
       // Stage: spelregels disciplines
       if (state.stage === 'spelregels' && !state.loading) {
         const wrap = el('div', 'display:flex;flex-direction:column;gap:8px;margin-top:4px;')
@@ -570,8 +622,9 @@
         body.appendChild(wrap)
       }
 
-      // Terug knop in chat
+      // Terug knop in chat (+ in testmodus: terugbel-knop)
       if (state.stage === 'chat' && !state.loading) {
+        if (testModusAan()) body.appendChild(chip(`📞 ${t.cbCta}`, () => { state.stage = 'terugbel'; state.callbackSent = false; state.callbackError = ''; render() }, true))
         body.appendChild(btn(t.backToTopics, () => { resetChat(); render() }, null, 'mokum-back-btn'))
       }
 
@@ -660,11 +713,38 @@
     render()
   }
 
+  async function submitCallback() {
+    const cb = state.callback
+    if (!cb.naam.trim() || !cb.telefoon.trim()) { state.callbackError = tr().cbRequired; render(); return }
+    state.callbackError = ''
+    try {
+      const res = await fetch(`${API_URL}/api/terugbelverzoek`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: state.conversationId,
+          naam: cb.naam, telefoon: cb.telefoon, onderwerp: cb.onderwerp, voorkeurstijd: cb.voorkeurstijd,
+          isTest: testModusAan(),
+        }),
+      })
+      if (!res.ok) throw new Error('http ' + res.status)
+      state.callbackSent = true
+      state.callback = { naam: '', telefoon: '', onderwerp: '', voorkeurstijd: '' }
+    } catch { state.callbackError = tr().cbError }
+    render()
+  }
+
+  function resetCallback() {
+    state.conversationId = null
+    state.callback = { naam: '', telefoon: '', onderwerp: '', voorkeurstijd: '' }
+    state.callbackError = ''; state.callbackSent = false
+  }
+
   function switchLang(newLang) {
     state.lang = newLang
     state.messages = [{ role: 'assistant', content: TRANSLATIONS[newLang].welcome }]
     state.stage = 'topics'; state.selectedTopic = null; state.selectedDiscipline = null
     state.internUnlocked = false; state.internPwd = ''; state.internPwdError = false
+    resetCallback()
     render()
   }
 
@@ -673,6 +753,7 @@
     state.internUnlocked = false; state.internPwd = ''; state.internPwdError = false
     state.messages = [{ role: 'assistant', content: tr().welcome }]; state.input = ''
     state.examplesOpen = false
+    resetCallback()
   }
 
   async function sendMessage(text) {
@@ -729,6 +810,7 @@
       if (!res.ok) throw new Error('http ' + res.status)
       const data = await res.json()
       if (!data || typeof data.reply !== 'string') throw new Error('geen antwoord')
+      if (data.conversationId) state.conversationId = data.conversationId
       return data.reply
     }
     try {

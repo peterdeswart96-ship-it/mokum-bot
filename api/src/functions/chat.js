@@ -174,19 +174,24 @@ function httpsRequest(options, body) {
   })
 }
 
+// Sorteerbare blobnaam in Amsterdam-tijd: "YYYY-MM-DDTHH-MM-SS-<random>.json"
+// sv-SE geeft "YYYY-MM-DD HH:MM:SS"; omzetten naar "YYYY-MM-DDTHH-MM-SS".
+function nieuweBlobNaam() {
+  const amsTijd = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Amsterdam",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  }).format(new Date()).replace(" ", "T").replace(/:/g, "-")
+  const random = Math.random().toString(36).substring(2, 8)
+  return `${amsTijd}-${random}.json`
+}
+
+// Slaat een gesprek op en geeft de blobnaam (conversationId) terug, of null bij falen.
 async function saveConversation(messages, reply, isTest) {
   try {
     const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
-    if (!sasToken) return
-    // Blobnaam in Amsterdam-tijd (sorteerbaar) zodat de naam in Azure de NL-tijd toont.
-    // sv-SE geeft "YYYY-MM-DD HH:MM:SS"; omzetten naar "YYYY-MM-DDTHH-MM-SS".
-    const amsTijd = new Intl.DateTimeFormat("sv-SE", {
-      timeZone: "Europe/Amsterdam",
-      year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
-    }).format(new Date()).replace(" ", "T").replace(/:/g, "-")
-    const random = Math.random().toString(36).substring(2, 8)
-    const blobName = `${amsTijd}-${random}.json`
+    if (!sasToken) return null
+    const blobName = nieuweBlobNaam()
     // timestamp-veld blijft UTC ISO — het dashboard rekent dat zelf om naar Amsterdam-tijd
     const content = JSON.stringify({ timestamp: new Date().toISOString(), messages, reply, isTest: !!isTest }, null, 2)
     const contentLength = Buffer.byteLength(content)
@@ -202,8 +207,10 @@ async function saveConversation(messages, reply, isTest) {
       },
     }
     await httpsRequest(options, content)
+    return blobName
   } catch (err) {
     console.log("Gesprek opslaan mislukt:", err.message)
+    return null
   }
 }
 
@@ -1077,11 +1084,11 @@ app.http("chat", {
           reply += f.weergave === "venster" ? `\n\n[${cap}](${f.url})` : `\n\n![${cap}](${f.url})`
         }
       }
-      saveConversation(messages, reply, isTest)
+      const conversationId = await saveConversation(messages, reply, isTest)
       return {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ reply }),
+        body: JSON.stringify({ reply, conversationId }),
       }
     } catch (error) {
       context.log("Error:", error)
@@ -1186,6 +1193,7 @@ app.http("gesprekken", {
         if (cbody.afgehandeld !== undefined) data.afgehandeld = !!cbody.afgehandeld
         if (cbody.teReviewen !== undefined) data.teReviewen = !!cbody.teReviewen
         if (cbody.fotoNodig !== undefined) data.fotoNodig = !!cbody.fotoNodig
+        if (cbody.terugbelAfgehandeld !== undefined) data.terugbelAfgehandeld = !!cbody.terugbelAfgehandeld
         const newContent = JSON.stringify(data, null, 2)
         const putOpts = {
           hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
@@ -1199,7 +1207,7 @@ app.http("gesprekken", {
           },
         }
         await httpsRequest(putOpts, newContent)
-        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest, afgehandeld: data.afgehandeld, teReviewen: data.teReviewen, fotoNodig: data.fotoNodig }) }
+        return { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ success: true, isTest: data.isTest, afgehandeld: data.afgehandeld, teReviewen: data.teReviewen, fotoNodig: data.fotoNodig, terugbelAfgehandeld: data.terugbelAfgehandeld }) }
       }
       // Opschonen — verwijdert gesprekken vóór een datum. Beveiligd met dashboard-wachtwoord.
       if (action === "cleanup" && request.method === "POST") {
@@ -1705,6 +1713,146 @@ app.http("auth", {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ success: false, error: error.message }),
       }
+    }
+  },
+})
+
+// ===================== TERUGBELVERZOEK =====================
+
+// Stuurt een NTFY-push + e-mail (via NTFY-forwarding) met alle terugbelgegevens.
+// No-op als de NTFY-config (env-vars) ontbreekt, zodat deployen kan vóór de config.
+async function stuurTerugbelNotificatie(d) {
+  try {
+    const base = process.env.NTFY_URL
+    const topic = process.env.NTFY_TOPIC
+    if (!base || !topic) return // nog niet geconfigureerd → stil overslaan
+    const regels = [
+      `Naam: ${d.naam || "-"}`,
+      `Telefoon: ${d.telefoon || "-"}`,
+      d.onderwerp ? `Onderwerp: ${d.onderwerp}` : null,
+      d.voorkeurstijd ? `Voorkeur: ${d.voorkeurstijd}` : null,
+      `Aangevraagd: ${d.aangevraagdOp || new Date().toISOString()}`,
+    ].filter(Boolean)
+    const body = regels.join("\n")
+    const u = new URL(base)
+    const headers = {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Length": Buffer.byteLength(body),
+      "Title": "Nieuw terugbelverzoek — Mokum",
+      "Priority": "high",
+      "Tags": "telephone",
+    }
+    if (process.env.NTFY_TOKEN) headers["Authorization"] = `Bearer ${process.env.NTFY_TOKEN}`
+    if (process.env.CONTACT_EMAIL) headers["Email"] = process.env.CONTACT_EMAIL // NTFY stuurt dan ook een e-mail
+    await httpsRequest({ hostname: u.hostname, port: u.port || 443, path: `/${encodeURIComponent(topic)}`, method: "POST", headers }, body)
+  } catch (err) {
+    console.log("Terugbel-notificatie mislukt:", err.message)
+  }
+}
+
+// Endpoint: bezoeker laat een terugbelverzoek achter (naam + telefoon verplicht).
+// Slaat het op het gesprek-blob op (zodat het in het dashboard verschijnt) en stuurt meldingen.
+app.http("terugbelverzoek", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  handler: async (request, context) => {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    }
+    if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
+    const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
+    try {
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) return json(500, { error: "Geen SAS token" })
+      const body = await request.json()
+      const cap = (v, n) => (v == null ? "" : String(v).trim().slice(0, n))
+      const naam = cap(body.naam, 120)
+      const telefoon = cap(body.telefoon, 40)
+      const onderwerp = cap(body.onderwerp, 500)
+      const voorkeurstijd = cap(body.voorkeurstijd, 200)
+      if (!naam || !telefoon) return json(400, { error: "Naam en telefoonnummer zijn verplicht" })
+
+      const aangevraagdOp = new Date().toISOString()
+      const terugbelData = { naam, telefoon, onderwerp, voorkeurstijd, aangevraagdOp, status: "nieuw" }
+
+      // Koppel aan een bestaand gesprek als er een geldig conversationId is; anders een nieuw blob.
+      let convId = cap(body.conversationId, 80)
+      if (convId && (convId.includes("/") || convId.includes(".."))) convId = ""
+      const host = `${STORAGE_ACCOUNT}.blob.core.windows.net`
+      let data = null
+      if (convId) {
+        try {
+          const got = await httpsRequest({ hostname: host, path: `/gesprekken/${encodeURIComponent(convId)}?${sasToken}`, method: "GET", headers: { "x-ms-version": "2020-04-08" } })
+          if (got.status === 200) { try { data = JSON.parse(got.body) } catch {} }
+        } catch {}
+      }
+      let blobName = convId
+      if (!data) {
+        // Geen (geldig) gesprek gevonden → nieuw minimaal gesprek aanmaken zodat het in de lijst verschijnt.
+        blobName = nieuweBlobNaam()
+        data = { timestamp: aangevraagdOp, messages: [{ role: "user", content: onderwerp || "Terugbelverzoek" }], reply: "", isTest: !!body.isTest }
+      }
+      data.terugbelVerzoek = true
+      data.terugbelAfgehandeld = false
+      data.terugbelData = terugbelData
+
+      const content = JSON.stringify(data, null, 2)
+      await httpsRequest({
+        hostname: host,
+        path: `/gesprekken/${encodeURIComponent(blobName)}?${sasToken}`,
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(content), "x-ms-blob-type": "BlockBlob", "x-ms-version": "2020-04-08" },
+      }, content)
+
+      // Meldingen (NTFY-push + e-mail) — mogen het opslaan niet blokkeren.
+      stuurTerugbelNotificatie(terugbelData)
+
+      return json(200, { success: true })
+    } catch (error) {
+      context.log("terugbelverzoek error:", error)
+      return json(500, { error: error.message })
+    }
+  },
+})
+
+// Dagelijkse AVG-opschoning: verwijdert de persoonsgegevens van terugbelverzoeken ouder dan 30 dagen.
+app.timer("terugbelOpschonen", {
+  schedule: "0 0 3 * * *", // elke dag om 03:00 (Amsterdam ~ UTC; exacte tijd niet kritisch)
+  handler: async (myTimer, context) => {
+    try {
+      const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      if (!sasToken) return
+      const host = `${STORAGE_ACCOUNT}.blob.core.windows.net`
+      const grens = Date.now() - 30 * 24 * 60 * 60 * 1000
+      let marker = ""
+      let geredigeerd = 0
+      do {
+        const listPath = `/gesprekken?restype=container&comp=list&maxresults=500${marker ? `&marker=${encodeURIComponent(marker)}` : ""}&${sasToken}`
+        const res = await httpsRequest({ hostname: host, path: listPath, method: "GET", headers: { "x-ms-version": "2020-04-08" } })
+        const namen = [...res.body.matchAll(/<Name>([^<]+)<\/Name>/g)].map(m => m[1])
+        marker = (res.body.match(/<NextMarker>([^<]*)<\/NextMarker>/) || [])[1] || ""
+        for (const naam of namen) {
+          try {
+            const got = await httpsRequest({ hostname: host, path: `/gesprekken/${encodeURIComponent(naam)}?${sasToken}`, method: "GET", headers: { "x-ms-version": "2020-04-08" } })
+            if (got.status !== 200) continue
+            let data; try { data = JSON.parse(got.body) } catch { continue }
+            const td = data && data.terugbelData
+            if (!td || td.verlopen) continue
+            const aangevraagd = Date.parse(td.aangevraagdOp || data.timestamp || "")
+            if (!aangevraagd || aangevraagd > grens) continue
+            // Persoonsgegevens redigeren, het gesprek zelf behouden.
+            data.terugbelData = { aangevraagdOp: td.aangevraagdOp, status: td.status || "verlopen", verlopen: true }
+            const content = JSON.stringify(data, null, 2)
+            await httpsRequest({ hostname: host, path: `/gesprekken/${encodeURIComponent(naam)}?${sasToken}`, method: "PUT", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(content), "x-ms-blob-type": "BlockBlob", "x-ms-version": "2020-04-08" } }, content)
+            geredigeerd++
+          } catch {}
+        }
+      } while (marker)
+      context.log(`Terugbel-opschoning: ${geredigeerd} verzoek(en) geredigeerd (>30 dagen).`)
+    } catch (err) {
+      context.log("Terugbel-opschoning mislukt:", err.message)
     }
   },
 })
