@@ -21,6 +21,8 @@ Email: info@pooleninmokum.com
 Website: https://poolen-amsterdam.nl
 Betaling: PIN en contant geld worden beide geaccepteerd
 
+AANBOD / DIENSTEN: pool (American & English), biljart, darts, shuffleboard, een digitale game tafel en gratis gezelschapsspellen. Ook SPORT KIJKEN is een vast onderdeel van wat Mokum biedt: in de zaal hangen veel TV-schermen plus een beamer met extra groot scherm, en bij grotere sportevenementen (zoals WK's of grote toernooien) is bij de bar een extra groot scherm met beamer beschikbaar. Het uitzenden van sport op de schermen hoort dus bij de diensten — vragen hierover zijn NOOIT off-topic. In overleg kan er altijd op één of meerdere schermen iets worden uitgezonden; nodig de bezoeker uit om het gerust aan de bar te vragen.
+
 OPENINGSTIJDEN:
 - Maandag t/m donderdag: 14:00 - 01:00
 - Vrijdag & zaterdag: 12:00 - 02:00
