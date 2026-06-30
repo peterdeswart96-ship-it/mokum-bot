@@ -1218,7 +1218,8 @@ function showTab(name, btn) {
   const subnav = document.getElementById("analyse-subnav")
   if (subnav) subnav.style.display = "none"
   if (name === "fotos") laadFotos()
-  // Website-tab (Sander) is nu zichtbaar → speel de cascade-intro van die widgets.
+  // Tab is nu zichtbaar → speel de cascade-intro van die tab opnieuw af.
+  if (name === "mark") speelOverzichtIntro()
   if (name === "sander") speelSanderIntro()
 }
 
@@ -1852,15 +1853,19 @@ function updateAlles() {
   renderKosten()
   const sanderTalen = renderTaalverdeling()
   renderGesprekken()
-  // Overzicht-widgets: één getrapte tijdlijn die meteen speelt (tab is standaard zichtbaar).
-  startIntroAnimatie([...(introDagen || []), ...(introOnderwerpen || [])])
-  // Website-widgets (Sander) staan op een verborgen tab → bewaar de intro en speel 'm
-  // zodra die tab geopend wordt (of meteen als die nú al actief is, bv. na een refresh).
+  // Bewaar de intro-updaters per tab en speel de intro van de tab die nú zichtbaar is.
+  // (Overzicht is standaard zichtbaar bij laden en na elke refresh via het filter.)
+  // Bij het wisselen van tab wordt de bijbehorende intro opnieuw afgespeeld (zie showTab).
+  window._overzichtUpdaters = [...(introDagen || []), ...(introOnderwerpen || [])]
   window._sanderUpdaters = [...(sanderOnderwerpen || []), ...(sanderTalen || [])]
   if (document.getElementById("tab-sander")?.classList.contains("active")) speelSanderIntro()
+  else speelOverzichtIntro()
 }
 
-// Speelt de bewaarde Website-intro op een eigen tijdlijn (onderbreekt de Overzicht-intro niet).
+// Speelt de bewaarde intro per tab op een eigen tijdlijn, zodat ze elkaar niet onderbreken.
+function speelOverzichtIntro() {
+  startIntroAnimatie(window._overzichtUpdaters || [], "_introTimer")
+}
 function speelSanderIntro() {
   startIntroAnimatie(window._sanderUpdaters || [], "_sanderTimer")
 }
