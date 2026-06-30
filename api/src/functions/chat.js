@@ -1739,7 +1739,7 @@ async function stuurTerugbelNotificatie(d) {
     const baseHeaders = {
       "Content-Type": "text/plain; charset=utf-8",
       "Content-Length": Buffer.byteLength(body),
-      "Title": "Nieuw terugbelverzoek — Mokum",
+      "Title": "Nieuw terugbelverzoek - Mokum",
       "Priority": "high",
       "Tags": "telephone",
     }
