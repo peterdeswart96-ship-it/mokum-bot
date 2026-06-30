@@ -1726,7 +1726,7 @@ async function stuurTerugbelNotificatie(d) {
   try {
     const base = process.env.NTFY_URL
     const topic = process.env.NTFY_TOPIC
-    if (!base || !topic) return // nog niet geconfigureerd → stil overslaan
+    if (!base || !topic) return { skipped: "NTFY_URL/NTFY_TOPIC ontbreekt" }
     const regels = [
       `Naam: ${d.naam || "-"}`,
       `Telefoon: ${d.telefoon || "-"}`,
@@ -1750,13 +1750,16 @@ async function stuurTerugbelNotificatie(d) {
     const metEmail = { ...baseHeaders }
     if (process.env.CONTACT_EMAIL) metEmail["Email"] = process.env.CONTACT_EMAIL // NTFY stuurt dan ook een e-mail
     const r = await httpsRequest({ ...opts, headers: metEmail }, body)
-    if (r.status >= 200 && r.status < 300) return
+    if (r.status >= 200 && r.status < 300) return { ok: true, status: r.status, email: !!process.env.CONTACT_EMAIL }
     console.log("Terugbel-notificatie (met e-mail) faalde:", r.status, r.body)
-    if (!process.env.CONTACT_EMAIL) return
+    if (!process.env.CONTACT_EMAIL) return { ok: false, status: r.status, body: String(r.body || "").slice(0, 300) }
     const r2 = await httpsRequest({ ...opts, headers: baseHeaders }, body)
-    if (r2.status < 200 || r2.status >= 300) console.log("Terugbel-push (zonder e-mail) faalde:", r2.status, r2.body)
+    if (r2.status >= 200 && r2.status < 300) return { ok: true, status: r2.status, email: false, emailFaalde: { status: r.status, body: String(r.body || "").slice(0, 300) } }
+    console.log("Terugbel-push (zonder e-mail) faalde:", r2.status, r2.body)
+    return { ok: false, status: r.status, body: String(r.body || "").slice(0, 300), retryStatus: r2.status, retryBody: String(r2.body || "").slice(0, 300) }
   } catch (err) {
     console.log("Terugbel-notificatie mislukt:", err.message)
+    return { error: err.message }
   }
 }
 
@@ -1817,9 +1820,9 @@ app.http("terugbelverzoek", {
       }, content)
 
       // Meldingen (NTFY-push + e-mail) — mogen het opslaan niet blokkeren.
-      stuurTerugbelNotificatie(terugbelData)
+      const notify = await stuurTerugbelNotificatie(terugbelData)
 
-      return json(200, { success: true })
+      return json(200, body.debug ? { success: true, notify } : { success: true })
     } catch (error) {
       context.log("terugbelverzoek error:", error)
       return json(500, { error: error.message })
