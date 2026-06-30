@@ -789,6 +789,7 @@
       <!-- Subtab balk -->
       <div style="display:flex;gap:4px;border-bottom:1px solid var(--input);margin-bottom:24px;flex-wrap:wrap;">
         <button class="btn" id="htab-btn-overzicht" onclick="showHTab('overzicht')" style="border-radius:0;border-bottom:2px solid var(--accent);color:var(--text);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🏠 Overzicht</button>
+        <button class="btn" id="htab-btn-vragen" onclick="showHTab('vragen')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">💬 Vragen</button>
         <button class="btn" id="htab-btn-talen" onclick="showHTab('talen')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">🌐 Talen</button>
         <button class="btn" id="htab-btn-kennisbronnen" onclick="showHTab('kennisbronnen')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📁 Kennisbronnen</button>
         <button class="btn" id="htab-btn-fotos" onclick="showHTab('fotos')" style="border-radius:0;border-bottom:2px solid transparent;color:var(--muted);background:none;border-top:none;border-left:none;border-right:none;padding:10px 14px;font-size:12px;white-space:nowrap;">📷 Foto's</button>
@@ -833,6 +834,41 @@
         </div>
       </div>
 
+      <!-- SUBTAB: VRAGEN BEHEREN -->
+      <div id="htab-vragen" style="display:none;">
+        <div class="insight-box" style="margin-bottom:16px;">💬 In <b>Analyse › Vragen</b> zie je alle bezoekersvragen mét het antwoord dat de bot gaf. Hier markeer, filter en beheer je ze — en voeg je meteen kennis of een foto toe.</div>
+
+        <div class="card-title">Een vraag markeren</div>
+        <div class="card">
+          <div class="row"><span class="row-label">✅ OK</span><span class="row-val" style="font-size:13px;">Antwoord was goed of kennis toegevoegd — de balk wordt groen</span></div>
+          <div class="row"><span class="row-label">❓ To review</span><span class="row-val" style="font-size:13px;">Nog te beoordelen (label in rood kader)</span></div>
+          <div class="row"><span class="row-label">📷 Foto nodig</span><span class="row-val" style="font-size:13px;">Hier hoort nog een foto bij</span></div>
+          <div class="row"><span class="row-label">⚠️ Geen antwoord</span><span class="row-val" style="font-size:13px;">De bot wist het waarschijnlijk niet</span></div>
+          <div class="row"><span class="row-label">Snel of uitgebreid</span><span class="row-val" style="font-size:13px;">Snelknoppen (✓ ? 📷 T ×) per rij, of klap de vraag uit voor alle acties</span></div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">Acties per vraag (uitgeklapt)</div>
+        <div class="card">
+          <div class="row"><span class="row-label">➕ Toevoegen</span><span class="row-val" style="font-size:13px;">Kennis toevoegen (wizard) of een foto toevoegen</span></div>
+          <div class="row"><span class="row-label">🏷️ Markeren</span><span class="row-val" style="font-size:13px;">OK · To review · Foto nodig · Test</span></div>
+          <div class="row"><span class="row-label">🗑 Verwijderen</span><span class="row-val" style="font-size:13px;">Het gesprek definitief weghalen</span></div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">Filteren (knop ⚙️ Filters)</div>
+        <div class="card">
+          <div class="row"><span class="row-label">📅 Periode</span><span class="row-val" style="font-size:13px;">Vandaag · 7 · 30 · 90 dagen · dit jaar · alles</span></div>
+          <div class="row"><span class="row-label">Tonen (optellend)</span><span class="row-val" style="font-size:13px;">Onbeantwoord · Nog te doen · OK · To review · Foto nodig · Testvragen — meerdere aanvinken toont méér (worden groen)</span></div>
+          <div class="row"><span class="row-label">Verbergen</span><span class="row-val" style="font-size:13px;">"OK-vragen niet weergeven" en "Test-vragen niet weergeven"</span></div>
+          <div class="row"><span class="row-label">🔁 Groeperen</span><span class="row-val" style="font-size:13px;">Identieke vragen samenvoegen tot één rij met een teller</span></div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">Testen &amp; opruimen</div>
+        <div class="card">
+          <div class="row"><span class="row-label">🧪 #test</span><span class="row-val" style="font-size:13px;">Begin een testvraag met <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">#test</code> — die blijft uit de statistieken</span></div>
+          <div class="row"><span class="row-label">☑️ Bulk</span><span class="row-val" style="font-size:13px;">"Alles selecteren" + meerdere tegelijk verwijderen (met waarschuwing)</span></div>
+        </div>
+      </div>
+
       <!-- SUBTAB: TALEN -->
       <div id="htab-talen" style="display:none;">
         <div class="insight-box" style="margin-bottom:16px;">🌐 De bot past zich automatisch aan aan de taal van de bezoeker. Jullie hoeven hier niets voor in te stellen.</div>
@@ -873,41 +909,30 @@
         </div>
 
         <div class="card-title" style="margin-top:20px;">Stap-voor-stap uitleg</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6;">De wizard is <b>geleid</b>: Claude denkt mee en doet de meeste voorstellen. Jij controleert en vult aan.</div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 1 — Beschrijf wat je wil toevoegen</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Typ een omschrijving of klik op een snelkeuze categorie. De wizard stelt automatisch een bestandsnaam en map voor.</div>
-          <img src="wizard-stap1.png" alt="Stap 1 — Omschrijving invoeren" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 1 — Wat wil je toevoegen?</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Typ een korte omschrijving (bijv. <i>"de bierprijzen"</i>) of kies een snelkeuze-categorie. Claude gebruikt dit om een voorstel te maken.</div>
+          <div style="border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;color:var(--muted-2);font-size:12px;background:var(--card-2);">📸 Screenshot volgt — <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">kennis-wizard-stap1.png</code></div>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 2 — Controleer bestandsnaam en categorie</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">De wizard stelt een logische bestandsnaam en categorie voor. Je kunt dit aanpassen. Spaties en speciale tekens worden automatisch vervangen.</div>
-          <img src="wizard-stap2.png" alt="Stap 2 — Bestandsnaam en categorie" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 2 — Voorstel van Claude</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Claude stelt automatisch een <b>titel</b>, <b>categorie</b> en <b>bestandsnaam</b> voor. Controleer en pas aan waar nodig, en klik op <b>Volgende →</b>.</div>
+          <div style="border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;color:var(--muted-2);font-size:12px;background:var(--card-2);">📸 Screenshot volgt — <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">kennis-wizard-stap2.png</code></div>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 3 — Voer de inhoud in</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Typ de tekst die de bot moet gebruiken. Er staat al een template klaar met de juiste structuur. Je kunt ook een bestaand .txt bestand uploaden.</div>
-          <img src="wizard-stap3.png" alt="Stap 3 — Inhoud invoeren" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 3 — Inhoud van het bestand</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Claude heeft alvast een nette <b>concepttekst</b> geschreven in de juiste structuur. Lees na, vul aan of corrigeer. (Je kunt ook een bestaand <code>.txt</code>/<code>.md</code>-bestand uploaden.)</div>
+          <div style="border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;color:var(--muted-2);font-size:12px;background:var(--card-2);">📸 Screenshot volgt — <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">kennis-wizard-stap3.png</code></div>
         </div>
 
         <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 4 — Bekijk de preview en upload</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Controleer het bestandspad en de inhoud. Klik op Uploaden om het bestand naar de juiste map te sturen.</div>
-          <img src="wizard-stap4.png" alt="Stap 4 — Preview en uploaden" style="width:100%;border-radius:8px;border:1px solid var(--border);">
-        </div>
-
-        <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 5 — Bevestiging</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Na het uploaden zie je een groene bevestiging. Het bestand is direct actief — de bot gebruikt de nieuwe informatie meteen.</div>
-          <img src="wizard-stap5.png" alt="Stap 5 — Bevestiging upload" style="width:100%;border-radius:8px;border:1px solid var(--border);">
-        </div>
-
-        <div class="card" style="margin-bottom:10px;">
-          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 6 — Test de bot</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Test direct of de bot de nieuwe informatie gebruikt door een relevante vraag te stellen. De bot pikt het meteen op.</div>
-          <img src="wizard-stap6.png" alt="Stap 6 — Bot test" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 4 — Preview en bevestigen</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Controleer het bestandspad en de inhoud en klik op <b>Uploaden</b>. Het bestand is <b>direct actief</b> en er wordt <b>automatisch een Engelse versie</b> aangemaakt. Test daarna met een relevante vraag — de bot pikt het meteen op.</div>
+          <div style="border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;color:var(--muted-2);font-size:12px;background:var(--card-2);">📸 Screenshot volgt — <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">kennis-wizard-stap4.png</code></div>
         </div>
 
       </div>
@@ -946,6 +971,26 @@
         <div class="card" style="margin-bottom:10px;">
           <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 4 — Beheren</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.7;">Per foto kun je: <b>↔ weergave wisselen</b>, <b>⏸ deactiveren</b> (tijdelijk verbergen zonder te verwijderen) of <b>✓ activeren</b>, en <b>🗑 verwijderen</b>. Twijfel je over een knop? Houd je muis op de knop zelf — dan verschijnt de uitleg.</div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">📷 Snel toevoegen: de foto-wizard</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6;">Naast de tab Foto's kun je ook via een <b>geleide wizard</b> één foto toevoegen — Claude doet het meeste werk.</div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 1 — Foto kiezen</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Kies een foto. De wizard verkleint 'm automatisch en doet een <b>gezichtscheck</b>. Zitten er gezichten op? Dan stuurt de wizard je naar de tab <b>Foto's</b> om die eerst te anonimiseren (AVG).</div>
+          <div style="border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;color:var(--muted-2);font-size:12px;background:var(--card-2);">📸 Screenshot volgt — <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">foto-wizard-stap1.png</code></div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:8px;">STAP 2 — Voorstel van Claude</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7;">Claude <b>bekijkt de foto</b> en stelt een <b>categorie</b>, <b>onderschrift</b> en <b>trigger words</b> (NL + EN) voor. Controleer en vul aan, en klik op <b>Uploaden</b>. De foto staat meteen live.</div>
+          <div style="border:2px dashed var(--border);border-radius:8px;padding:22px;text-align:center;color:var(--muted-2);font-size:12px;background:var(--card-2);">📸 Screenshot volgt — <code style="background:var(--divider);padding:1px 6px;border-radius:4px;">foto-wizard-stap2.png</code></div>
+        </div>
+
+        <div class="card" style="margin-bottom:10px;">
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:6px;">💬 Foto toevoegen vanuit een vraag</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.7;">Zie je in <b>Analyse › Vragen</b> een vraag waar een foto bij past? Klik daar op <b>📷 Foto toevoegen</b> — dezelfde wizard opent, met het <b>trigger-label van het onderwerp al voorgevuld</b>.</div>
         </div>
 
         <div class="card-title" style="margin-top:20px;">🙂 Privacy — gezichten (AVG)</div>
@@ -2851,7 +2896,7 @@ function wizardReset() {
 }
 
 function showHTab(naam) {
-  ["overzicht","talen","kennisbronnen","fotos","kosten","rubrieken","problemen"].forEach(t => {
+  ["overzicht","vragen","talen","kennisbronnen","fotos","kosten","rubrieken","problemen"].forEach(t => {
     const el = document.getElementById(`htab-${t}`)
     const btn = document.getElementById(`htab-btn-${t}`)
     if (el) el.style.display = t === naam ? "block" : "none"
