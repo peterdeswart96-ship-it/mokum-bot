@@ -1736,16 +1736,25 @@ async function stuurTerugbelNotificatie(d) {
     ].filter(Boolean)
     const body = regels.join("\n")
     const u = new URL(base)
-    const headers = {
+    const baseHeaders = {
       "Content-Type": "text/plain; charset=utf-8",
       "Content-Length": Buffer.byteLength(body),
       "Title": "Nieuw terugbelverzoek — Mokum",
       "Priority": "high",
       "Tags": "telephone",
     }
-    if (process.env.NTFY_TOKEN) headers["Authorization"] = `Bearer ${process.env.NTFY_TOKEN}`
-    if (process.env.CONTACT_EMAIL) headers["Email"] = process.env.CONTACT_EMAIL // NTFY stuurt dan ook een e-mail
-    await httpsRequest({ hostname: u.hostname, port: u.port || 443, path: `/${encodeURIComponent(topic)}`, method: "POST", headers }, body)
+    if (process.env.NTFY_TOKEN) baseHeaders["Authorization"] = `Bearer ${process.env.NTFY_TOKEN}`
+    const opts = { hostname: u.hostname, port: u.port || 443, path: `/${encodeURIComponent(topic)}`, method: "POST" }
+    // Push + e-mail in één publish. Mislukt dat (bijv. e-mailadres niet geverifieerd → 40052),
+    // stuur dan de push alsnog zonder e-mail, zodat de melding zelf nooit verloren gaat.
+    const metEmail = { ...baseHeaders }
+    if (process.env.CONTACT_EMAIL) metEmail["Email"] = process.env.CONTACT_EMAIL // NTFY stuurt dan ook een e-mail
+    const r = await httpsRequest({ ...opts, headers: metEmail }, body)
+    if (r.status >= 200 && r.status < 300) return
+    console.log("Terugbel-notificatie (met e-mail) faalde:", r.status, r.body)
+    if (!process.env.CONTACT_EMAIL) return
+    const r2 = await httpsRequest({ ...opts, headers: baseHeaders }, body)
+    if (r2.status < 200 || r2.status >= 300) console.log("Terugbel-push (zonder e-mail) faalde:", r2.status, r2.body)
   } catch (err) {
     console.log("Terugbel-notificatie mislukt:", err.message)
   }
