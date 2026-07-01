@@ -861,6 +861,38 @@
     window.visualViewport.addEventListener('scroll', fitMobileWindow)
   }
 
+  // Voorbeeldvragen per rubriek dynamisch laden uit het dashboard (issue #33).
+  // Overschrijft alleen onderwerpen waarvoor beheer-vragen bestaan; faalt 'ie of is
+  // 'ie leeg, dan blijven de hier hardcoded voorbeeldvragen staan (fallback).
+  function laadStandaardvragen() {
+    fetch(`${API_URL}/api/standaardvragen`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const vragen = data && Array.isArray(data.vragen) ? data.vragen : null
+        if (!vragen || !vragen.length) return
+        const perLang = { nl: {}, en: {} }
+        vragen.filter((v) => v && v.actief !== false).forEach((v) => {
+          const ond = v.onderwerp
+          if (!ond) return
+          ;['nl', 'en'].forEach((lang) => {
+            const tekst = v.vraag && v.vraag[lang]
+            if (!tekst) return
+            ;(perLang[lang][ond] = perLang[lang][ond] || []).push({ q: tekst, volg: v.volgnummer || 0 })
+          })
+        })
+        ;['nl', 'en'].forEach((lang) => {
+          const T = TRANSLATIONS[lang]
+          if (!T || !T.questions) return
+          Object.keys(perLang[lang]).forEach((ond) => {
+            const arr = perLang[lang][ond].sort((a, b) => a.volg - b.volg).map((x) => x.q)
+            if (arr.length) T.questions[ond] = arr
+          })
+        })
+        render()
+      })
+      .catch(() => {})
+  }
+
   function init() {
     // Host in de pagina; de hele widget leeft in een Shadow DOM zodat thema-CSS er niet in kan lekken.
     const host = document.createElement('div')
@@ -873,6 +905,7 @@
     injectStyles()
     state.messages = [{ role: 'assistant', content: tr().welcome }]
     render()
+    laadStandaardvragen()
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
