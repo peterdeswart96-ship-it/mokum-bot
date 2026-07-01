@@ -1775,28 +1775,28 @@ function renderRubriekvragen() {
   })
   if (!lijst.length) html = `<div style="color:var(--muted);padding:6px 0;">Geen standaardvragen voor deze filter.</div>`
   el.innerHTML = html
-  // Foto-previews vullen voor elke gerenderde kaart.
-  el.querySelectorAll("select[id^='rv-fotos-']").forEach(sel => {
-    rvUpdateFotoPreview(sel.id.slice("rv-fotos-".length))
+  // Fotobeheer (chips + zoeklijst + preview) vullen voor elke gerenderde kaart.
+  el.querySelectorAll("[id^='rv-fotobeheer-']").forEach(div => {
+    rvInitFotobeheer(div.id.slice("rv-fotobeheer-".length))
   })
 }
 
-// Onthoudt per kaart welke gekoppelde foto nu in de preview staat.
+// Onthoudt per kaart welke gekoppelde foto nu in de preview staat + de zoekterm.
 const rvFotoIdx = {}
+const rvFotoZoek = {}
+
+// De gekoppelde foto's leven op het entry-object (e.fotos); toevoegen/verwijderen
+// muteert dat live, zodat de selectie cumulatief onthouden wordt.
+function rvEntry(key) { return alleStandaardvragen.find(v => rvKey(v) === key) }
 
 function rvFotoKiezerHtml(e, key) {
   const k = fAttr(key)
   const jk = fJs(key)
-  const gekozen = new Set(e.fotos || [])
-  const opts = alleFotos.map(f => {
-    const label = (f.onderschrift || f.bestand) + (f.categorie ? ` — ${f.categorie}` : "")
-    return `<option value="${fAttr(f.bestand)}" ${gekozen.has(f.bestand) ? "selected" : ""}>${fEsc(label)}</option>`
-  }).join("")
-  const size = Math.min(6, Math.max(3, alleFotos.length))
-  return `<div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;">
-    <div style="flex:1;min-width:230px;display:flex;flex-direction:column;">
-      <select id="rv-fotos-${k}" multiple size="${size}" onchange="rvFotoIdx['${jk}']=0;rvUpdateFotoPreview('${jk}')" style="width:100%;flex:1;box-sizing:border-box;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px;font-size:12px;">${opts || "<option disabled>Geen afbeeldingen beschikbaar</option>"}</select>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Ctrl/Cmd-klik om meerdere te (de)selecteren.</div>
+  return `<div id="rv-fotobeheer-${k}" style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;">
+    <div style="flex:1;min-width:250px;display:flex;flex-direction:column;gap:6px;">
+      <div id="rv-fotochips-${k}" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      <input type="text" id="rv-fotozoek-${k}" class="foto-inp" autocomplete="off" placeholder="🔎 Zoek foto om toe te voegen…" oninput="rvFotoZoekChange('${jk}')" style="width:100%;box-sizing:border-box;">
+      <div id="rv-fotoresults-${k}" style="max-height:150px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--input);"></div>
     </div>
     <div style="flex:1;min-width:230px;">
       <div id="rv-fotoprev-${k}" style="height:100%;min-height:150px;box-sizing:border-box;border:1px solid var(--border);border-radius:8px;background:var(--input);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;text-align:center;"></div>
@@ -1804,14 +1804,80 @@ function rvFotoKiezerHtml(e, key) {
   </div>`
 }
 
+function rvInitFotobeheer(key) {
+  rvRenderFotochips(key)
+  rvRenderFotoresults(key)
+}
+
+// Chips van de reeds gekoppelde foto's (met ✕ om te ontkoppelen).
+function rvRenderFotochips(key) {
+  const e = rvEntry(key)
+  const box = document.getElementById("rv-fotochips-" + fAttr(key))
+  if (!box) return
+  const fotos = (e && e.fotos) || []
+  if (!fotos.length) {
+    box.innerHTML = `<span style="font-size:11px;color:var(--muted);">Nog geen foto's gekoppeld — zoek en klik hieronder om toe te voegen.</span>`
+  } else {
+    box.innerHTML = fotos.map(b => {
+      const f = alleFotos.find(x => x.bestand === b)
+      const cap = f ? (f.onderschrift || f.bestand) : b
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--divider);border:1px solid var(--border);border-radius:14px;padding:2px 6px 2px 10px;font-size:11px;color:var(--text);">${fEsc(cap)}<button onclick="rvFotoRemove('${fJs(key)}','${fJs(b)}')" title="Ontkoppel deze foto van dit antwoord (de foto blijft in je fotobibliotheek). Klik daarna op Opslaan." style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">×</button></span>`
+    }).join("")
+  }
+  rvUpdateFotoPreview(key)
+}
+
+// Zoekbare lijst met foto's uit de bibliotheek die nog niet gekoppeld zijn.
+function rvRenderFotoresults(key) {
+  const e = rvEntry(key)
+  const box = document.getElementById("rv-fotoresults-" + fAttr(key))
+  if (!box) return
+  const gekoppeld = new Set((e && e.fotos) || [])
+  const zoek = (rvFotoZoek[key] || "").trim().toLowerCase()
+  if (!alleFotos.length) { box.innerHTML = `<div style="padding:8px;font-size:11px;color:var(--muted);">Geen foto's in de bibliotheek.</div>`; return }
+  let pool = alleFotos.filter(f => !gekoppeld.has(f.bestand))
+  if (zoek) pool = pool.filter(f => [(f.onderschrift || ""), (f.categorie || ""), (f.bestand || "")].join(" ").toLowerCase().includes(zoek))
+  if (!pool.length) { box.innerHTML = `<div style="padding:8px;font-size:11px;color:var(--muted);">${zoek ? "Geen foto's gevonden." : "Alle foto's zijn al gekoppeld."}</div>`; return }
+  const max = 40
+  const toon = pool.slice(0, max)
+  box.innerHTML = toon.map(f => {
+    const label = (f.onderschrift || f.bestand) + (f.categorie ? ` — ${f.categorie}` : "")
+    return `<div onclick="rvFotoAdd('${fJs(key)}','${fJs(f.bestand)}')" onmouseover="this.style.background='var(--divider)'" onmouseout="this.style.background='none'" style="padding:5px 9px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;"><span style="color:var(--good);font-weight:700;">＋</span> ${fEsc(label)}</div>`
+  }).join("") + (pool.length > max ? `<div style="padding:5px 9px;font-size:10px;color:var(--muted);">…en nog ${pool.length - max}. Verfijn met zoeken.</div>` : "")
+}
+
+function rvFotoZoekChange(key) {
+  const inp = document.getElementById("rv-fotozoek-" + fAttr(key))
+  rvFotoZoek[key] = inp ? inp.value : ""
+  rvRenderFotoresults(key)
+}
+
+function rvFotoAdd(key, bestand) {
+  const e = rvEntry(key)
+  if (!e) return
+  e.fotos = e.fotos || []
+  if (!e.fotos.includes(bestand)) e.fotos.push(bestand)
+  rvFotoIdx[key] = e.fotos.length - 1 // toon de zojuist toegevoegde in de preview
+  rvRenderFotochips(key)
+  rvRenderFotoresults(key)
+}
+
+function rvFotoRemove(key, bestand) {
+  const e = rvEntry(key)
+  if (!e) return
+  e.fotos = (e.fotos || []).filter(b => b !== bestand)
+  rvRenderFotochips(key)
+  rvRenderFotoresults(key)
+}
+
 // Toont de gekoppelde foto('s) zoals de bezoeker ze ziet, met blader-knoppen.
 function rvUpdateFotoPreview(key) {
-  const sel = document.getElementById("rv-fotos-" + key)
-  const box = document.getElementById("rv-fotoprev-" + key)
-  if (!sel || !box) return
-  const gekozen = [...sel.selectedOptions].map(o => o.value)
+  const e = rvEntry(key)
+  const box = document.getElementById("rv-fotoprev-" + fAttr(key))
+  if (!box) return
+  const gekozen = (e && e.fotos) || []
   if (!gekozen.length) {
-    box.innerHTML = `<div style="color:var(--muted);font-size:12px;">Nog geen foto gekoppeld.<br>Selecteer links een of meer foto's om de preview te zien.</div>`
+    box.innerHTML = `<div style="color:var(--muted);font-size:12px;">Nog geen foto gekoppeld.<br>Zoek en klik links om foto's toe te voegen.</div>`
     return
   }
   const n = gekozen.length
@@ -1833,10 +1899,12 @@ function rvUpdateFotoPreview(key) {
        <button onclick="rvFotoPrevStap('${fJs(key)}',1)" class="fbtn fbtn-view" style="padding:2px 9px;">›</button>`
     : `<span style="font-size:11px;color:var(--muted);">1 / 1</span>`
   const badge = venster ? "🪟 apart venster" : "🖼️ inline"
+  const ontkoppel = `<span class="tip" style="margin-top:8px;"><button onclick="rvFotoRemove('${fJs(key)}','${fJs(f.bestand)}')" class="fbtn fbtn-del" style="padding:3px 11px;font-size:11px;">🗑 Ontkoppelen</button><span class="tipbox">Haalt déze foto weg bij dit antwoord. De foto zelf blijft gewoon in je fotobibliotheek — je koppelt 'm alleen los van deze vraag. Klik daarna op Opslaan om het te bewaren.</span></span>`
   box.innerHTML = `
     <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;">${nav}</div>
     <div style="flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;">${media}</div>
-    <div style="font-size:12px;color:var(--text);margin-top:6px;">${fEsc(cap)} <span style="color:var(--muted);font-size:10px;">· ${badge}</span></div>`
+    <div style="font-size:12px;color:var(--text);margin-top:6px;">${fEsc(cap)} <span style="color:var(--muted);font-size:10px;">· ${badge}</span></div>
+    ${ontkoppel}`
 }
 
 function rvFotoPrevStap(key, delta) {
@@ -1912,9 +1980,9 @@ function nieuweStandaardvraag() {
 function rvVerzamel(key) {
   const k = key
   const g = (pre) => document.getElementById(`rv-${pre}-${k}`)
-  const fotosSel = g("fotos")
-  const fotos = fotosSel ? [...fotosSel.selectedOptions].map(o => o.value) : []
   const e = alleStandaardvragen.find(v => rvKey(v) === key)
+  // Gekoppelde foto's leven op het entry-object (cumulatief bijgehouden via chips).
+  const fotos = (e && Array.isArray(e.fotos)) ? [...e.fotos] : []
   return {
     id: (e && e.id) || "",
     rubriek: g("rubriek").value,
