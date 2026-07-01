@@ -25,7 +25,7 @@ if (!wachtwoord) {
 // Topic → rubriek (uit CATEGORIES in public/widget.js). Onderwerpen zonder eigen
 // voorbeeldvragen (spelregels, anders) worden overgeslagen.
 const CATEGORIES = [
-  { id: "toernooien", topics: ["ledendag", "toernooien", "resultaten", "amsterdam-open"] },
+  { id: "toernooien", topics: ["toernooien", "resultaten", "amsterdam-open"] },
   { id: "spelen", topics: ["pool", "darts", "spelregels", "gaming"] },
   { id: "praktisch", topics: ["openingstijden", "tarieven", "locatie", "eten-drinken", "sport"] },
   { id: "service", topics: ["keu-reparatie", "keu-shop", "clinics"] },

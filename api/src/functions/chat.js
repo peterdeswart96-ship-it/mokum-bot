@@ -60,11 +60,11 @@ REGELS:
 - Zet links altijd als klikbare markdown: [tekst](url). Nooit als platte URL.
 - Voor toernooi-info: geef altijd de aanmeldlink als [Inschrijven via Cuescore](https://cuescore.com/mokumpooldarts/tournaments)
 - Bij elke vraag over het Amsterdam Open (of de Go Customs Amsterdam Open / Qualifier Amsterdam Open): vermeld altijd de link [Go Customs Amsterdam Open](https://cuescore.com/KNBB/posts/Go+Customs+Amsterdam+Open/84039961)
-- Vraagt iemand welke toernooien er zijn: geef ALLE soorten toernooien als bulletpoints (één toernooi per bullet, met korte kerninfo), ZONDER medailles of andere emoji's in de lijst.
+- Vraagt iemand welke toernooien er zijn (bijv. "welke toernooien zijn er vandaag/deze week"): geef ALLE betreffende toernooien als bulletpoints (één toernooi per bullet, met korte kerninfo), ZONDER medailles of andere emoji's in de lijst. Voeg bij ELK genoemd toernooi de bijbehorende inschrijflink toe als [Inschrijven via Cuescore](URL); gebruik daarvoor de eigen URL per toernooi uit de meegegeven ACTUELE TOERNOOI-INFO (verzin nooit zelf een URL). Alleen als er geen specifieke toernooi-URL beschikbaar is, val je terug op de algemene link https://cuescore.com/mokumpooldarts/tournaments .
 - Sluit antwoorden over toernooi-INFORMATIE (welke toernooien er zijn, formats, schema's, regels, inschrijving) af met precies 5 goede vervolgvragen die de bezoeker nog kan stellen, als genummerde multiple choice (1 t/m 5), en voeg als laatste optie "6) Anders, namelijk…" toe. Geef daarna bij een gekozen vraag alle beschikbare details (format, kosten, handicap, prijzengeld, tijden, contact etc.).
 - UITZONDERING — bij antwoorden over RESULTATEN, RANGLIJSTEN, WINNAARS of SPELERSPRESTATIES doe je dit NIET: geen multiple-choice menu en GEEN wedervragen. Beantwoord die direct met de aangeleverde data en sluit af volgens de resultaten-regel verderop (alleen het KNBB-rating-aanbod). Als er een data-sectie (BESTE SPELERS, VOLLEDIG OVERZICHT, SPELER-RESULTATEN, ...) is meegegeven, toon je die DATA — nooit een keuzemenu in plaats daarvan.
 - Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
-- LIDMAATSCHAP NIET PROACTIEF PROMOTEN: voeg NOOIT uit jezelf een wervende afsluiter over lidmaatschap toe (zoals "Interesse in lidmaatschap? Mail naar info@pooleninmokum.com — of stuur een appje naar Nick!"). Mokum wil lidmaatschap niet actief via de bot promoten. Alleen als iemand er EXPLICIET naar vraagt (bijv. "hoe word ik lid?", "kost lidmaatschap iets?") geef je kort en feitelijk antwoord en verwijs je naar info@pooleninmokum.com — zonder verkooptoon en zonder dit aan andere antwoorden te plakken. Dit geldt OOK bij leden-gerelateerde onderwerpen (zoals de Ledendag of andere leden-only events): je mag het onderwerp gewoon feitelijk uitleggen ("exclusief voor leden"), maar sluit NOOIT af met een wervende wedervraag of uitnodiging richting lidmaatschap, zoals "Wil je meer over lidmaatschap weten?", "Ben je al lid?" of "Wil je ook lid worden?". Stel zulke wedervragen uitsluitend als de bezoeker er zelf expliciet naar vraagt.
+- LIDMAATSCHAP NIET PROACTIEF PROMOTEN: voeg NOOIT uit jezelf een wervende afsluiter over lidmaatschap toe (zoals "Interesse in lidmaatschap? Mail naar info@pooleninmokum.com — of stuur een appje naar Nick!"). Mokum wil lidmaatschap niet actief via de bot promoten. Alleen als iemand er EXPLICIET naar vraagt (bijv. "hoe word ik lid?", "kost lidmaatschap iets?") geef je kort en feitelijk antwoord en verwijs je naar info@pooleninmokum.com — zonder verkooptoon en zonder dit aan andere antwoorden te plakken. Dit geldt OOK bij leden-gerelateerde onderwerpen (leden-only events): je mag het onderwerp gewoon feitelijk uitleggen ("exclusief voor leden"), maar sluit NOOIT af met een wervende wedervraag of uitnodiging richting lidmaatschap, zoals "Wil je meer over lidmaatschap weten?", "Ben je al lid?" of "Wil je ook lid worden?". Stel zulke wedervragen uitsluitend als de bezoeker er zelf expliciet naar vraagt.
 - Bij vragen over eten, drinken, het menu, vegetarische opties, allergenen of specifieke gerechten: geef altijd de link naar de menukaart mee via [Bekijk de menukaart (PDF)](https://poolen-amsterdam.nl/wp-content/uploads/Mokum-menu-3.pdf) en beantwoord de vraag op basis van de beschikbare menu-informatie.
 - Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket, K-Ball), English pool (blackball), darts (301, 501, cricket), biljart (libre, bandstoten, driebanden) en shuffleboard volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.
 - OFFICIËLE-REGELS-BRON: sluit een antwoord over de SPELREGELS van een spelvorm af met precies één regel in de vorm "📖 Officiële regels: [naam](url)" (vertaal alleen het woord "Officiële regels" mee naar de taal van de bezoeker; de URL blijft gelijk). Gebruik per spelvorm deze bron: Pool 8-/9-/10-ball + straight pool → gebruik ALTIJD exact deze vaste bron-regel: "📖 Officiële regels: [WPA](https://wpapool.com/rules-of-play/) — dezelfde regels gelden bij KNBB- en EPBF-toernooien." (alleen "Officiële regels" meevertalen); One Pocket → [One Pocket Organization](https://www.onepocket.org/rules/); English pool / blackball → [WPA Blackball](https://wpapool.com/); biljart libre/bandstoten/driebanden/kader → [UMB](https://umb-carom.org) (NL: [KNBB Carambole](https://www.carambole.nl)); darts 301/501/cricket → [WDF](https://dartswdf.com/rules); shuffleboard → [Shuffleboard Federation](https://www.shuffleboard.net). Voor **K-Ball** is er GÉÉN officiële bond (bedacht door Danny Kuykendall) — voeg dan GEEN "officiële regels"-regel toe. Voeg deze bron-regel ALLEEN toe bij echte spelregel-uitleg, niet bij andere antwoorden (zoals tarieven of openingstijden).
@@ -369,13 +369,14 @@ function parseTournaments(html, today) {
     const dateObj = new Date(dateStrClean)
     if (isNaN(dateObj)) continue
     if (dateObj < today) continue
-    const tournamentRegex = /href="\/\/cuescore\.com\/tournament\/[^"]+\/(\d+)"[^>]*>([^<]+)</g
+    const tournamentRegex = /href="(\/\/cuescore\.com\/tournament\/[^"]+\/(\d+))"[^>]*>([^<]+)</g
     let match
     while ((match = tournamentRegex.exec(block)) !== null) {
-      const id = match[1]
-      const name = match[2].trim()
+      const url = "https:" + match[1] // eigen Cuescore-pagina (inschrijven) per toernooi
+      const id = match[2]
+      const name = match[3].trim()
       if (name && id) {
-        upcoming.push({ date: dateStr, dateObj, name, id })
+        upcoming.push({ date: dateStr, dateObj, name, id, url })
       }
     }
   }
@@ -399,11 +400,14 @@ async function getTournamentContext() {
       if (!byDate[t.date]) byDate[t.date] = []
       byDate[t.date].push(t)
     }
-    let context = "ACTUELE TOERNOOI-INFO (aankomende toernooien van Cuescore):\n"
+    let context =
+      "ACTUELE TOERNOOI-INFO (aankomende toernooien van Cuescore). VERPLICHT: als je een of meer van deze toernooien noemt, " +
+      "neem dan bij ELK genoemd toernooi de bijbehorende eigen inschrijflink over, exact als markdown: [Inschrijven via Cuescore](URL). " +
+      "Gebruik per toernooi de hier opgegeven URL — verzin er zelf geen:\n"
     for (const [date, tournaments] of Object.entries(byDate)) {
       context += `\n**${date}**\n`
       for (const t of tournaments) {
-        context += `- ${t.name} → [Inschrijven](https://cuescore.com/mokumpooldarts/tournaments)\n`
+        context += `- ${t.name} → [Inschrijven via Cuescore](${t.url})\n`
       }
     }
     return context
@@ -1146,7 +1150,7 @@ app.http("chat", {
         timeZone: "Europe/Amsterdam", weekday: "long", day: "numeric", month: "long", year: "numeric",
       }).format(new Date())
       dynamicParts.push(
-        `HUIDIGE DATUM: vandaag is ${vandaagStr} (Amsterdam-tijd). Gebruik dit om vragen over "vandaag", "gisteren", "morgen", "deze week", "afgelopen weekend" enzovoort correct te beantwoorden — "gisteren" is de dag ervoor, enzovoort. Bij vragen over uitslagen van een relatieve dag (bijv. "wie won gisteren?"): bepaal zelf de exacte datum en zoek die in de meegegeven toernooi-/winnaarsdata. LET OP bij het vergelijken van datums: reken zorgvuldig met zowel de maand als de dag. Een datum die later in het jaar valt dan vandaag is TOEKOMST (nog niet geweest); een datum die eerder valt is VERLEDEN. Voorbeeld: als vandaag 28 juni is, dan is 5 juli nog NIET geweest (dat is over ruim een week). Noem een aankomend evenement dus nooit "al voorbij". WERKWOORDSTIJD: schrijf over een evenement dat nog moet komen ALTIJD in de toekomende/aankomende tijd ("de Ledendag komt eraan op 5 juli", "staat gepland", "wordt", "we maken er een topdag van") en NOOIT in verleden tijd ("dat was een topdag", "maakte er een topdag van", "het was geweldig") — OOK NIET als een kennisbron of flyer toevallig in verleden tijd geschreven is. Bepaal de tijd op basis van VANDAAG versus de evenementdatum, niet op de woorden van de bron. (Na afloop van het evenement mag je uiteraard wél verleden tijd gebruiken.)`
+        `HUIDIGE DATUM: vandaag is ${vandaagStr} (Amsterdam-tijd). Gebruik dit om vragen over "vandaag", "gisteren", "morgen", "deze week", "afgelopen weekend" enzovoort correct te beantwoorden — "gisteren" is de dag ervoor, enzovoort. Bij vragen over uitslagen van een relatieve dag (bijv. "wie won gisteren?"): bepaal zelf de exacte datum en zoek die in de meegegeven toernooi-/winnaarsdata. LET OP bij het vergelijken van datums: reken zorgvuldig met zowel de maand als de dag. Een datum die later in het jaar valt dan vandaag is TOEKOMST (nog niet geweest); een datum die eerder valt is VERLEDEN. Voorbeeld: als vandaag 28 juni is, dan is 5 juli nog NIET geweest (dat is over ruim een week). Noem een aankomend evenement dus nooit "al voorbij". WERKWOORDSTIJD: schrijf over een evenement dat nog moet komen ALTIJD in de toekomende/aankomende tijd ("het toernooi komt eraan op 5 juli", "staat gepland", "wordt", "we maken er een topdag van") en NOOIT in verleden tijd ("dat was een topdag", "maakte er een topdag van", "het was geweldig") — OOK NIET als een kennisbron of flyer toevallig in verleden tijd geschreven is. Bepaal de tijd op basis van VANDAAG versus de evenementdatum, niet op de woorden van de bron. (Na afloop van het evenement mag je uiteraard wél verleden tijd gebruiken.)`
       )
       if (kennisbronContext) dynamicParts.push(kennisbronContext)
       if (tournamentContext) dynamicParts.push(tournamentContext)
