@@ -60,7 +60,7 @@ REGELS:
 - Zet links altijd als klikbare markdown: [tekst](url). Nooit als platte URL.
 - Voor toernooi-info: geef altijd de aanmeldlink als [Inschrijven via Cuescore](https://cuescore.com/mokumpooldarts/tournaments)
 - Bij elke vraag over het Amsterdam Open (of de Go Customs Amsterdam Open / Qualifier Amsterdam Open): vermeld altijd de link [Go Customs Amsterdam Open](https://cuescore.com/KNBB/posts/Go+Customs+Amsterdam+Open/84039961)
-- Vraagt iemand welke toernooien er zijn: geef ALLE soorten toernooien als bulletpoints (één toernooi per bullet, met korte kerninfo), ZONDER medailles of andere emoji's in de lijst.
+- Vraagt iemand welke toernooien er zijn (bijv. "welke toernooien zijn er vandaag/deze week"): geef ALLE betreffende toernooien als bulletpoints (één toernooi per bullet, met korte kerninfo), ZONDER medailles of andere emoji's in de lijst. Voeg bij ELK genoemd toernooi de bijbehorende inschrijflink toe als [Inschrijven via Cuescore](URL); gebruik daarvoor de eigen URL per toernooi uit de meegegeven ACTUELE TOERNOOI-INFO (verzin nooit zelf een URL). Alleen als er geen specifieke toernooi-URL beschikbaar is, val je terug op de algemene link https://cuescore.com/mokumpooldarts/tournaments .
 - Sluit antwoorden over toernooi-INFORMATIE (welke toernooien er zijn, formats, schema's, regels, inschrijving) af met precies 5 goede vervolgvragen die de bezoeker nog kan stellen, als genummerde multiple choice (1 t/m 5), en voeg als laatste optie "6) Anders, namelijk…" toe. Geef daarna bij een gekozen vraag alle beschikbare details (format, kosten, handicap, prijzengeld, tijden, contact etc.).
 - UITZONDERING — bij antwoorden over RESULTATEN, RANGLIJSTEN, WINNAARS of SPELERSPRESTATIES doe je dit NIET: geen multiple-choice menu en GEEN wedervragen. Beantwoord die direct met de aangeleverde data en sluit af volgens de resultaten-regel verderop (alleen het KNBB-rating-aanbod). Als er een data-sectie (BESTE SPELERS, VOLLEDIG OVERZICHT, SPELER-RESULTATEN, ...) is meegegeven, toon je die DATA — nooit een keuzemenu in plaats daarvan.
 - Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
@@ -369,13 +369,14 @@ function parseTournaments(html, today) {
     const dateObj = new Date(dateStrClean)
     if (isNaN(dateObj)) continue
     if (dateObj < today) continue
-    const tournamentRegex = /href="\/\/cuescore\.com\/tournament\/[^"]+\/(\d+)"[^>]*>([^<]+)</g
+    const tournamentRegex = /href="(\/\/cuescore\.com\/tournament\/[^"]+\/(\d+))"[^>]*>([^<]+)</g
     let match
     while ((match = tournamentRegex.exec(block)) !== null) {
-      const id = match[1]
-      const name = match[2].trim()
+      const url = "https:" + match[1] // eigen Cuescore-pagina (inschrijven) per toernooi
+      const id = match[2]
+      const name = match[3].trim()
       if (name && id) {
-        upcoming.push({ date: dateStr, dateObj, name, id })
+        upcoming.push({ date: dateStr, dateObj, name, id, url })
       }
     }
   }
@@ -399,11 +400,14 @@ async function getTournamentContext() {
       if (!byDate[t.date]) byDate[t.date] = []
       byDate[t.date].push(t)
     }
-    let context = "ACTUELE TOERNOOI-INFO (aankomende toernooien van Cuescore):\n"
+    let context =
+      "ACTUELE TOERNOOI-INFO (aankomende toernooien van Cuescore). VERPLICHT: als je een of meer van deze toernooien noemt, " +
+      "neem dan bij ELK genoemd toernooi de bijbehorende eigen inschrijflink over, exact als markdown: [Inschrijven via Cuescore](URL). " +
+      "Gebruik per toernooi de hier opgegeven URL — verzin er zelf geen:\n"
     for (const [date, tournaments] of Object.entries(byDate)) {
       context += `\n**${date}**\n`
       for (const t of tournaments) {
-        context += `- ${t.name} → [Inschrijven](https://cuescore.com/mokumpooldarts/tournaments)\n`
+        context += `- ${t.name} → [Inschrijven via Cuescore](${t.url})\n`
       }
     }
     return context

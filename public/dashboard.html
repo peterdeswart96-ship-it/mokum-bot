@@ -786,7 +786,8 @@
     <main>
       <div class="insight-box" style="margin-bottom:8px;">📋 Beheer de <b>standaardvragen per rubriek</b> (de voorbeeldvragen in de widget). Leg per vraag een <b>vast antwoord</b> vast (NL + EN) en koppel eventueel foto's. Een vraag met een vast antwoord wordt <b>direct beantwoord zonder de bot aan te roepen</b> — sneller én gratis. Laat het antwoord leeg om de vraag gewoon door de bot te laten beantwoorden.</div>
       <div class="card" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <input type="text" id="rv-zoek" class="ffsearch" placeholder="🔎 Zoek in vragen of antwoorden…" oninput="renderRubriekvragen()" style="flex:1;min-width:200px;">
+        <input type="text" id="rv-zoek-vraag" class="ffsearch" placeholder="🔎 Zoek in vragen (NL+EN)…" oninput="renderRubriekvragen()" style="flex:1;min-width:180px;">
+        <input type="text" id="rv-zoek-antwoord" class="ffsearch" placeholder="🔎 Zoek in antwoorden (NL+EN)…" oninput="renderRubriekvragen()" style="flex:1;min-width:180px;">
         <select id="rv-filter-rubriek" onchange="renderRubriekvragen()" title="Filter op rubriek"></select>
         <select id="rv-filter-status" onchange="renderRubriekvragen()" title="Filter op status">
           <option value="">Alle statussen</option>
@@ -1726,7 +1727,8 @@ function renderRubriekvragen() {
   const el = document.getElementById("rv-lijst")
   if (!el) return
   const fRub = (document.getElementById("rv-filter-rubriek") || {}).value || ""
-  const fZoek = ((document.getElementById("rv-zoek") || {}).value || "").trim().toLowerCase()
+  const fZoekV = ((document.getElementById("rv-zoek-vraag") || {}).value || "").trim().toLowerCase()
+  const fZoekA = ((document.getElementById("rv-zoek-antwoord") || {}).value || "").trim().toLowerCase()
   const alleenLeeg = !!(document.getElementById("rv-alleen-leeg") || {}).checked
   const fStatus = (document.getElementById("rv-filter-status") || {}).value || ""
 
@@ -1737,9 +1739,13 @@ function renderRubriekvragen() {
     if (fRub && v.rubriek !== fRub) return false
     if (alleenLeeg && heeftAntw(v)) return false
     if (fStatus && statusVan(v) !== fStatus) return false
-    if (fZoek) {
-      const hooi = [v.vraag?.nl, v.vraag?.en, v.antwoord?.nl, v.antwoord?.en, v.onderwerp].join(" ").toLowerCase()
-      if (!hooi.includes(fZoek)) return false
+    if (fZoekV) {
+      const hooi = [v.vraag?.nl, v.vraag?.en, v.onderwerp].join(" ").toLowerCase()
+      if (!hooi.includes(fZoekV)) return false
+    }
+    if (fZoekA) {
+      const hooi = [v.antwoord?.nl, v.antwoord?.en].join(" ").toLowerCase()
+      if (!hooi.includes(fZoekA)) return false
     }
     return true
   }
