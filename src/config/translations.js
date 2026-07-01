@@ -26,7 +26,6 @@ const translations = {
       { id: "darts",           emoji: "🎯", label: "Darts" },
       { id: "openingstijden",  emoji: "📅", label: "Openingstijden" },
       { id: "tarieven",        emoji: "💶", label: "Tarieven" },
-      { id: "ledendag",        emoji: "🎉", label: "Ledendag 5 juli" },
       { id: "toernooien",      emoji: "🏆", label: "Toernooien" },
       { id: "resultaten",      emoji: "📊", label: "Toernooi resultaten" },
       { id: "amsterdam-open",  emoji: "🏆", label: "Amsterdam Open" },
@@ -78,13 +77,6 @@ const translations = {
         "Top 5 spelers per toernooisoort aller tijden",
         "Wie zijn de beste 9-ball spelers dit jaar?",
         "Laat de top 20 KNBB-rating zien",
-      ],
-      ledendag: [
-        "Wat is de Ledendag op 5 juli?",
-        "Hoe laat begint de Ledendag?",
-        "Hoe meld ik me aan voor de Ledendag?",
-        "Wat zijn de aanbiedingen op de Ledendag?",
-        "Voor wie is de Ledendag?",
       ],
       "amsterdam-open": [
         "Wanneer is het Go Customs Amsterdam Open?",
@@ -211,7 +203,6 @@ const translations = {
       { id: "darts",           emoji: "🎯", label: "Darts" },
       { id: "openingstijden",  emoji: "📅", label: "Opening Hours" },
       { id: "tarieven",        emoji: "💶", label: "Rates" },
-      { id: "ledendag",        emoji: "🎉", label: "Members Day July 5" },
       { id: "toernooien",      emoji: "🏆", label: "Tournaments" },
       { id: "resultaten",      emoji: "📊", label: "Tournament results" },
       { id: "amsterdam-open",  emoji: "🏆", label: "Amsterdam Open" },
@@ -263,13 +254,6 @@ const translations = {
         "Top 5 players per tournament type all-time",
         "Who are the best 9-ball players this year?",
         "Show the top 20 KNBB rating",
-      ],
-      ledendag: [
-        "What is the Members Day on July 5?",
-        "What time does the Members Day start?",
-        "How do I sign up for the Members Day?",
-        "What are the offers on Members Day?",
-        "Who is the Members Day for?",
       ],
       "amsterdam-open": [
         "When is the Go Customs Amsterdam Open?",

@@ -41,7 +41,7 @@ const DUP_WINDOW = 60000 // 60 seconden
 
 // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
 const CATEGORIES = [
-  { id: "toernooien", emoji: "🏆", topics: ["ledendag", "toernooien", "resultaten", "amsterdam-open"], newTopics: ["resultaten"], starTopics: ["ledendag", "amsterdam-open"] },
+  { id: "toernooien", emoji: "🏆", topics: ["toernooien", "resultaten", "amsterdam-open"], newTopics: ["resultaten"], starTopics: ["amsterdam-open"] },
   { id: "spelen",     emoji: "🎱", topics: ["pool", "darts", "spelregels", "gaming"] },
   { id: "praktisch",  emoji: "ℹ️", topics: ["openingstijden", "tarieven", "locatie", "eten-drinken", "sport"] },
   { id: "service",    emoji: "🛠️", topics: ["keu-reparatie", "keu-shop", "clinics"] },
