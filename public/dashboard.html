@@ -249,6 +249,35 @@
   .foto-filterbar select { width: auto; flex: 0 1 auto; max-width: 48%; }
   .foto-filterbar .ffsearch { flex: 1 1 170px; min-width: 130px; width: auto; }
   .foto-filterbar .ffcount { font-size: 11px; color: var(--muted-2); margin-left: auto; white-space: nowrap; }
+  /* Foto's-subtabs (Upload / Overzicht) */
+  .foto-subtabbar { display: flex; gap: 4px; border-bottom: 1px solid var(--input); margin-bottom: 16px; flex-wrap: wrap; }
+  .foto-subtab { border-radius: 0; border: none; border-bottom: 2px solid transparent; background: none; color: var(--muted); padding: 10px 16px; font-size: 13px; cursor: pointer; white-space: nowrap; font-weight: 600; }
+  .foto-subtab:hover { color: var(--text-2); }
+  .foto-subtab.active { border-bottom-color: var(--accent); color: var(--text); }
+  /* A/B weergave-schakelaar (segmented) */
+  .foto-view-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; flex-shrink: 0; }
+  .foto-view-toggle button { background: var(--input); color: var(--muted); border: none; padding: 6px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .foto-view-toggle button + button { border-left: 1px solid var(--border); }
+  .foto-view-toggle button.active { background: var(--accent); color: #fff; }
+  /* Galerij-weergave (Knop B): grote foto's + trigger words */
+  .foto-gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .foto-gal-cat { grid-column: 1 / -1; font-weight: 700; color: var(--text); font-size: 13px; margin: 6px 0 -2px; }
+  .foto-gal-item { position: relative; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card); display: flex; flex-direction: column; }
+  .foto-gal-item.uit { opacity: 0.55; }
+  .foto-gal-media { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--input); }
+  .foto-gal-pdf { display: flex; align-items: center; justify-content: center; font-size: 44px; }
+  .foto-gal-body { padding: 7px 9px 9px; }
+  .foto-gal-trig { font-size: 11px; line-height: 1.5; word-break: break-word; }
+  .foto-gal-trig .fg-chip { display: inline-block; background: var(--divider); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; margin: 2px 3px 0 0; font-size: 10.5px; color: var(--text-2); }
+  .foto-gal-trig .fg-none { color: var(--muted-2); font-style: italic; }
+  .foto-gal-badge { position: absolute; top: 6px; left: 6px; z-index: 5; font-size: 10px; font-weight: 700; border-radius: 6px; padding: 1px 7px; background: rgba(0,0,0,0.6); color: var(--bad); }
+  .foto-gal-info { position: absolute; top: 6px; right: 6px; z-index: 6; width: 26px; height: 26px; border-radius: 50%; border: none; background: rgba(0,0,0,0.55); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .foto-gal-info:hover { background: rgba(0,0,0,0.82); }
+  .foto-gal-pop { display: none; position: absolute; top: 36px; right: 6px; left: 6px; z-index: 20; background: var(--card); border: 1px solid var(--accent); border-radius: 10px; padding: 9px 11px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 11.5px; color: var(--text-2); }
+  .foto-gal-item.pop-open .foto-gal-pop { display: block; }
+  .foto-gal-pop .fgp-row { margin: 3px 0; display: flex; gap: 6px; }
+  .foto-gal-pop .fgp-lbl { color: var(--muted); font-weight: 600; flex: 0 0 74px; }
+  .foto-gal-pop .fgp-val { color: var(--text); word-break: break-word; min-width: 0; }
 </style>
 <script>
   // Thema direct zetten (voorkomt flits van verkeerd thema bij laden)
@@ -300,7 +329,8 @@
   <div class="subnav-wrap" id="analyse-subnav">
     <div class="subnav">
       <button class="subtab active" id="asub-overzicht" onclick="showAnalyse('overzicht')">📊 Overzicht</button>
-      <button class="subtab" id="asub-vragen" onclick="showAnalyse('vragen')">💬 Vragen</button>
+      <button class="subtab" id="asub-vragen" onclick="showAnalyse('vragen')">💬 Directe vragen aan bot</button>
+      <button class="subtab" id="asub-rubriekvragen" onclick="showAnalyse('rubriekvragen')">📋 Rubriek vragen</button>
       <button class="subtab" id="asub-website" onclick="showAnalyse('website')">🌐 Website</button>
     </div>
   </div>
@@ -667,7 +697,16 @@
     <main>
       <div>
         <div class="insight-box" style="margin-bottom:5px;">📷 Beheer de foto's die de bot toont. Per foto kies je <b>trigger words</b> (wanneer hij verschijnt) en de <b>weergave</b>: <b>Inline</b> (klein in de chat) of <b>Apart venster</b> (grote foto/PDF die in een nieuw tabblad opent).</div>
-        <div style="font-size:10px;color:var(--muted-2);text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:var(--muted-2);">2026-06-27 — compacter v2 + filters</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
+        <div style="font-size:10px;color:var(--muted-2);text-align:right;margin:-10px 0 10px;">Foto-module versie: <b style="color:var(--muted-2);">2026-07-01 — submenu's (Upload / Overzicht)</b> — zie je een oudere datum? Doe <b>Ctrl+Shift+R</b> (cache).</div>
+
+        <!-- Subtab-balk: Upload / Overzicht -->
+        <div class="foto-subtabbar">
+          <button class="foto-subtab active" id="ftab-btn-upload" onclick="showFTab('upload')">📤 Upload</button>
+          <button class="foto-subtab" id="ftab-btn-overzicht" onclick="showFTab('overzicht')">🗂️ Overzicht</button>
+        </div>
+
+        <!-- SUBTAB: UPLOAD -->
+        <div id="ftab-upload">
 
         <div class="card" style="margin-bottom:16px;">
           <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;">
@@ -717,8 +756,18 @@
           </div>
         </div>
 
+        </div><!-- /ftab-upload -->
+
+        <!-- SUBTAB: OVERZICHT -->
+        <div id="ftab-overzicht" style="display:none;">
         <div class="card">
-          <div class="card-title">Foto-overzicht</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+            <div class="card-title" style="margin-bottom:0;">Foto-overzicht</div>
+            <div class="foto-view-toggle" role="group" aria-label="Weergave">
+              <button id="foto-view-details" onclick="setFotoView('details')" title="Detailweergave: bewerk categorie, onderschrift, trigger words en status">≣ Details</button>
+              <button id="foto-view-galerij" onclick="setFotoView('galerij')" title="Grote foto's met trigger words; overige details via het ⓘ-knopje">▦ Grote foto's</button>
+            </div>
+          </div>
           <div class="foto-filterbar">
             <select id="foto-filter-cat" onchange="onFotoCatChange()" title="Filter op categorie"></select>
             <select id="foto-filter-ond" onchange="renderFotos()" title="Filter op onderschrift (verfijnt verder)"></select>
@@ -727,7 +776,30 @@
           </div>
           <div id="foto-overzicht" style="font-size:13px;color:var(--muted);">Laden...</div>
         </div>
+        </div><!-- /ftab-overzicht -->
       </div>
+    </main>
+  </div>
+
+  <!-- TAB: RUBRIEK VRAGEN (standaardvragen beheren — issue #33) -->
+  <div id="tab-rubriekvragen" class="tab-content">
+    <main>
+      <div class="insight-box" style="margin-bottom:8px;">📋 Beheer de <b>standaardvragen per rubriek</b> (de voorbeeldvragen in de widget). Leg per vraag een <b>vast antwoord</b> vast (NL + EN) en koppel eventueel foto's. Een vraag met een vast antwoord wordt <b>direct beantwoord zonder de bot aan te roepen</b> — sneller én gratis. Laat het antwoord leeg om de vraag gewoon door de bot te laten beantwoorden.</div>
+      <div class="card" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="rv-zoek" class="ffsearch" placeholder="🔎 Zoek in vragen of antwoorden…" oninput="renderRubriekvragen()" style="flex:1;min-width:200px;">
+        <select id="rv-filter-rubriek" onchange="renderRubriekvragen()" title="Filter op rubriek"></select>
+        <select id="rv-filter-status" onchange="renderRubriekvragen()" title="Filter op status">
+          <option value="">Alle statussen</option>
+          <option value="definitief">✓ Definitief (live)</option>
+          <option value="concept">📝 Concept</option>
+          <option value="leeg">→ Zonder antwoord</option>
+          <option value="altijdlive">🔄 Altijd live</option>
+        </select>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2);white-space:nowrap;"><input type="checkbox" id="rv-alleen-leeg" onchange="renderRubriekvragen()"> Alleen zonder vast antwoord</label>
+        <button class="btn-sm-red" onclick="nieuweStandaardvraag()">➕ Vraag toevoegen</button>
+      </div>
+      <div id="rv-status" style="font-size:12px;color:var(--muted);margin-bottom:6px;"></div>
+      <div id="rv-lijst" style="font-size:13px;color:var(--muted);">Laden...</div>
     </main>
   </div>
 
@@ -1218,20 +1290,21 @@ function showTab(name, btn) {
   const subnav = document.getElementById("analyse-subnav")
   if (subnav) subnav.style.display = "none"
   if (name === "fotos") laadFotos()
+  if (name === "rubriekvragen") laadStandaardvragen()
   // Tab is nu zichtbaar → speel de cascade-intro van die tab opnieuw af.
   if (name === "mark") speelOverzichtIntro()
   if (name === "sander") speelSanderIntro()
 }
 
-// Analyse-groep: submenu Overzicht (mark) / Vragen (gesprekken) / Website (sander)
+// Analyse-groep: submenu Overzicht (mark) / Directe vragen (gesprekken) / Rubriek vragen / Website (sander)
 function showAnalyse(sub) {
-  const map = { overzicht: "mark", vragen: "gesprekken", website: "sander" }
+  const map = { overzicht: "mark", vragen: "gesprekken", rubriekvragen: "rubriekvragen", website: "sander" }
   showTab(map[sub] || "mark", null)
   const top = document.getElementById("toptab-analyse")
   if (top) top.classList.add("active")
   const subnav = document.getElementById("analyse-subnav")
   if (subnav) subnav.style.display = ""
-  ;["overzicht", "vragen", "website"].forEach(s => {
+  ;["overzicht", "vragen", "rubriekvragen", "website"].forEach(s => {
     const b = document.getElementById("asub-" + s)
     if (b) b.classList.toggle("active", s === sub)
   })
@@ -1421,6 +1494,7 @@ async function laadFotos() {
     const data = await resp.json()
     alleFotos = data.fotos || []
     populateFotoFilters()
+    syncFotoViewButtons()
     renderFotos()
   } catch (e) {
     if (el) el.textContent = "Kon foto's niet laden."
@@ -1473,6 +1547,7 @@ function renderFotos() {
   if (!lijst.length) { el.innerHTML = "<div style='color:var(--muted);padding:6px 0;'>Geen foto's voor deze filter.</div>"; return }
   const groepen = {}
   lijst.forEach(f => { const c = f.categorie || "Overig"; (groepen[c] = groepen[c] || []).push(f) })
+  if (fotoView === "galerij") { el.innerHTML = renderFotosGalerij(groepen); return }
   let html = ""
   Object.keys(groepen).sort().forEach(cat => {
     html += `<div style="margin:7px 0 3px;font-weight:700;color:var(--text);font-size:13px;">${fEsc(cat)}</div>`
@@ -1518,10 +1593,401 @@ function renderFotos() {
   el.innerHTML = html
 }
 
+// ---- Foto's-subtabs (Upload / Overzicht) ----
+function showFTab(naam) {
+  ;["upload", "overzicht"].forEach(t => {
+    const el = document.getElementById(`ftab-${t}`)
+    const btn = document.getElementById(`ftab-btn-${t}`)
+    if (el) el.style.display = t === naam ? "block" : "none"
+    if (btn) btn.classList.toggle("active", t === naam)
+  })
+}
+
+// ---- Overzicht-weergave: 'details' (Knop A) of 'galerij' (Knop B) ----
+let fotoView = localStorage.getItem("mkm-foto-view") === "galerij" ? "galerij" : "details"
+function setFotoView(mode) {
+  fotoView = mode === "galerij" ? "galerij" : "details"
+  localStorage.setItem("mkm-foto-view", fotoView)
+  syncFotoViewButtons()
+  renderFotos()
+}
+function syncFotoViewButtons() {
+  const a = document.getElementById("foto-view-details")
+  const b = document.getElementById("foto-view-galerij")
+  if (a) a.classList.toggle("active", fotoView === "details")
+  if (b) b.classList.toggle("active", fotoView === "galerij")
+}
+
+// Galerij-weergave (Knop B): grote foto's + trigger words zichtbaar, overige details via ⓘ-popup
+function renderFotosGalerij(groepen) {
+  let html = ""
+  Object.keys(groepen).sort().forEach(cat => {
+    html += `<div class="foto-gal-cat">${fEsc(cat)}</div>`
+    html += `<div class="foto-gal">`
+    groepen[cat].forEach(f => {
+      const isPdf = /\.pdf$/i.test(f.bestand || "")
+      const media = isPdf
+        ? `<div class="foto-gal-media foto-gal-pdf">📄</div>`
+        : `<a href="${fAttr(f.url)}" target="_blank" title="Open op ware grootte"><img class="foto-gal-media" src="${fAttr(f.url)}" loading="lazy" alt="${fAttr(f.onderschrift || f.bestand)}"></a>`
+      const triggers = (f.triggerWords || [])
+      const trigHtml = triggers.length
+        ? triggers.map(t => `<span class="fg-chip">${fEsc(t)}</span>`).join("")
+        : `<span class="fg-none">geen trigger words</span>`
+      const uitBadge = f.actief === false ? `<span class="foto-gal-badge">uit</span>` : ""
+      const weergaveTxt = f.weergave === "venster" ? "🪟 Apart venster (groot/PDF)" : "🖼️ Inline (klein in chat)"
+      const statusTxt = f.actief === false ? "⏸ Gedeactiveerd" : "✅ Actief"
+      const gezichtTxt = f.heeftGezichten ? (f.toonEcht ? "😶 echte gezichten zichtbaar" : "🛡️ geanonimiseerd") : "—"
+      const pop = `<div class="foto-gal-pop">
+          <div class="fgp-row"><span class="fgp-lbl">Onderschrift</span><span class="fgp-val">${fEsc(f.onderschrift || "—")}</span></div>
+          <div class="fgp-row"><span class="fgp-lbl">Categorie</span><span class="fgp-val">${fEsc(f.categorie || "Overig")}</span></div>
+          <div class="fgp-row"><span class="fgp-lbl">Weergave</span><span class="fgp-val">${weergaveTxt}</span></div>
+          <div class="fgp-row"><span class="fgp-lbl">Status</span><span class="fgp-val">${statusTxt}</span></div>
+          <div class="fgp-row"><span class="fgp-lbl">Gezichten</span><span class="fgp-val">${gezichtTxt}</span></div>
+          <div class="fgp-row"><span class="fgp-lbl">Bestand</span><span class="fgp-val">${fEsc(f.bestand || "")}</span></div>
+        </div>`
+      html += `<div class="foto-gal-item${f.actief === false ? " uit" : ""}">
+        ${uitBadge}
+        <button class="foto-gal-info" onclick="toggleFotoPop(this)" title="Details" aria-label="Details">ⓘ</button>
+        ${pop}
+        ${media}
+        <div class="foto-gal-body"><div class="foto-gal-trig">${trigHtml}</div></div>
+      </div>`
+    })
+    html += `</div>`
+  })
+  return html
+}
+
+// ⓘ-knopje: open/sluit de detail-popup (sluit eventuele andere open popups)
+function toggleFotoPop(btn) {
+  const item = btn.closest(".foto-gal-item")
+  if (!item) return
+  const wasOpen = item.classList.contains("pop-open")
+  document.querySelectorAll(".foto-gal-item.pop-open").forEach(el => el.classList.remove("pop-open"))
+  if (!wasOpen) item.classList.add("pop-open")
+}
+// Klik buiten een open popup → sluiten
+document.addEventListener("click", e => {
+  if (e.target.closest(".foto-gal-info") || e.target.closest(".foto-gal-pop")) return
+  document.querySelectorAll(".foto-gal-item.pop-open").forEach(el => el.classList.remove("pop-open"))
+})
+
 async function fotoActie(payload) {
   const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
   const resp = await fetch(`${API}/fotos`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, wachtwoord }) })
   return resp.json()
+}
+
+// ===== Standaardvragen per rubriek beheren (issue #33) =====
+let alleStandaardvragen = []
+let _rvTmpTeller = 0
+const RV_RUBRIEKEN = [
+  { id: "toernooien", label: "🏆 Toernooien" },
+  { id: "spelen", label: "🎱 Spelen & Regels" },
+  { id: "praktisch", label: "ℹ️ Praktisch" },
+  { id: "service", label: "🛠️ Service" },
+  { id: "overig", label: "📋 Overig" },
+]
+function rvRubriekLabel(id) { return (RV_RUBRIEKEN.find(r => r.id === id) || {}).label || id }
+function rvKey(e) { return e.id || e._tmpid }
+
+async function laadStandaardvragen() {
+  const el = document.getElementById("rv-lijst")
+  if (el) el.textContent = "Laden..."
+  // Foto's nodig voor de koppel-kiezer; laad ze als dat nog niet gebeurd is.
+  if (!alleFotos.length) {
+    try { const r = await fetch(`${API}/fotos`); alleFotos = (await r.json()).fotos || [] } catch (e) {}
+  }
+  try {
+    const resp = await fetch(`${API}/standaardvragen`)
+    if (!resp.ok) throw new Error("status " + resp.status)
+    const data = await resp.json()
+    alleStandaardvragen = (data.vragen || []).filter(v => !v._nieuw)
+    populateRvRubriekFilter()
+    renderRubriekvragen()
+  } catch (e) {
+    if (el) el.textContent = "Kon standaardvragen niet laden."
+  }
+}
+
+function populateRvRubriekFilter() {
+  const sel = document.getElementById("rv-filter-rubriek")
+  if (!sel) return
+  const cur = sel.value || ""
+  sel.innerHTML = `<option value="">Alle rubrieken (${alleStandaardvragen.filter(v => !v._nieuw).length})</option>` +
+    RV_RUBRIEKEN.map(r => {
+      const n = alleStandaardvragen.filter(v => v.rubriek === r.id && !v._nieuw).length
+      return `<option value="${r.id}">${fEsc(r.label)} (${n})</option>`
+    }).join("")
+  sel.value = cur
+}
+
+function renderRubriekvragen() {
+  const el = document.getElementById("rv-lijst")
+  if (!el) return
+  const fRub = (document.getElementById("rv-filter-rubriek") || {}).value || ""
+  const fZoek = ((document.getElementById("rv-zoek") || {}).value || "").trim().toLowerCase()
+  const alleenLeeg = !!(document.getElementById("rv-alleen-leeg") || {}).checked
+  const fStatus = (document.getElementById("rv-filter-status") || {}).value || ""
+
+  const heeftAntw = (v) => ((v.antwoord && v.antwoord.nl) || "").trim()
+  const statusVan = (v) => v.altijdLive ? "altijdlive" : !heeftAntw(v) ? "leeg" : (v.status === "goedgekeurd" ? "definitief" : "concept")
+  const past = (v) => {
+    if (v._nieuw) return true
+    if (fRub && v.rubriek !== fRub) return false
+    if (alleenLeeg && heeftAntw(v)) return false
+    if (fStatus && statusVan(v) !== fStatus) return false
+    if (fZoek) {
+      const hooi = [v.vraag?.nl, v.vraag?.en, v.antwoord?.nl, v.antwoord?.en, v.onderwerp].join(" ").toLowerCase()
+      if (!hooi.includes(fZoek)) return false
+    }
+    return true
+  }
+  const lijst = alleStandaardvragen.filter(past)
+
+  const echte = alleStandaardvragen.filter(v => !v._nieuw)
+  const nDef = echte.filter(v => statusVan(v) === "definitief").length
+  const nConcept = echte.filter(v => statusVan(v) === "concept").length
+  const nLeeg = echte.filter(v => statusVan(v) === "leeg").length
+  const nLive = echte.filter(v => statusVan(v) === "altijdlive").length
+  const st = document.getElementById("rv-status")
+  if (st) st.innerHTML = `<span style="color:var(--good);">✓ ${nDef} definitief (live)</span> · <span style="color:var(--info);">📝 ${nConcept} concept</span> · <span style="color:var(--warn);">→ ${nLeeg} via bot</span> · <span style="color:var(--warn);">🔄 ${nLive} altijd live</span> &nbsp;(totaal ${echte.length})`
+
+  let html = ""
+  // Nieuwe (nog niet opgeslagen) vragen bovenaan
+  const nieuw = lijst.filter(v => v._nieuw)
+  if (nieuw.length) {
+    html += `<div style="margin:6px 0 3px;font-weight:700;color:var(--text);font-size:14px;">🆕 Nieuwe vraag</div>`
+    nieuw.forEach(v => { html += rvKaartHtml(v) })
+  }
+  // Bestaande vragen: gegroepeerd per rubriek → onderwerp
+  RV_RUBRIEKEN.forEach(rub => {
+    const inRub = lijst.filter(v => !v._nieuw && v.rubriek === rub.id)
+    if (!inRub.length) return
+    html += `<div style="margin:14px 0 5px;font-weight:700;color:var(--text);font-size:15px;border-bottom:1px solid var(--border);padding-bottom:3px;">${fEsc(rub.label)}</div>`
+    const onderwerpen = [...new Set(inRub.map(v => v.onderwerp || ""))]
+    onderwerpen.forEach(ond => {
+      if (ond) html += `<div style="margin:8px 0 3px;font-weight:600;color:var(--text-2);font-size:12.5px;">${fEsc(ond)}</div>`
+      inRub.filter(v => (v.onderwerp || "") === ond)
+        .sort((a, b) => (a.volgnummer || 0) - (b.volgnummer || 0))
+        .forEach(v => { html += rvKaartHtml(v) })
+    })
+  })
+  if (!lijst.length) html = `<div style="color:var(--muted);padding:6px 0;">Geen standaardvragen voor deze filter.</div>`
+  el.innerHTML = html
+  // Foto-previews vullen voor elke gerenderde kaart.
+  el.querySelectorAll("select[id^='rv-fotos-']").forEach(sel => {
+    rvUpdateFotoPreview(sel.id.slice("rv-fotos-".length))
+  })
+}
+
+// Onthoudt per kaart welke gekoppelde foto nu in de preview staat.
+const rvFotoIdx = {}
+
+function rvFotoKiezerHtml(e, key) {
+  const k = fAttr(key)
+  const jk = fJs(key)
+  const gekozen = new Set(e.fotos || [])
+  const opts = alleFotos.map(f => {
+    const label = (f.onderschrift || f.bestand) + (f.categorie ? ` — ${f.categorie}` : "")
+    return `<option value="${fAttr(f.bestand)}" ${gekozen.has(f.bestand) ? "selected" : ""}>${fEsc(label)}</option>`
+  }).join("")
+  const size = Math.min(6, Math.max(3, alleFotos.length))
+  return `<div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;">
+    <div style="flex:1;min-width:230px;display:flex;flex-direction:column;">
+      <select id="rv-fotos-${k}" multiple size="${size}" onchange="rvFotoIdx['${jk}']=0;rvUpdateFotoPreview('${jk}')" style="width:100%;flex:1;box-sizing:border-box;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px;font-size:12px;">${opts || "<option disabled>Geen afbeeldingen beschikbaar</option>"}</select>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Ctrl/Cmd-klik om meerdere te (de)selecteren.</div>
+    </div>
+    <div style="flex:1;min-width:230px;">
+      <div id="rv-fotoprev-${k}" style="height:100%;min-height:150px;box-sizing:border-box;border:1px solid var(--border);border-radius:8px;background:var(--input);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;text-align:center;"></div>
+    </div>
+  </div>`
+}
+
+// Toont de gekoppelde foto('s) zoals de bezoeker ze ziet, met blader-knoppen.
+function rvUpdateFotoPreview(key) {
+  const sel = document.getElementById("rv-fotos-" + key)
+  const box = document.getElementById("rv-fotoprev-" + key)
+  if (!sel || !box) return
+  const gekozen = [...sel.selectedOptions].map(o => o.value)
+  if (!gekozen.length) {
+    box.innerHTML = `<div style="color:var(--muted);font-size:12px;">Nog geen foto gekoppeld.<br>Selecteer links een of meer foto's om de preview te zien.</div>`
+    return
+  }
+  const n = gekozen.length
+  let i = rvFotoIdx[key] || 0
+  if (i >= n) i = 0
+  if (i < 0) i = n - 1
+  rvFotoIdx[key] = i
+  const f = alleFotos.find(x => x.bestand === gekozen[i])
+  if (!f) { box.innerHTML = `<div style="color:var(--muted);font-size:12px;">Foto niet gevonden.</div>`; return }
+  const cap = f.onderschrift || f.bestand
+  const isPdf = /\.pdf$/i.test(f.bestand || "")
+  const venster = f.weergave === "venster"
+  const media = (isPdf || venster)
+    ? `<a href="${fAttr(f.url)}" target="_blank" class="btn-sm-red" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">${isPdf ? "📄" : "🪟"} ${fEsc(cap)}</a>`
+    : `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" style="max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--border);object-fit:contain;"></a>`
+  const nav = n > 1
+    ? `<button onclick="rvFotoPrevStap('${fJs(key)}',-1)" class="fbtn fbtn-view" style="padding:2px 9px;">‹</button>
+       <span style="font-size:11px;color:var(--muted);">${i + 1} / ${n}</span>
+       <button onclick="rvFotoPrevStap('${fJs(key)}',1)" class="fbtn fbtn-view" style="padding:2px 9px;">›</button>`
+    : `<span style="font-size:11px;color:var(--muted);">1 / 1</span>`
+  const badge = venster ? "🪟 apart venster" : "🖼️ inline"
+  box.innerHTML = `
+    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;">${nav}</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0;">${media}</div>
+    <div style="font-size:12px;color:var(--text);margin-top:6px;">${fEsc(cap)} <span style="color:var(--muted);font-size:10px;">· ${badge}</span></div>`
+}
+
+function rvFotoPrevStap(key, delta) {
+  rvFotoIdx[key] = (rvFotoIdx[key] || 0) + delta
+  rvUpdateFotoPreview(key)
+}
+
+function rvKaartHtml(e) {
+  const key = rvKey(e)
+  const k = fAttr(key)
+  const heeftVast = ((e.antwoord && e.antwoord.nl) || "").trim()
+  const definitief = e.status === "goedgekeurd"
+  const altijdLive = !!e.altijdLive
+  const badge = e._nieuw
+    ? `<span style="color:var(--info);font-size:11px;">nieuw</span>`
+    : altijdLive
+      ? `<span style="color:var(--warn);font-size:11px;">🔄 altijd live (nooit gecached)</span>`
+      : !heeftVast
+        ? `<span style="color:var(--warn);font-size:11px;">→ via bot</span>`
+        : definitief
+          ? `<span style="color:var(--good);font-size:11px;">✓ definitief (live)</span>`
+          : `<span style="color:var(--info);font-size:11px;">📝 concept (bot antwoordt live)</span>`
+  const rubOpts = RV_RUBRIEKEN.map(r => `<option value="${r.id}" ${e.rubriek === r.id ? "selected" : ""}>${fEsc(r.label)}</option>`).join("")
+  const inp = "width:100%;box-sizing:border-box;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px;"
+  const ta = inp + "min-height:64px;resize:vertical;font-family:inherit;line-height:1.4;"
+  const lbl = "font-size:11px;color:var(--muted);margin:6px 0 2px;font-weight:600;"
+  return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card);">
+    <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:4px;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="rv-rubriek-${k}" style="background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:12px;">${rubOpts}</select>
+        <input type="text" id="rv-onderwerp-${k}" value="${fAttr(e.onderwerp || "")}" placeholder="onderwerp (bijv. pool)" style="background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:12px;width:150px;">
+        <label style="font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;">volgorde <input type="number" id="rv-volg-${k}" value="${Number(e.volgnummer || 0)}" style="width:52px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 5px;font-size:12px;"></label>
+        <label style="font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;"><input type="checkbox" id="rv-actief-${k}" ${e.actief === false ? "" : "checked"}> actief</label>
+        <label style="font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;" title="Definitief = dit vaste antwoord wordt live geserveerd (zonder de bot). Concept = de bot antwoordt nog live."><input type="checkbox" id="rv-def-${k}" ${definitief ? "checked" : ""}> ✅ definitief</label>
+        <label style="font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;" title="Altijd live = deze vraag gebruikt live data (bijv. toernooi-uitslagen/rankings van Cuescore) en wordt NOOIT gecached; de bot beantwoordt 'm altijd zelf."><input type="checkbox" id="rv-live-${k}" ${altijdLive ? "checked" : ""}> 🔄 altijd live</label>
+      </div>
+      ${badge}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div style="${lbl}">Vraag (NL)</div>
+        <input type="text" id="rv-vraagnl-${k}" value="${fAttr(e.vraag?.nl || "")}" style="${inp}">
+        <div style="${lbl}">Antwoord (NL) — leeg = via de bot</div>
+        <textarea id="rv-antnl-${k}" style="${ta}" placeholder="Vast antwoord dat de bezoeker ziet…">${fEsc(e.antwoord?.nl || "")}</textarea>
+      </div>
+      <div>
+        <div style="${lbl}">Vraag (EN)</div>
+        <input type="text" id="rv-vraagen-${k}" value="${fAttr(e.vraag?.en || "")}" style="${inp}">
+        <div style="${lbl}">Antwoord (EN) — leeg = via de bot</div>
+        <textarea id="rv-anten-${k}" style="${ta}" placeholder="Fixed answer the visitor sees…">${fEsc(e.antwoord?.en || "")}</textarea>
+      </div>
+    </div>
+    <div style="${lbl}">Gekoppelde foto's</div>
+    ${rvFotoKiezerHtml(e, key)}
+    <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+      <button class="fbtn fbtn-save" onclick="saveStandaardvraag('${fJs(key)}')">💾 Opslaan</button>
+      <button class="fbtn fbtn-view" onclick="previewStandaardvraag('${fJs(key)}')">👁 Preview</button>
+      <button class="fbtn fbtn-del" onclick="deleteStandaardvraag('${fJs(key)}')">🗑 Verwijderen</button>
+    </div>
+    <div id="rv-preview-${k}" style="display:none;margin-top:8px;padding:9px 11px;border:1px dashed var(--border);border-radius:9px;background:var(--input);"></div>
+  </div>`
+}
+
+function nieuweStandaardvraag() {
+  const tmpid = "nieuw-" + (++_rvTmpTeller)
+  alleStandaardvragen.unshift({
+    _nieuw: true, _tmpid: tmpid, id: "", rubriek: "overig", onderwerp: "", volgnummer: 0,
+    actief: true, vraag: { nl: "", en: "" }, antwoord: { nl: "", en: "" }, fotos: [],
+  })
+  renderRubriekvragen()
+}
+
+function rvVerzamel(key) {
+  const k = key
+  const g = (pre) => document.getElementById(`rv-${pre}-${k}`)
+  const fotosSel = g("fotos")
+  const fotos = fotosSel ? [...fotosSel.selectedOptions].map(o => o.value) : []
+  const e = alleStandaardvragen.find(v => rvKey(v) === key)
+  return {
+    id: (e && e.id) || "",
+    rubriek: g("rubriek").value,
+    onderwerp: g("onderwerp").value.trim(),
+    volgnummer: Number(g("volg").value) || 0,
+    actief: g("actief").checked,
+    status: g("def").checked ? "goedgekeurd" : "concept",
+    altijdLive: g("live").checked,
+    vraag: { nl: g("vraagnl").value.trim(), en: g("vraagen").value.trim() },
+    antwoord: { nl: g("antnl").value, en: g("anten").value },
+    fotos,
+  }
+}
+
+async function saveStandaardvraag(key) {
+  const entry = rvVerzamel(key)
+  if (!entry.vraag.nl) { alert("Vul minimaal de Nederlandse vraag in."); return }
+  const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
+  try {
+    const resp = await fetch(`${API}/standaardvragen`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", wachtwoord, entry }),
+    })
+    const data = await resp.json()
+    if (!resp.ok || !data.success) { alert("Opslaan mislukt: " + (data.error || resp.status)); return }
+    // Verwijder de oude/tijdelijke versie en zet de opgeslagen versie terug.
+    alleStandaardvragen = alleStandaardvragen.filter(v => rvKey(v) !== key)
+    const idx = alleStandaardvragen.findIndex(v => v.id === data.entry.id)
+    if (idx >= 0) alleStandaardvragen[idx] = data.entry
+    else alleStandaardvragen.push(data.entry)
+    populateRvRubriekFilter()
+    renderRubriekvragen()
+  } catch (e) { alert("Opslaan mislukt: " + e.message) }
+}
+
+async function deleteStandaardvraag(key) {
+  const e = alleStandaardvragen.find(v => rvKey(v) === key)
+  if (!e) return
+  if (e._nieuw) { alleStandaardvragen = alleStandaardvragen.filter(v => rvKey(v) !== key); renderRubriekvragen(); return }
+  if (!confirm(`Standaardvraag verwijderen?\n\n"${(e.vraag && e.vraag.nl) || ""}"`)) return
+  const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
+  try {
+    const resp = await fetch(`${API}/standaardvragen`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", wachtwoord, id: e.id }),
+    })
+    const data = await resp.json()
+    if (!resp.ok || !data.success) { alert("Verwijderen mislukt: " + (data.error || resp.status)); return }
+    alleStandaardvragen = alleStandaardvragen.filter(v => rvKey(v) !== key)
+    populateRvRubriekFilter()
+    renderRubriekvragen()
+  } catch (e) { alert("Verwijderen mislukt: " + e.message) }
+}
+
+// Toont hoe de bezoeker het (NL) antwoord + gekoppelde foto's ziet.
+function previewStandaardvraag(key) {
+  const box = document.getElementById(`rv-preview-${key}`)
+  if (!box) return
+  if (box.style.display === "block") { box.style.display = "none"; return }
+  const entry = rvVerzamel(key)
+  const tekst = (entry.antwoord.nl || "").trim()
+  let html = tekst
+    ? `<div style="font-size:13px;color:var(--text);white-space:pre-wrap;line-height:1.45;">${fEsc(tekst)}</div>`
+    : `<div style="font-size:12px;color:var(--warn);">Geen vast antwoord — deze vraag wordt door de bot beantwoord.</div>`
+  const thumbs = (entry.fotos || []).map(b => {
+    const f = alleFotos.find(x => x.bestand === b)
+    if (!f) return ""
+    if (/\.pdf$/i.test(b)) return `<a href="${fAttr(f.url)}" target="_blank" style="font-size:12px;color:var(--info);">📄 ${fEsc(f.onderschrift || b)}</a>`
+    return `<a href="${fAttr(f.url)}" target="_blank"><img src="${fAttr(f.url)}" title="${fAttr(f.onderschrift || b)}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"></a>`
+  }).join("")
+  if (thumbs) html += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${thumbs}</div>`
+  box.innerHTML = html
+  box.style.display = "block"
 }
 
 // ===== Geleide foto-wizard (foto kiezen → gezichtscheck → Claude-voorstel → uploaden) =====

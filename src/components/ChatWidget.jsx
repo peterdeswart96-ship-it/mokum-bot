@@ -334,10 +334,46 @@ export default function ChatWidget() {
   ])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [, setDvVersie] = useState(0)
   const bottomRef = useRef(null)
   const sendTimesRef = useRef([])
   const lastSentQuestionRef = useRef("")
   const dupTimesRef = useRef([])
+
+  // Voorbeeldvragen per rubriek dynamisch laden uit het dashboard (issue #33).
+  // Overschrijft alleen onderwerpen met beheer-vragen; bij falen/leeg blijven de
+  // hardcoded voorbeeldvragen uit translations.js staan (fallback).
+  useEffect(() => {
+    let afgebroken = false
+    fetch(`${API_URL}/api/standaardvragen`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (afgebroken) return
+        const vragen = data && Array.isArray(data.vragen) ? data.vragen : null
+        if (!vragen || !vragen.length) return
+        const perLang = { nl: {}, en: {} }
+        vragen.filter((v) => v && v.actief !== false).forEach((v) => {
+          const ond = v.onderwerp
+          if (!ond) return
+          ;["nl", "en"].forEach((l) => {
+            const tekst = v.vraag && v.vraag[l]
+            if (!tekst) return
+            ;(perLang[l][ond] = perLang[l][ond] || []).push({ q: tekst, volg: v.volgnummer || 0 })
+          })
+        })
+        ;["nl", "en"].forEach((l) => {
+          const T = translations[l]
+          if (!T || !T.questions) return
+          Object.keys(perLang[l]).forEach((ond) => {
+            const arr = perLang[l][ond].sort((a, b) => a.volg - b.volg).map((x) => x.q)
+            if (arr.length) T.questions[ond] = arr
+          })
+        })
+        setDvVersie((n) => n + 1)
+      })
+      .catch(() => {})
+    return () => { afgebroken = true }
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
