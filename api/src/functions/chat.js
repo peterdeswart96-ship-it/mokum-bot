@@ -817,7 +817,8 @@ async function getStandaardAntwoord(message, sasToken) {
   const qTokens = textTokens(message)
   let best = null
   for (const e of index) {
-    if (!e || e.actief === false) continue
+    // Alleen goedgekeurde (definitieve) antwoorden cachen; concepten laat de bot live beantwoorden.
+    if (!e || e.actief === false || e.status !== "goedgekeurd") continue
     for (const lang of ["nl", "en"]) {
       const vraag = e.vraag && e.vraag[lang]
       const antwoord = e.antwoord && e.antwoord[lang]

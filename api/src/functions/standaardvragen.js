@@ -118,12 +118,15 @@ function normEntry(raw, bestaand) {
     : Array.isArray(src.fotos)
       ? src.fotos
       : []
+  // concept = klad (bot antwoordt live); goedgekeurd = vast antwoord dat gecachet wordt
+  const statusIn = e.status !== undefined ? e.status : src.status
   return {
     id: src.id || e.id || `${(e.onderwerp || rubriek || "vraag")}-${crypto.randomBytes(3).toString("hex")}`,
     rubriek,
     onderwerp: asText(e.onderwerp ?? src.onderwerp),
     volgnummer: Number.isFinite(+e.volgnummer) ? +e.volgnummer : (src.volgnummer ?? 0),
     actief: e.actief === undefined ? (src.actief === undefined ? true : !!src.actief) : !!e.actief,
+    status: statusIn === "goedgekeurd" ? "goedgekeurd" : "concept",
     vraag: {
       nl: asText(e.vraag?.nl ?? src.vraag?.nl),
       en: asText(e.vraag?.en ?? src.vraag?.en),
