@@ -787,6 +787,74 @@ async function getFotoContext(message, sasToken) {
   }
 }
 
+// --- Standaardvragen: vast (goedgekeurd) antwoord serveren i.p.v. Claude (issue #33) ---
+const STD_CONTAINER = "standaardvragen"
+const STD_JACCARD_MIN = 0.72 // drempel voor een "lijkende" (niet exact getypte) vraag
+const STD_SHARED_MIN = 3 // minimaal aantal gedeelde woorden voordat we lijkend accepteren
+
+function jaccard(aTokens, bTokens) {
+  const a = new Set(aTokens)
+  const b = new Set(bTokens)
+  if (!a.size || !b.size) return { score: 0, shared: 0 }
+  let shared = 0
+  for (const tok of a) if (b.has(tok)) shared++
+  const union = a.size + b.size - shared
+  return { score: union ? shared / union : 0, shared }
+}
+
+// Zoekt het best passende opgeslagen antwoord bij de laatste vraag.
+// Exacte (genormaliseerde) match wint altijd; anders alleen bij hoge woord-overlap.
+async function getStandaardAntwoord(message, sasToken) {
+  if (!sasToken || !message) return null
+  const raw = await fetchWithTimeout(
+    `https://${STORAGE_ACCOUNT}.blob.core.windows.net/${STD_CONTAINER}/_index.json?${sasToken}`, 2500)
+  if (!raw) return null
+  let index
+  try { index = JSON.parse(raw) } catch { return null }
+  if (!Array.isArray(index) || !index.length) return null
+
+  const qNorm = normalizeText(message)
+  const qTokens = textTokens(message)
+  let best = null
+  for (const e of index) {
+    if (!e || e.actief === false) continue
+    for (const lang of ["nl", "en"]) {
+      const vraag = e.vraag && e.vraag[lang]
+      const antwoord = e.antwoord && e.antwoord[lang]
+      if (!vraag || !antwoord || !antwoord.trim()) continue
+      const vNorm = normalizeText(vraag)
+      let score
+      if (vNorm && vNorm === qNorm) score = 1
+      else {
+        const j = jaccard(qTokens, textTokens(vraag))
+        if (j.shared < STD_SHARED_MIN || j.score < STD_JACCARD_MIN) continue
+        score = j.score
+      }
+      if (!best || score > best.score) best = { entry: e, lang, antwoord, score }
+    }
+  }
+  return best
+}
+
+// Zet gekoppelde foto-bestandsnamen om naar markdown (zelfde weergave als de bot-fallback).
+async function fotosVoorAntwoord(bestanden, sasToken) {
+  if (!Array.isArray(bestanden) || !bestanden.length || !sasToken) return ""
+  const raw = await fetchWithTimeout(
+    `https://${STORAGE_ACCOUNT}.blob.core.windows.net/fotos/_catalog.json?${sasToken}`, 2500)
+  if (!raw) return ""
+  let catalog
+  try { catalog = JSON.parse(raw) } catch { return "" }
+  if (!Array.isArray(catalog)) return ""
+  let out = ""
+  for (const bestand of bestanden) {
+    const f = catalog.find((c) => c && c.bestand === bestand && c.actief !== false)
+    if (!f || !f.url) continue
+    const cap = f.onderschrift || "Bekijk"
+    out += f.weergave === "venster" ? `\n\n[${cap}](${f.url})` : `\n\n![${cap}](${f.url})`
+  }
+  return out
+}
+
 async function getResultatenContext(messages, sasToken) {
   if (!sasToken) return null
   const lastMsg = messages[messages.length - 1]?.content || ""
@@ -1025,6 +1093,23 @@ app.http("chat", {
         lastMessageLower.includes("wedstrijd") ||
         lastMessageLower.includes("speeldag")
       const sasToken = process.env.AZURE_STORAGE_SAS_TOKEN
+      // Standaardvraag met een vast, goedgekeurd antwoord? Serveer dat direct —
+      // geen Claude-call (sneller + gratis). Faalt open bij twijfel/fouten.
+      try {
+        const std = await getStandaardAntwoord(lastMessage, sasToken)
+        if (std) {
+          let reply = std.antwoord + (await fotosVoorAntwoord(std.entry.fotos, sasToken))
+          const conversationId = await saveConversation(messages, reply, isTest)
+          console.log(`Standaardantwoord geserveerd (${std.entry.id}, ${std.lang}, score ${std.score.toFixed(2)})`)
+          return {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            body: JSON.stringify({ reply, conversationId, standaard: true }),
+          }
+        }
+      } catch (err) {
+        console.log("Standaardvraag-check mislukt:", err.message)
+      }
       let kennisbronContext = null
       try {
         kennisbronContext = await getKennisbronContext(messages, sasToken)
