@@ -64,6 +64,8 @@ console.log(`${lijst.length} standaardvragen gevonden.\n`)
 
 let gedaan = 0, overgeslagen = 0, fouten = 0
 for (const entry of lijst) {
+  // "Altijd live"-vragen (bijv. Cuescore-data) nooit een vast antwoord geven.
+  if (entry.altijdLive) { overgeslagen++; continue }
   const antwoord = { ...(entry.antwoord || {}) }
   let gewijzigd = false
   for (const lang of talen) {

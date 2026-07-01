@@ -127,6 +127,8 @@ function normEntry(raw, bestaand) {
     volgnummer: Number.isFinite(+e.volgnummer) ? +e.volgnummer : (src.volgnummer ?? 0),
     actief: e.actief === undefined ? (src.actief === undefined ? true : !!src.actief) : !!e.actief,
     status: statusIn === "goedgekeurd" ? "goedgekeurd" : "concept",
+    // altijdLive: vraag gebruikt live data (bijv. Cuescore) → nooit cachen, altijd de bot laten antwoorden.
+    altijdLive: e.altijdLive !== undefined ? !!e.altijdLive : !!src.altijdLive,
     vraag: {
       nl: asText(e.vraag?.nl ?? src.vraag?.nl),
       en: asText(e.vraag?.en ?? src.vraag?.en),

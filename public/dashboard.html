@@ -793,6 +793,7 @@
           <option value="definitief">✓ Definitief (live)</option>
           <option value="concept">📝 Concept</option>
           <option value="leeg">→ Zonder antwoord</option>
+          <option value="altijdlive">🔄 Altijd live</option>
         </select>
         <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2);white-space:nowrap;"><input type="checkbox" id="rv-alleen-leeg" onchange="renderRubriekvragen()"> Alleen zonder vast antwoord</label>
         <button class="btn-sm-red" onclick="nieuweStandaardvraag()">➕ Vraag toevoegen</button>
@@ -1730,7 +1731,7 @@ function renderRubriekvragen() {
   const fStatus = (document.getElementById("rv-filter-status") || {}).value || ""
 
   const heeftAntw = (v) => ((v.antwoord && v.antwoord.nl) || "").trim()
-  const statusVan = (v) => !heeftAntw(v) ? "leeg" : (v.status === "goedgekeurd" ? "definitief" : "concept")
+  const statusVan = (v) => v.altijdLive ? "altijdlive" : !heeftAntw(v) ? "leeg" : (v.status === "goedgekeurd" ? "definitief" : "concept")
   const past = (v) => {
     if (v._nieuw) return true
     if (fRub && v.rubriek !== fRub) return false
@@ -1748,8 +1749,9 @@ function renderRubriekvragen() {
   const nDef = echte.filter(v => statusVan(v) === "definitief").length
   const nConcept = echte.filter(v => statusVan(v) === "concept").length
   const nLeeg = echte.filter(v => statusVan(v) === "leeg").length
+  const nLive = echte.filter(v => statusVan(v) === "altijdlive").length
   const st = document.getElementById("rv-status")
-  if (st) st.innerHTML = `<span style="color:var(--good);">✓ ${nDef} definitief (live)</span> · <span style="color:var(--info);">📝 ${nConcept} concept</span> · <span style="color:var(--warn);">→ ${nLeeg} via bot</span> &nbsp;(totaal ${echte.length})`
+  if (st) st.innerHTML = `<span style="color:var(--good);">✓ ${nDef} definitief (live)</span> · <span style="color:var(--info);">📝 ${nConcept} concept</span> · <span style="color:var(--warn);">→ ${nLeeg} via bot</span> · <span style="color:var(--warn);">🔄 ${nLive} altijd live</span> &nbsp;(totaal ${echte.length})`
 
   let html = ""
   // Nieuwe (nog niet opgeslagen) vragen bovenaan
@@ -1847,13 +1849,16 @@ function rvKaartHtml(e) {
   const k = fAttr(key)
   const heeftVast = ((e.antwoord && e.antwoord.nl) || "").trim()
   const definitief = e.status === "goedgekeurd"
+  const altijdLive = !!e.altijdLive
   const badge = e._nieuw
     ? `<span style="color:var(--info);font-size:11px;">nieuw</span>`
-    : !heeftVast
-      ? `<span style="color:var(--warn);font-size:11px;">→ via bot</span>`
-      : definitief
-        ? `<span style="color:var(--good);font-size:11px;">✓ definitief (live)</span>`
-        : `<span style="color:var(--info);font-size:11px;">📝 concept (bot antwoordt live)</span>`
+    : altijdLive
+      ? `<span style="color:var(--warn);font-size:11px;">🔄 altijd live (nooit gecached)</span>`
+      : !heeftVast
+        ? `<span style="color:var(--warn);font-size:11px;">→ via bot</span>`
+        : definitief
+          ? `<span style="color:var(--good);font-size:11px;">✓ definitief (live)</span>`
+          : `<span style="color:var(--info);font-size:11px;">📝 concept (bot antwoordt live)</span>`
   const rubOpts = RV_RUBRIEKEN.map(r => `<option value="${r.id}" ${e.rubriek === r.id ? "selected" : ""}>${fEsc(r.label)}</option>`).join("")
   const inp = "width:100%;box-sizing:border-box;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px;"
   const ta = inp + "min-height:64px;resize:vertical;font-family:inherit;line-height:1.4;"
@@ -1866,6 +1871,7 @@ function rvKaartHtml(e) {
         <label style="font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;">volgorde <input type="number" id="rv-volg-${k}" value="${Number(e.volgnummer || 0)}" style="width:52px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px 5px;font-size:12px;"></label>
         <label style="font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;"><input type="checkbox" id="rv-actief-${k}" ${e.actief === false ? "" : "checked"}> actief</label>
         <label style="font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;" title="Definitief = dit vaste antwoord wordt live geserveerd (zonder de bot). Concept = de bot antwoordt nog live."><input type="checkbox" id="rv-def-${k}" ${definitief ? "checked" : ""}> ✅ definitief</label>
+        <label style="font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;" title="Altijd live = deze vraag gebruikt live data (bijv. toernooi-uitslagen/rankings van Cuescore) en wordt NOOIT gecached; de bot beantwoordt 'm altijd zelf."><input type="checkbox" id="rv-live-${k}" ${altijdLive ? "checked" : ""}> 🔄 altijd live</label>
       </div>
       ${badge}
     </div>
@@ -1916,6 +1922,7 @@ function rvVerzamel(key) {
     volgnummer: Number(g("volg").value) || 0,
     actief: g("actief").checked,
     status: g("def").checked ? "goedgekeurd" : "concept",
+    altijdLive: g("live").checked,
     vraag: { nl: g("vraagnl").value.trim(), en: g("vraagen").value.trim() },
     antwoord: { nl: g("antnl").value, en: g("anten").value },
     fotos,
