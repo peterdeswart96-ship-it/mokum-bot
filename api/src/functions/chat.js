@@ -1,5 +1,14 @@
 const Anthropic = require("@anthropic-ai/sdk")
 const https = require("https")
+const crypto = require("crypto")
+
+// Dashboard-wachtwoordcheck (gedeeld met de auth/gesprekken-endpoints).
+// De hardcoded hash is bewust een fallback: later zetten we DASHBOARD_HASH als
+// env-var in Azure en halen we de fallback weg — issue #68.
+const DASHBOARD_HASH = process.env.DASHBOARD_HASH || "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+function checkPwd(wachtwoord) {
+  return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
+}
 
 const SYSTEM_PROMPT = `Je bent Mokum Bot, de digitale gast van Mokum Pool & Darts in Amsterdam Oost. Je helpt bezoekers snel aan de juiste informatie — zonder gedoe.
 
@@ -1382,6 +1391,9 @@ app.http("analyse", {
     }
     try {
       const body = await request.json()
+      if (!checkPwd(body.wachtwoord)) {
+        return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+      }
       const { gesprekken, type } = body
       if (!gesprekken || !Array.isArray(gesprekken)) {
         return {
@@ -1485,6 +1497,9 @@ app.http("kennisbron-upload", {
     }
     try {
       const body = await request.json()
+      if (!checkPwd(body.wachtwoord)) {
+        return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+      }
       const { bestandsnaam, map, inhoud } = body
 
       if (!bestandsnaam || !map || !inhoud) {
@@ -1564,6 +1579,7 @@ app.http("kennis-suggestie", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
+      if (!checkPwd(body.wachtwoord)) return json(401, { error: "Onjuist wachtwoord" })
       const omschrijving = (body.omschrijving || "").toString().trim()
       const vraag = (body.vraag || "").toString().trim()
       const antwoord = (body.antwoord || "").toString().trim()
@@ -1638,6 +1654,7 @@ app.http("foto-suggestie", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
+      if (!checkPwd(body.wachtwoord)) return json(401, { error: "Onjuist wachtwoord" })
       const b64 = body.contentBase64
       const mediaType = body.contentType || "image/jpeg"
       const categorieen = Array.isArray(body.categorieen) && body.categorieen.length ? body.categorieen : ["Overig"]
@@ -1703,6 +1720,7 @@ app.http("kennisbron-vertaal", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
+      if (!checkPwd(body.wachtwoord)) return json(401, { error: "Onjuist wachtwoord" })
       const pad = (body.pad || "").toString().trim()
       const doel = (body.doelTaal || "en").toString().trim()
       if (!pad || /\.en\.(txt|md)$/i.test(pad)) return json(400, { error: "geldig bron-pad vereist (geen .en-bestand)" })
