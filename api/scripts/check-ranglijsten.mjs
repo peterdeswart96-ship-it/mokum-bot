@@ -103,6 +103,14 @@ for (const r of results) { const s = classifySeries(r.tournamentName); serieCoun
 console.log("\n=== Reeks-classificatie (beginners worden uitgesloten uit overall/discipline) ===")
 Object.entries(serieCount).sort((a, b) => b[1] - a[1]).forEach(([s, n]) => console.log(`   ${s}${BEGINNERS_SERIES.has(s) ? " (beginner → uitgesloten)" : ""} → ${n}`))
 
+// Toernooinamen die als 'Overig' vallen (om verstopte reeksen zoals Handicap Madness te vinden).
+const overigNamen = {}
+for (const r of results) { if (classifySeries(r.tournamentName) === "Overig") { const nm = r.tournamentName || "(leeg)"; overigNamen[nm] = (overigNamen[nm] || 0) + 1 } }
+const overigLijst = Object.entries(overigNamen).sort((a, b) => b[1] - a[1])
+console.log(`\n=== Toernooinamen in 'Overig' (${overigLijst.length} unieke, niet herkend als reeks) ===`)
+overigLijst.slice(0, 50).forEach(([nm, n]) => console.log(`   ${String(n).padStart(4)}  ${nm}`))
+if (overigLijst.length > 50) console.log(`   … en nog ${overigLijst.length - 50} andere namen`)
+
 // --- Fase 0: nieuwe ranglijsten (aller tijden, drempel ≥5) ---
 console.log(`\n=== NIEUW: Overall top 10 (aller tijden, ≥${MIN_APP_ALLTIME} toernooien, beginners uitgesloten) ===`)
 console.log(fmt(buildLeaderboard(results, "all", MIN_APP_ALLTIME).slice(0, 10)))
