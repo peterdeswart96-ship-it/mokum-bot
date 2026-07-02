@@ -18,20 +18,23 @@ if (!sas) {
 // ---- Zelfde criteria als chat.js (issue #60) --------------------------------
 const DISCIPLINES = ["8-Ball", "9-Ball", "10-Ball"]
 const SCORING = { kampioen: 8, finalist: 5, halveFinale: 3, kwartFinale: 2, laatste16: 1, perGewonnenPartij: 0.2 }
-const BEGINNERS_SERIES = new Set(["Fluke Ranking", "Handicap Madness"])
+const EXCLUDE_FROM_OVERALL = new Set(["Fluke Ranking", "Handicap Madness", "Fun / Sociaal", "Mini / Last-minute"])
 const MIN_APP_PERIODE = 3
 const MIN_APP_ALLTIME = 5
-const MAIN_SERIES = ["Fluke Ranking", "Handicap Madness", "MEGA Ranking", "MEGA Summer Ranking", "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday"]
+const MAIN_SERIES = ["Fluke Ranking", "Handicap Madness", "Mokum 9ball Ranking", "MEGA Ranking", "MEGA Summer Ranking", "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday"]
 
 function classifySeries(name) {
   const n = (name || "").toLowerCase()
   if (n.includes("fluke")) return "Fluke Ranking"
   if (n.includes("madness")) return "Handicap Madness"
+  if (n.includes("mokum ranking 9ball") || (n.includes("eind toernooi") && n.includes("9ball ranking"))) return "Mokum 9ball Ranking"
   if (n.includes("mega") && n.includes("summer")) return "MEGA Summer Ranking"
   if (n.includes("mega")) return "MEGA Ranking"
   if (n.includes("8 & 10") || n.includes("& 10ball") || n.includes("8ball ranking") || n.includes("10ball ranking")) return "8/10ball Zaterdag"
   if (n.includes("onepocket") || n.includes("one pocket")) return "OnePocket Monthly"
   if (n.includes("sunday")) return "9 ball Sunday"
+  if (/familiediner|kerst|x-?mass|xmas|padel|students only/.test(n)) return "Fun / Sociaal"
+  if (/\bmini\b|last minute|monday challenge/.test(n)) return "Mini / Last-minute"
   return "Overig"
 }
 
@@ -40,8 +43,8 @@ function buildLeaderboard(rows, key, minAppearances = 1) {
   const agg = {}
   for (const r of rows) {
     const serie = classifySeries(r.tournamentName)
-    if (key === "all") { if (BEGINNERS_SERIES.has(serie)) continue }
-    else if (isDiscipline) { if ((r.discipline || "") !== key) continue; if (BEGINNERS_SERIES.has(serie)) continue }
+    if (key === "all") { if (EXCLUDE_FROM_OVERALL.has(serie)) continue }
+    else if (isDiscipline) { if ((r.discipline || "") !== key) continue; if (EXCLUDE_FROM_OVERALL.has(serie)) continue }
     else if (serie !== key) continue
     const pid = r.playerId
     if (!agg[pid]) agg[pid] = { name: r.playerName, score: 0, titles: 0, finals: 0, appearances: 0, wins: 0, losses: 0 }
@@ -101,7 +104,7 @@ console.log(vreemd.length ? `   ⚠️ Labels die NIET matchen met ${DISCIPLINES
 const serieCount = {}
 for (const r of results) { const s = classifySeries(r.tournamentName); serieCount[s] = (serieCount[s] || 0) + 1 }
 console.log("\n=== Reeks-classificatie (beginners worden uitgesloten uit overall/discipline) ===")
-Object.entries(serieCount).sort((a, b) => b[1] - a[1]).forEach(([s, n]) => console.log(`   ${s}${BEGINNERS_SERIES.has(s) ? " (beginner → uitgesloten)" : ""} → ${n}`))
+Object.entries(serieCount).sort((a, b) => b[1] - a[1]).forEach(([s, n]) => console.log(`   ${s}${EXCLUDE_FROM_OVERALL.has(s) ? " (uitgesloten uit overall/discipline)" : ""} → ${n}`))
 
 // Toernooinamen die als 'Overig' vallen (om verstopte reeksen zoals Handicap Madness te vinden).
 const overigNamen = {}

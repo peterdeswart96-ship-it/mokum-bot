@@ -496,6 +496,7 @@ async function tableQuery(table, filter, sasToken) {
 const SERIES_OPTIONS = [
   "Fluke Ranking",
   "Handicap Madness",
+  "Mokum 9ball Ranking",
   "MEGA Ranking",
   "MEGA Summer Ranking",
   "8/10ball Zaterdag",
@@ -511,6 +512,8 @@ function classifySeries(name) {
   const n = (name || "").toLowerCase()
   if (n.includes("fluke")) return "Fluke Ranking"
   if (n.includes("madness")) return "Handicap Madness"
+  if (n.includes("mokum ranking 9ball") || (n.includes("eind toernooi") && n.includes("9ball ranking")))
+    return "Mokum 9ball Ranking"
   if (n.includes("mega") && n.includes("summer")) return "MEGA Summer Ranking"
   if (n.includes("mega")) return "MEGA Ranking"
   if (
@@ -522,6 +525,9 @@ function classifySeries(name) {
     return "8/10ball Zaterdag"
   if (n.includes("onepocket") || n.includes("one pocket")) return "OnePocket Monthly"
   if (n.includes("sunday")) return "9 ball Sunday"
+  // Niet-competitief: fun/sociale events en losse mini/last-minute toernooitjes.
+  if (/familiediner|kerst|x-?mass|xmas|padel|students only/.test(n)) return "Fun / Sociaal"
+  if (/\bmini\b|last minute|monday challenge/.test(n)) return "Mini / Last-minute"
   return "Overig"
 }
 
@@ -547,6 +553,7 @@ function parseSeries(text) {
   const n = normalizeText(text)
   if (/\bfluke\b/.test(n)) return "Fluke Ranking"
   if (/\bmadness\b|handicap madness/.test(n)) return "Handicap Madness"
+  if (/mokum ranking 9ball|mokum 9ball ranking/.test(n)) return "Mokum 9ball Ranking"
   if (/\bmega\b/.test(n) && /summer|zomer/.test(n)) return "MEGA Summer Ranking"
   if (/\bmega\b/.test(n)) return "MEGA Ranking"
   if (/onepocket|one pocket|one-pocket/.test(n)) return "OnePocket Monthly"
@@ -658,9 +665,13 @@ const SCORING = {
   laatste16: 1, // "Last sixteen"
   perGewonnenPartij: 0.2,
 }
-// Beginners-reeksen: tellen NIET mee in de overall- en discipline-ranglijsten
-// (wel in hun eigen reeks-lijst).
-const BEGINNERS_SERIES = new Set(["Fluke Ranking", "Handicap Madness"])
+// Reeksen die NIET meetellen in de overall- en discipline-ranglijsten:
+// beginners (Fluke, Handicap Madness) + niet-competitieve events (fun/sociaal,
+// mini/last-minute). Beginners houden wél hun eigen reeks-lijst (via MAIN_SERIES);
+// fun/mini krijgen geen eigen blok.
+const EXCLUDE_FROM_OVERALL = new Set([
+  "Fluke Ranking", "Handicap Madness", "Fun / Sociaal", "Mini / Last-minute",
+])
 // Minimum aantal toernooien om in een ranglijst te verschijnen (schaalt met periode).
 const MIN_APP_PERIODE = 3 // begrensde periode (bijv. dit jaar/seizoen)
 const MIN_APP_ALLTIME = 5 // aller tijden
@@ -671,10 +682,10 @@ function buildLeaderboard(rows, key, minAppearances = 1) {
   for (const r of rows) {
     const serie = classifySeries(r.tournamentName)
     if (key === "all") {
-      if (BEGINNERS_SERIES.has(serie)) continue // beginners niet in overall
+      if (EXCLUDE_FROM_OVERALL.has(serie)) continue // beginners niet in overall
     } else if (isDiscipline) {
       if ((r.discipline || "") !== key) continue
-      if (BEGINNERS_SERIES.has(serie)) continue // beginners niet in discipline-lijst
+      if (EXCLUDE_FROM_OVERALL.has(serie)) continue // beginners niet in discipline-lijst
     } else if (serie !== key) {
       continue
     }
@@ -982,8 +993,8 @@ async function getResultatenContext(messages, sasToken) {
     const CRIT = ` Volgorde: meeste titels eerst (dan finales, dan prestatiepunten). Alleen spelers met ≥${minApp} toernooien in deze periode.`
 
     const MAIN_SERIES = [
-      "Fluke Ranking", "Handicap Madness", "MEGA Ranking", "MEGA Summer Ranking",
-      "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday",
+      "Fluke Ranking", "Handicap Madness", "Mokum 9ball Ranking", "MEGA Ranking",
+      "MEGA Summer Ranking", "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday",
     ]
     const DISCIPLINES_LBL = ["8-Ball", "9-Ball", "10-Ball"]
     const lijnen = (board, metWL) =>
