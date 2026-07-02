@@ -1,26 +1,28 @@
 // Kennisbronnen listen/verwijderen in Azure Blob Storage.
 //
-// Leest de SAS-token uit upload-kennisbronnen.ps1 (staat al in het repo) zodat de
-// credential niet op de command line hoeft. Alleen 'verwijder' is destructief.
+// Leest de SAS-token uit de omgevingsvariabele AZURE_STORAGE_SAS_TOKEN (nooit
+// hardcoden). Alleen 'verwijder' is destructief.
 //
-// Gebruik (vanuit projectmap):
-//   node api/scripts/kennisbron-beheer.mjs list [zoekterm]     # toon (gefilterde) blobs
-//   node api/scripts/kennisbron-beheer.mjs verwijder <blobnaam>  # verwijder één blob
-
-import fs from "fs"
+// Gebruik (vanuit projectmap), zet eerst de token:
+//   PowerShell:  $env:AZURE_STORAGE_SAS_TOKEN = "se=...&sig=..."
+//   bash:        export AZURE_STORAGE_SAS_TOKEN="se=...&sig=..."
+//   node api/scripts/kennisbron-beheer.mjs list [zoekterm]      # toon (gefilterde) blobs
+//   node api/scripts/kennisbron-beheer.mjs verwijder <blobnaam>   # verwijder één blob
 
 const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "kennisbronnen"
 const HOST = `${STORAGE_ACCOUNT}.blob.core.windows.net`
 const API_VERSION = "2020-04-08"
 
-// SAS uit het bestaande upload-script halen (of uit env KENNISBRON_SAS).
+// SAS-token uit de omgevingsvariabele (nooit hardcoden).
 function leesSas() {
-  if (process.env.KENNISBRON_SAS) return process.env.KENNISBRON_SAS
-  const ps1 = fs.readFileSync("upload-kennisbronnen.ps1", "utf8")
-  const m = ps1.match(/\$SasToken\s*=\s*"([^"]+)"/)
-  if (!m) throw new Error("SAS-token niet gevonden in upload-kennisbronnen.ps1")
-  return m[1]
+  const sas = process.env.AZURE_STORAGE_SAS_TOKEN || process.env.KENNISBRON_SAS
+  if (!sas) {
+    throw new Error(
+      "Geen SAS-token. Zet 'm eerst — PowerShell: $env:AZURE_STORAGE_SAS_TOKEN = '<token>' | bash: export AZURE_STORAGE_SAS_TOKEN='<token>'"
+    )
+  }
+  return sas
 }
 
 const sas = leesSas()

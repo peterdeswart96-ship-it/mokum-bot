@@ -20,6 +20,7 @@ const { app } = require("@azure/functions")
 const STORAGE_ACCOUNT = "mokumbotrg904a"
 const FOTOS_CONTAINER = "fotos"
 const CATALOG_BLOB = "_catalog.json"
+const META_BLOB = "_meta.json"
 const API_VERSION = "2020-04-08"
 // Foto's worden via de Functie geserveerd (proxy met server-side SAS) — de
 // container is niet publiek toegankelijk. Absolute URL zodat de afbeelding ook
@@ -133,6 +134,53 @@ function normTriggers(triggerWords) {
   return arr.map((t) => String(t).trim()).filter(Boolean)
 }
 
+// --- Vast referentienummer per foto (issue #55): "Pool-03", per categorie ---
+// Prefix uit de categorie (eerste woord, alfanumeriek). Wordt één keer toegekend
+// en blijft daarna vast (ook als de categorie later wijzigt).
+function refPrefix(categorie) {
+  const eerste = String(categorie || "Overig").split(/[&,/]/)[0].trim()
+  const clean = eerste.replace(/[^a-zA-Z0-9]/g, "")
+  const p = clean || "Overig"
+  return p.charAt(0).toUpperCase() + p.slice(1)
+}
+
+// _meta.json houdt per prefix de laatst uitgegeven teller bij (nooit hergebruikt).
+async function getMeta(sasToken) {
+  const res = await httpsRequest({
+    hostname: host(),
+    path: `/${FOTOS_CONTAINER}/${META_BLOB}?${sasToken}`,
+    method: "GET",
+    headers: { "x-ms-version": API_VERSION },
+  })
+  if (res.status === 200) {
+    try { const m = JSON.parse(res.body); return m && m.counters ? m : { counters: {} } } catch { return { counters: {} } }
+  }
+  return { counters: {} }
+}
+
+async function putMeta(meta, sasToken) {
+  const content = Buffer.from(JSON.stringify(meta, null, 2), "utf-8")
+  await httpsRequest({
+    hostname: host(),
+    path: `/${FOTOS_CONTAINER}/${META_BLOB}?${sasToken}`,
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": content.length,
+      "x-ms-blob-type": "BlockBlob",
+      "x-ms-version": API_VERSION,
+    },
+  }, content)
+}
+
+// Geeft het volgende referentienummer voor deze categorie en verhoogt de teller.
+function nextRef(meta, categorie) {
+  const p = refPrefix(categorie)
+  const n = (meta.counters[p] || 0) + 1
+  meta.counters[p] = n
+  return `${p}-${String(n).padStart(2, "0")}`
+}
+
 app.http("fotos", {
   methods: ["GET", "POST", "OPTIONS"],
   authLevel: "anonymous",
@@ -216,11 +264,24 @@ app.http("fotos", {
         }
         const catalog = await getCatalog(sasToken)
         const idx = catalog.findIndex((f) => f.bestand === veilig)
-        if (idx >= 0) catalog[idx] = { ...catalog[idx], ...entry }
-        else catalog.push(entry)
+        if (idx >= 0) {
+          // Her-upload van dezelfde bestandsnaam: ref blijft behouden (entry heeft geen ref-key).
+          catalog[idx] = { ...catalog[idx], ...entry }
+          if (!catalog[idx].ref) {
+            const meta = await getMeta(sasToken)
+            catalog[idx].ref = nextRef(meta, catalog[idx].categorie)
+            await putMeta(meta, sasToken)
+          }
+          entry.ref = catalog[idx].ref
+        } else {
+          const meta = await getMeta(sasToken)
+          entry.ref = nextRef(meta, entry.categorie)
+          await putMeta(meta, sasToken)
+          catalog.push(entry)
+        }
         await putCatalog(catalog, sasToken)
 
-        context.log(`Foto geupload: ${veilig} (${weergave}, gezichten=${heeftGezichten})`)
+        context.log(`Foto geupload: ${veilig} (${weergave}, gezichten=${heeftGezichten}, ref=${entry.ref})`)
         const { bestandEcht, ...veiligEntry } = entry
         return json(200, { success: true, foto: veiligEntry })
       }
@@ -266,6 +327,20 @@ app.http("fotos", {
         const next = catalog.filter((f) => f.bestand !== bestand)
         await putCatalog(next, sasToken)
         return json(200, { success: true })
+      }
+
+      // Kent vaste referentienummers toe aan alle foto's die er nog geen hebben (issue #55).
+      if (action === "assign-refs") {
+        const catalog = await getCatalog(sasToken)
+        const meta = await getMeta(sasToken)
+        let toegekend = 0
+        for (const f of catalog) {
+          if (!f.ref) { f.ref = nextRef(meta, f.categorie); toegekend++ }
+        }
+        await putMeta(meta, sasToken)
+        await putCatalog(catalog, sasToken)
+        context.log(`Referentienummers toegekend: ${toegekend}/${catalog.length}`)
+        return json(200, { success: true, toegekend, totaal: catalog.length })
       }
 
       return json(400, { error: `Onbekende actie: ${action}` })

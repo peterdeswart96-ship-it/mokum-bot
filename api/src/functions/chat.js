@@ -504,6 +504,8 @@ async function tableQuery(table, filter, sasToken) {
 
 const SERIES_OPTIONS = [
   "Fluke Ranking",
+  "Handicap Madness",
+  "Mokum 9ball Ranking",
   "MEGA Ranking",
   "MEGA Summer Ranking",
   "8/10ball Zaterdag",
@@ -518,6 +520,9 @@ const DISCIPLINES = ["8-Ball", "9-Ball", "10-Ball"]
 function classifySeries(name) {
   const n = (name || "").toLowerCase()
   if (n.includes("fluke")) return "Fluke Ranking"
+  if (n.includes("madness")) return "Handicap Madness"
+  if (n.includes("mokum ranking 9ball") || (n.includes("eind toernooi") && n.includes("9ball ranking")))
+    return "Mokum 9ball Ranking"
   if (n.includes("mega") && n.includes("summer")) return "MEGA Summer Ranking"
   if (n.includes("mega")) return "MEGA Ranking"
   if (
@@ -529,6 +534,9 @@ function classifySeries(name) {
     return "8/10ball Zaterdag"
   if (n.includes("onepocket") || n.includes("one pocket")) return "OnePocket Monthly"
   if (n.includes("sunday")) return "9 ball Sunday"
+  // Niet-competitief: fun/sociale events en losse mini/last-minute toernooitjes.
+  if (/familiediner|kerst|x-?mass|xmas|padel|students only/.test(n)) return "Fun / Sociaal"
+  if (/\bmini\b|last minute|monday challenge/.test(n)) return "Mini / Last-minute"
   return "Overig"
 }
 
@@ -541,10 +549,20 @@ function parseDiscipline(text) {
   return null
 }
 
+// Matcht de discipline van een toernooi (opgeslagen veld of naam) tegen de
+// gevraagde discipline ("8-Ball" -> zoekt "8 ball"). Robuust tegen labelverschillen.
+function disciplineMatch(text, wanted) {
+  const num = (String(wanted).match(/\d+/) || [])[0]
+  if (!num) return false
+  return new RegExp(`\\b${num}\\s*ball\\b`).test(normalizeText(text))
+}
+
 // Leidt de gevraagde reeks af uit (genormaliseerde) vraagtekst, of null.
 function parseSeries(text) {
   const n = normalizeText(text)
   if (/\bfluke\b/.test(n)) return "Fluke Ranking"
+  if (/\bmadness\b|handicap madness/.test(n)) return "Handicap Madness"
+  if (/mokum ranking 9ball|mokum 9ball ranking/.test(n)) return "Mokum 9ball Ranking"
   if (/\bmega\b/.test(n) && /summer|zomer/.test(n)) return "MEGA Summer Ranking"
   if (/\bmega\b/.test(n)) return "MEGA Ranking"
   if (/onepocket|one pocket|one-pocket/.test(n)) return "OnePocket Monthly"
@@ -645,26 +663,52 @@ function medalPrefix(i) {
   return i === 0 ? "🥇 " : i === 1 ? "🥈 " : i === 2 ? "🥉 " : ""
 }
 
-function buildLeaderboard(rows, key) {
+// --- Ranglijst-criteria (issue #60) ------------------------------------------
+// Puntensysteem: weegt de DIEPTE van elke toernooiloop; dient als tiebreak.
+// Titels wegen het zwaarst (zie de sortering onderaan buildLeaderboard).
+const SCORING = {
+  kampioen: 8,
+  finalist: 5, // runner-up
+  halveFinale: 3, // "Semi final"
+  kwartFinale: 2, // "Quarter final"
+  laatste16: 1, // "Last sixteen"
+  perGewonnenPartij: 0.2,
+}
+// Reeksen die NIET meetellen in de overall- en discipline-ranglijsten:
+// beginners (Fluke, Handicap Madness) + niet-competitieve events (fun/sociaal,
+// mini/last-minute). Beginners houden wél hun eigen reeks-lijst (via MAIN_SERIES);
+// fun/mini krijgen geen eigen blok.
+const EXCLUDE_FROM_OVERALL = new Set([
+  "Fluke Ranking", "Handicap Madness", "Fun / Sociaal", "Mini / Last-minute",
+])
+// Minimum aantal toernooien om in een ranglijst te verschijnen (schaalt met periode).
+const MIN_APP_PERIODE = 3 // begrensde periode (bijv. dit jaar/seizoen)
+const MIN_APP_ALLTIME = 5 // aller tijden
+
+function buildLeaderboard(rows, key, minAppearances = 1) {
   const isDiscipline = DISCIPLINES.includes(key)
   const agg = {}
   for (const r of rows) {
-    if (key !== "all") {
-      if (isDiscipline) {
-        if ((r.discipline || "") !== key) continue
-      } else if (classifySeries(r.tournamentName) !== key) continue
+    const serie = classifySeries(r.tournamentName)
+    if (key === "all") {
+      if (EXCLUDE_FROM_OVERALL.has(serie)) continue // beginners niet in overall
+    } else if (isDiscipline) {
+      if ((r.discipline || "") !== key) continue
+      if (EXCLUDE_FROM_OVERALL.has(serie)) continue // beginners niet in discipline-lijst
+    } else if (serie !== key) {
+      continue
     }
     const pid = r.playerId
     if (!agg[pid]) agg[pid] = { name: r.playerName, score: 0, titles: 0, finals: 0, appearances: 0, wins: 0, losses: 0 }
     const a = agg[pid]
     const champ = r.isChampion === true || r.isChampion === "true"
     const runner = r.isRunnerUp === true || r.isRunnerUp === "true"
-    let pts = champ ? 8 : runner ? 5
-      : r.reachedRound === "Semi final" ? 3
-      : r.reachedRound === "Quarter final" ? 2
-      : r.reachedRound === "Last sixteen" ? 1
+    let pts = champ ? SCORING.kampioen : runner ? SCORING.finalist
+      : r.reachedRound === "Semi final" ? SCORING.halveFinale
+      : r.reachedRound === "Quarter final" ? SCORING.kwartFinale
+      : r.reachedRound === "Last sixteen" ? SCORING.laatste16
       : 0
-    pts += (Number(r.wins) || 0) * 0.2
+    pts += (Number(r.wins) || 0) * SCORING.perGewonnenPartij
     a.score += pts
     a.appearances++
     a.wins += Number(r.wins) || 0
@@ -672,8 +716,16 @@ function buildLeaderboard(rows, key) {
     if (champ) a.titles++
     if (champ || runner) a.finals++
   }
-  return Object.values(agg).sort(
-    (x, y) => y.score - x.score || y.titles - x.titles || y.finals - x.finals || y.appearances - x.appearances
+  let board = Object.values(agg)
+  // Drempel voor kleine steekproeven; vangnet: nooit tot een lege lijst filteren.
+  if (minAppearances > 1) {
+    const gefilterd = board.filter((a) => a.appearances >= minAppearances)
+    if (gefilterd.length) board = gefilterd
+  }
+  // Competitief: meeste titels eerst, dan finales, dan diepte (score), dan winst.
+  return board.sort(
+    (x, y) =>
+      y.titles - x.titles || y.finals - x.finals || y.score - x.score || y.wins - x.wins || y.appearances - x.appearances
   )
 }
 
@@ -945,10 +997,13 @@ async function getResultatenContext(messages, sasToken) {
     const period = parsePeriod(flowText) || { all: true, label: "aller tijden" }
     const filter = period.all ? null : `date ge '${period.start}' and date le '${period.end}'`
     const rows = await tableQueryPaged("PlayerResults", filter, sasToken)
+    // Drempel schaalt met de periode; criteria-uitleg voor de bot (transparantie).
+    const minApp = period.all ? MIN_APP_ALLTIME : MIN_APP_PERIODE
+    const CRIT = ` Volgorde: meeste titels eerst (dan finales, dan prestatiepunten). Alleen spelers met ≥${minApp} toernooien in deze periode.`
 
     const MAIN_SERIES = [
-      "Fluke Ranking", "MEGA Ranking", "MEGA Summer Ranking",
-      "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday",
+      "Fluke Ranking", "Handicap Madness", "Mokum 9ball Ranking", "MEGA Ranking",
+      "MEGA Summer Ranking", "8/10ball Zaterdag", "OnePocket Monthly", "9 ball Sunday",
     ]
     const DISCIPLINES_LBL = ["8-Ball", "9-Ball", "10-Ball"]
     const lijnen = (board, metWL) =>
@@ -964,19 +1019,19 @@ async function getResultatenContext(messages, sasToken) {
     // 1) Specifieke reeks of discipline gevraagd -> alleen die ranglijst (top 10)
     const specifiek = series && series !== "all" ? series : perSeries ? null : discipline
     if (specifiek) {
-      const board = buildLeaderboard(rows, specifiek)
+      const board = buildLeaderboard(rows, specifiek, minApp)
       if (!board.length) return `---\nGEEN DATA: geen resultaten voor ${specifiek} in periode ${period.label}.\n---`
       return (
-        `---\nBESTE SPELERS (top 10) — ${specifiek} — ${period.label} (🥇🥈🥉 voor de top 3).${KNBB_OFFER}\n\n` +
+        `---\nBESTE SPELERS (top 10) — ${specifiek} — ${period.label} (🥇🥈🥉 voor de top 3).${CRIT}${KNBB_OFFER}\n\n` +
         lijnen(board.slice(0, 10), true) + "\n---"
       )
     }
 
     // 2) 'Alle toernooien gecombineerd' expliciet -> overall top 10
     if (series === "all") {
-      const board = buildLeaderboard(rows, "all")
+      const board = buildLeaderboard(rows, "all", minApp)
       return (
-        `---\nBESTE SPELERS (top 10) — Alle toernooien — ${period.label} (🥇🥈🥉 voor de top 3).${KNBB_OFFER}\n\n` +
+        `---\nBESTE SPELERS (top 10) — Alle toernooien — ${period.label} (🥇🥈🥉 voor de top 3).${CRIT}${KNBB_OFFER}\n\n` +
         lijnen(board.slice(0, 10), true) + "\n---"
       )
     }
@@ -984,29 +1039,29 @@ async function getResultatenContext(messages, sasToken) {
     // 3) Expliciet 'per toernooisoort' -> top 10 per reeks
     if (perSeries) {
       const blocks = MAIN_SERIES.map((s) => {
-        const b = buildLeaderboard(rows, s).slice(0, 10)
+        const b = buildLeaderboard(rows, s, minApp).slice(0, 10)
         return b.length ? `${s}:\n${lijnen(b)}` : `${s}: (geen resultaten)`
       }).join("\n\n")
-      return `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label} (presenteer per soort, 🥇🥈🥉 voor de top 3).${KNBB_OFFER}\n\n${blocks}\n---`
+      return `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label}. Toon ELKE hieronder opgegeven reeks die resultaten heeft, met een kopje per reeks; laat GEEN reeks-met-resultaten weg (sla alleen reeksen met "(geen resultaten)" over). 🥇🥈🥉 voor de top 3.${CRIT}${KNBB_OFFER}\n\n${blocks}\n---`
     }
 
     // 4) Algemeen ('wie zijn de beste spelers?') -> VOLLEDIG overzicht, geen wedervragen
     const perSoort = MAIN_SERIES.map((s) => {
-      const b = buildLeaderboard(rows, s).slice(0, 3)
+      const b = buildLeaderboard(rows, s, minApp).slice(0, 3)
       return b.length ? `${s}:\n${lijnen(b)}` : `${s}: (geen resultaten)`
     }).join("\n\n")
     const perDisc = DISCIPLINES_LBL.map((d) => {
-      const b = buildLeaderboard(rows, d).slice(0, 3)
+      const b = buildLeaderboard(rows, d, minApp).slice(0, 3)
       return b.length ? `${d}:\n${lijnen(b)}` : `${d}: (geen resultaten)`
     }).join("\n\n")
-    const overall = buildLeaderboard(rows, "all").slice(0, 5)
+    const overall = buildLeaderboard(rows, "all", minApp).slice(0, 5)
     return (
       `---\nINSTRUCTIE (VERPLICHT): De gebruiker heeft GEVRAAGD wie de beste spelers zijn. Hieronder staat het complete antwoord met ECHTE data. ` +
       `Toon deze drie ranglijsten NU direct, letterlijk en volledig in je antwoord, met nette opmaak (een kopje per deel, 🥇🥈🥉 voor de top 3). ` +
       `Verboden: een keuzemenu tonen, vragen "wat wil je zien?", of één van de delen weglaten. De gebruiker heeft het al gevraagd — geef gewoon het overzicht. ` +
       `Eindig met precies één korte ja/nee-vraag: of de gebruiker ook de top 20 op KNBB-rating van Mokum-spelers wil zien.\n\n` +
       `== DEEL 1 — OVERALL TOP 5 (alle toernooien) ==\n${lijnen(overall, true)}\n\n` +
-      `== DEEL 2 — TOP 3 PER TOERNOOISOORT (alle 6 tonen) ==\n${perSoort}\n\n` +
+      `== DEEL 2 — TOP 3 PER TOERNOOISOORT (toon ELKE reeks hieronder die resultaten heeft) ==\n${perSoort}\n\n` +
       `== DEEL 3 — TOP 3 PER SPELSOORT / DISCIPLINE (8-ball, 9-ball, 10-ball) ==\n${perDisc}\n---`
     )
   }
@@ -1043,13 +1098,22 @@ async function getResultatenContext(messages, sasToken) {
   }
 
   if (asksWinner && !players.length) {
+    const disc = parseDiscipline(lastMsg) // "8-Ball" / "9-Ball" / "10-Ball" of null
     const tours = await tableQuery("Tournaments", null, sasToken)
     tours.sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-    const recent = tours
+    // Vroeg een specifieke discipline? Filter daarop (op discipline-veld óf naam) zodat
+    // "laatste 8-ball toernooi" ook klopt als het buiten de recentste 12 zou vallen.
+    const pool = disc ? tours.filter((t) => disciplineMatch(t.discipline, disc) || disciplineMatch(t.name, disc)) : tours
+    const recent = pool
       .slice(0, 12)
       .map((t) => `  - ${t.date} | ${t.name} (${t.discipline}): winnaar ${t.winnerName || "?"}`)
       .join("\n")
-    if (recent) ctx += (ctx ? "\n\n" : "") + "RECENTE TOERNOOI-WINNAARS:\n" + recent
+    if (recent) {
+      const kop = disc
+        ? `RECENTE ${disc.toUpperCase()}-TOERNOOI-WINNAARS (nieuwste eerst; de bovenste is het meest recente ${disc}-toernooi):`
+        : "RECENTE TOERNOOI-WINNAARS (nieuwste eerst):"
+      ctx += (ctx ? "\n\n" : "") + kop + "\n" + recent
+    }
   }
 
   if (!ctx) return null

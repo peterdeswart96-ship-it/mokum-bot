@@ -763,9 +763,12 @@
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
             <div class="card-title" style="margin-bottom:0;">Foto-overzicht</div>
-            <div class="foto-view-toggle" role="group" aria-label="Weergave">
-              <button id="foto-view-details" onclick="setFotoView('details')" title="Detailweergave: bewerk categorie, onderschrift, trigger words en status">≣ Details</button>
-              <button id="foto-view-galerij" onclick="setFotoView('galerij')" title="Grote foto's met trigger words; overige details via het ⓘ-knopje">▦ Grote foto's</button>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="foto-view-toggle" role="group" aria-label="Weergave">
+                <button id="foto-view-details" onclick="setFotoView('details')" title="Detailweergave: bewerk categorie, onderschrift, trigger words en status">≣ Details</button>
+                <button id="foto-view-galerij" onclick="setFotoView('galerij')" title="Grote foto's met trigger words; overige details via het ⓘ-knopje">▦ Grote foto's</button>
+              </div>
+              <button class="btn-sm-red" onclick="kenRefsToe()" title="Kent elke foto zonder referentienummer een vast nummer toe (bijv. Pool-03). Bestaande nummers blijven ongewijzigd." style="white-space:nowrap;">🔖 Nummers toekennen</button>
             </div>
           </div>
           <div class="foto-filterbar">
@@ -1572,7 +1575,7 @@ function renderFotos() {
       html += `<div style="display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border:1px solid var(--border);border-radius:9px;margin-bottom:4px;background:var(--card);">
         ${preview}
         <div style="flex:1;min-width:0;">
-          <div style="color:var(--text);font-size:13px;font-weight:600;">${fEsc(f.onderschrift || f.bestand)} <span style="color:var(--muted);font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
+          <div style="color:var(--text);font-size:13px;font-weight:600;">${f.ref ? `<span style="background:var(--divider);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:0 6px;font-size:11px;font-weight:700;margin-right:6px;">#${fEsc(f.ref)}</span>` : ""}${fEsc(f.onderschrift || f.bestand)} <span style="color:var(--muted);font-weight:400;font-size:11px;">· ${fEsc(f.bestand)}</span></div>
           <div style="font-size:11px;color:var(--muted);margin:2px 0;">${weergaveLabel} · ${statusLabel}${gezichtLabel}</div>
           ${f.gelabeldDoorClaude ? '<div style="font-size:10px;color:var(--info);background:var(--info-soft);border:1px solid var(--info-border);border-radius:6px;padding:1px 7px;display:inline-block;margin:1px 0;">🤖 Door Claude gelabeld — pas hieronder gerust handmatig aan</div>' : ""}
           <div style="display:flex;flex-direction:column;gap:4px;margin-top:3px;">
@@ -1677,6 +1680,16 @@ async function fotoActie(payload) {
   const wachtwoord = sessionStorage.getItem("mkm-pwd") || ""
   const resp = await fetch(`${API}/fotos`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, wachtwoord }) })
   return resp.json()
+}
+
+// Kent vaste referentienummers (bijv. Pool-03) toe aan foto's zonder nummer (issue #55).
+async function kenRefsToe() {
+  if (!confirm("Vaste referentienummers toekennen aan alle foto's zonder nummer?\n\nBestaande nummers blijven ongewijzigd.")) return
+  try {
+    const r = await fotoActie({ action: "assign-refs" })
+    if (r && r.success) { alert(`Klaar — ${r.toegekend} nieuw(e) nummer(s) toegekend (${r.totaal} foto's totaal).`); laadFotos() }
+    else alert("Mislukt: " + ((r && r.error) || "onbekende fout"))
+  } catch (e) { alert("Mislukt: " + e.message) }
 }
 
 // ===== Standaardvragen per rubriek beheren (issue #33) =====
@@ -1826,7 +1839,7 @@ function rvRenderFotochips(key) {
   } else {
     box.innerHTML = fotos.map(b => {
       const f = alleFotos.find(x => x.bestand === b)
-      const cap = f ? (f.onderschrift || f.bestand) : b
+      const cap = f ? ((f.ref ? `#${f.ref} ` : "") + (f.onderschrift || f.bestand)) : b
       return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--divider);border:1px solid var(--border);border-radius:14px;padding:2px 6px 2px 10px;font-size:11px;color:var(--text);">${fEsc(cap)}<button onclick="rvFotoRemove('${fJs(key)}','${fJs(b)}')" title="Ontkoppel deze foto van dit antwoord (de foto blijft in je fotobibliotheek). Klik daarna op Opslaan." style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;">×</button></span>`
     }).join("")
   }
@@ -1847,7 +1860,7 @@ function rvRenderFotoresults(key) {
   const max = 40
   const toon = pool.slice(0, max)
   box.innerHTML = toon.map(f => {
-    const label = (f.onderschrift || f.bestand) + (f.categorie ? ` — ${f.categorie}` : "")
+    const label = (f.ref ? `#${f.ref} · ` : "") + (f.onderschrift || f.bestand) + (f.categorie ? ` — ${f.categorie}` : "")
     return `<div onclick="rvFotoAdd('${fJs(key)}','${fJs(f.bestand)}')" onmouseover="this.style.background='var(--divider)'" onmouseout="this.style.background='none'" style="padding:5px 9px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;"><span style="color:var(--good);font-weight:700;">＋</span> ${fEsc(label)}</div>`
   }).join("") + (pool.length > max ? `<div style="padding:5px 9px;font-size:10px;color:var(--muted);">…en nog ${pool.length - max}. Verfijn met zoeken.</div>` : "")
 }
@@ -1893,7 +1906,7 @@ function rvUpdateFotoPreview(key) {
   rvFotoIdx[key] = i
   const f = alleFotos.find(x => x.bestand === gekozen[i])
   if (!f) { box.innerHTML = `<div style="color:var(--muted);font-size:12px;">Foto niet gevonden.</div>`; return }
-  const cap = f.onderschrift || f.bestand
+  const cap = (f.ref ? `#${f.ref} · ` : "") + (f.onderschrift || f.bestand)
   const isPdf = /\.pdf$/i.test(f.bestand || "")
   const venster = f.weergave === "venster"
   const media = (isPdf || venster)

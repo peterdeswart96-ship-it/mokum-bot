@@ -55,6 +55,27 @@ for (const cat of CATEGORIES) {
   }
 }
 
+// VEILIGHEID: importeren vervangt de HELE index (incl. antwoorden, altijd-live en
+// definitief-status). Weiger te overschrijven als de index al inhoud heeft, tenzij
+// expliciet '--force' wordt meegegeven.
+const force = process.argv.includes("--force")
+try {
+  const huidig = (await (await fetch(`${API_URL}/api/standaardvragen`)).json()).vragen || []
+  const metAntwoord = huidig.filter((v) => ((v.antwoord && v.antwoord.nl) || "").trim()).length
+  if (huidig.length && metAntwoord && !force) {
+    console.error(
+      `\n⛔ GESTOPT: de index bevat al ${huidig.length} vragen waarvan ${metAntwoord} met een ingevuld antwoord.\n` +
+        `   Opnieuw seeden zou ALLES overschrijven (antwoorden, altijd-live én definitief-status gaan verloren).\n` +
+        `   Weet je het zeker? Draai dan opnieuw met --force:\n` +
+        `   node api/scripts/seed-standaardvragen.mjs <wachtwoord> --force\n`
+    )
+    process.exit(1)
+  }
+} catch (e) {
+  console.error("Kon de huidige index niet controleren:", e.message)
+  process.exit(1)
+}
+
 console.log(`Seed: ${entries.length} standaardvragen samengesteld. Versturen naar ${API_URL} ...`)
 
 const res = await fetch(`${API_URL}/api/standaardvragen`, {
