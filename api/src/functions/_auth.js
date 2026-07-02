@@ -13,7 +13,7 @@
 const crypto = require("crypto")
 
 // sha256("mkm!") — zelfde gedeelde dashboard-wachtwoord als nu
-const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+const DASHBOARD_HASH = process.env.DASHBOARD_HASH || "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
 
 // Entra-config (in te vullen als App Settings ná de tenant/app-registratie):
 const ENTRA_ISSUER = process.env.ENTRA_ISSUER || "" // bijv. https://<tenant>.ciamlogin.com/<tenantId>/v2.0

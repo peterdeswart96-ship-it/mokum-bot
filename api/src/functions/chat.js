@@ -1321,12 +1321,9 @@ app.http("gesprekken", {
       }
       // Eén gesprek verwijderen of als testvraag (de)markeren. Beveiligd met dashboard-wachtwoord.
       if ((action === "delete" || action === "mark") && request.method === "POST") {
-        const crypto = require("crypto")
         let cbody = {}
         try { cbody = await request.json() } catch {}
-        const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
-        const hash = cbody.wachtwoord ? crypto.createHash("sha256").update(cbody.wachtwoord).digest("hex") : ""
-        if (hash !== DASHBOARD_HASH) {
+        if (!checkPwd(cbody.wachtwoord)) {
           return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
         }
         const naam = cbody.blob
@@ -1376,13 +1373,10 @@ app.http("gesprekken", {
       }
       // Opschonen — verwijdert gesprekken vóór een datum. Beveiligd met dashboard-wachtwoord.
       if (action === "cleanup" && request.method === "POST") {
-        const crypto = require("crypto")
         let cbody = {}
         try { cbody = await request.json() } catch {}
         const { wachtwoord, voor, dryrun } = cbody
-        const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
-        const hash = wachtwoord ? crypto.createHash("sha256").update(wachtwoord).digest("hex") : ""
-        if (hash !== DASHBOARD_HASH) {
+        if (!checkPwd(wachtwoord)) {
           return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
         }
         if (!voor || !/^\d{4}-\d{2}-\d{2}(T\d{2}-\d{2}(-\d{2})?)?$/.test(voor)) {
@@ -1855,14 +1849,7 @@ app.http("auth", {
         }
       }
 
-      // Hash het wachtwoord server-side
-      const crypto = require("crypto")
-      const hash = crypto.createHash("sha256").update(wachtwoord).digest("hex")
-
-      // Enige geldige hash — mkm!
-      const DASHBOARD_HASH = "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
-
-      if (hash === DASHBOARD_HASH) {
+      if (checkPwd(wachtwoord)) {
         // Genereer een tijdelijk sessie token (geldig voor 8 uur)
         const token = crypto.randomBytes(32).toString("hex")
         const expiry = Date.now() + (8 * 60 * 60 * 1000)
