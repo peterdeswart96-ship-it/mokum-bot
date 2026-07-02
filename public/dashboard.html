@@ -2181,7 +2181,7 @@ async function fotoWizardStap2(btn) {
   try {
     const r = await fetch(`${API}/foto-suggestie`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contentBase64: _fwPrepared.b64, contentType: _fwPrepared.type, categorieen, bedrijf: "Mokum Pool & Darts" }),
+      body: JSON.stringify({ contentBase64: _fwPrepared.b64, contentType: _fwPrepared.type, categorieen, bedrijf: "Mokum Pool & Darts", wachtwoord: sessionStorage.getItem("mkm-pwd") || "" }),
     })
     if (r.ok) { const d = await r.json(); suggestie = d.suggestie }
   } catch (e) {}
@@ -3225,7 +3225,7 @@ async function startAnalyse(type) {
     const response = await fetch(`${API}/analyse`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gesprekken: sample, type })
+      body: JSON.stringify({ gesprekken: sample, type, wachtwoord: sessionStorage.getItem("mkm-pwd") || "" })
     })
 
     const data = await response.json()
@@ -3416,7 +3416,7 @@ async function wizardStap2(btn) {
     const resp = await fetch(`${API}/kennis-suggestie`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ omschrijving, vraag: _kennisVraag, antwoord: _kennisAntwoord, categorieen, bedrijf: "Mokum Pool & Darts" }),
+      body: JSON.stringify({ omschrijving, vraag: _kennisVraag, antwoord: _kennisAntwoord, categorieen, bedrijf: "Mokum Pool & Darts", wachtwoord: sessionStorage.getItem("mkm-pwd") || "" }),
     })
     if (resp.ok) { const data = await resp.json(); suggestie = data.suggestie }
   } catch (e) { /* val terug op vaste regels */ }
@@ -3533,7 +3533,7 @@ async function voerUploadUit() {
     const resp = await fetch(`${API}/kennisbron-upload`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bestandsnaam: naam, map, inhoud })
+      body: JSON.stringify({ bestandsnaam: naam, map, inhoud, wachtwoord: sessionStorage.getItem("mkm-pwd") || "" })
     })
     const data = await resp.json()
     if (data.success) {
@@ -3545,7 +3545,7 @@ async function voerUploadUit() {
       terugBtn.onclick = () => wizardReset()
       // Automatisch een Engelse versie aanmaken zodat EN-bezoekers die direct krijgen.
       try {
-        const vr = await fetch(`${API}/kennisbron-vertaal`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pad: data.pad }) })
+        const vr = await fetch(`${API}/kennisbron-vertaal`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pad: data.pad, wachtwoord: sessionStorage.getItem("mkm-pwd") || "" }) })
         const vd = await vr.json()
         const enStatus = document.getElementById("upload-en-status")
         if (enStatus) enStatus.innerHTML = vd.success
