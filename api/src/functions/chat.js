@@ -1033,7 +1033,7 @@ async function getResultatenContext(messages, sasToken) {
         const b = buildLeaderboard(rows, s, minApp).slice(0, 10)
         return b.length ? `${s}:\n${lijnen(b)}` : `${s}: (geen resultaten)`
       }).join("\n\n")
-      return `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label} (presenteer per soort, 🥇🥈🥉 voor de top 3).${CRIT}${KNBB_OFFER}\n\n${blocks}\n---`
+      return `---\nTOP 10 SPELERS PER TOERNOOISOORT — ${period.label}. Toon ELKE hieronder opgegeven reeks die resultaten heeft, met een kopje per reeks; laat GEEN reeks-met-resultaten weg (sla alleen reeksen met "(geen resultaten)" over). 🥇🥈🥉 voor de top 3.${CRIT}${KNBB_OFFER}\n\n${blocks}\n---`
     }
 
     // 4) Algemeen ('wie zijn de beste spelers?') -> VOLLEDIG overzicht, geen wedervragen
@@ -1052,7 +1052,7 @@ async function getResultatenContext(messages, sasToken) {
       `Verboden: een keuzemenu tonen, vragen "wat wil je zien?", of één van de delen weglaten. De gebruiker heeft het al gevraagd — geef gewoon het overzicht. ` +
       `Eindig met precies één korte ja/nee-vraag: of de gebruiker ook de top 20 op KNBB-rating van Mokum-spelers wil zien.\n\n` +
       `== DEEL 1 — OVERALL TOP 5 (alle toernooien) ==\n${lijnen(overall, true)}\n\n` +
-      `== DEEL 2 — TOP 3 PER TOERNOOISOORT (alle 6 tonen) ==\n${perSoort}\n\n` +
+      `== DEEL 2 — TOP 3 PER TOERNOOISOORT (toon ELKE reeks hieronder die resultaten heeft) ==\n${perSoort}\n\n` +
       `== DEEL 3 — TOP 3 PER SPELSOORT / DISCIPLINE (8-ball, 9-ball, 10-ball) ==\n${perDisc}\n---`
     )
   }
