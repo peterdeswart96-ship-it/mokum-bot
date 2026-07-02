@@ -3,9 +3,9 @@ const https = require("https")
 const crypto = require("crypto")
 
 // Dashboard-wachtwoordcheck (gedeeld met de auth/gesprekken-endpoints).
-// De hardcoded hash is bewust een fallback: later zetten we DASHBOARD_HASH als
-// env-var in Azure en halen we de fallback weg — issue #68.
-const DASHBOARD_HASH = process.env.DASHBOARD_HASH || "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+// De hash komt uit de App Setting DASHBOARD_HASH in Azure (#68). Geen fallback meer:
+// ontbreekt de env-var, dan faalt elke check (fail-closed) i.p.v. terug te vallen op een hash in de repo.
+const DASHBOARD_HASH = process.env.DASHBOARD_HASH
 function checkPwd(wachtwoord) {
   return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
 }

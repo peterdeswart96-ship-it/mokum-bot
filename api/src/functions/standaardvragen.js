@@ -21,8 +21,8 @@ const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "standaardvragen"
 const INDEX_BLOB = "_index.json"
 const API_VERSION = "2020-04-08"
-// sha256("mkm!") — zelfde dashboard-wachtwoord als de auth/fotos endpoints
-const DASHBOARD_HASH = process.env.DASHBOARD_HASH || "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+// Dashboard-wachtwoord-hash uit de App Setting DASHBOARD_HASH in Azure (#68) — geen fallback in de repo.
+const DASHBOARD_HASH = process.env.DASHBOARD_HASH
 
 const RUBRIEKEN = ["toernooien", "spelen", "praktisch", "service", "overig"]
 

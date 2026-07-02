@@ -26,8 +26,8 @@ const API_VERSION = "2020-04-08"
 // container is niet publiek toegankelijk. Absolute URL zodat de afbeelding ook
 // vanaf de klant-website (embed-widget) laadt.
 const FUNC_BASE = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
-// sha256("mkm!") — zelfde dashboard-wachtwoord als de auth/cleanup endpoints
-const DASHBOARD_HASH = process.env.DASHBOARD_HASH || "e76ba1957d8c978fc25c9ca24af6280569876436d3fe9ca6418a43144f2f7265"
+// Dashboard-wachtwoord-hash uit de App Setting DASHBOARD_HASH in Azure (#68) — geen fallback in de repo.
+const DASHBOARD_HASH = process.env.DASHBOARD_HASH
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
