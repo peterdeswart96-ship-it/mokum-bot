@@ -1175,6 +1175,36 @@ function chatSanitizeMessages(messages) {
     .map((m) => ({ role: m.role, content: m.content.slice(0, CHAT_MAX_CONTENT_LEN) }))
 }
 
+// Leest alle text-blocks uit een Claude-respons robuust uit (#72). Voorkomt een crash of
+// vervuilde output als het eerste content-block geen tekst is (bv. een leeg block of tool_use):
+// filtert op text-blocks en plakt ze aan elkaar i.p.v. blind content[0].text te pakken.
+function leesClaudeTekst(response) {
+  return (response && Array.isArray(response.content) ? response.content : [])
+    .filter((b) => b && b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+}
+
+// CORS voor dashboard-endpoints (#72): alleen de dashboard-origin, niet '*'. Reflecteert de
+// origin als die op de allowlist staat, anders de canonieke productie-origin — zo blokkeert de
+// browser een niet-toegestane cross-origin respons. Publieke widget-endpoints (chat,
+// terugbelverzoek) houden bewust '*' zodat de widget op elke klant-site blijft werken.
+// NB: CORS beschermt alleen browser-verkeer; de echte gate op deze endpoints is checkPwd.
+const DASHBOARD_ORIGINS = [
+  "https://mokum-bot.pdscloud.nl", // productie-dashboard (GitHub Pages, main-CNAME)
+  "http://localhost:5173",         // lokale dev (Vite)
+]
+function dashboardCors(request, methods) {
+  const origin = request.headers.get("origin") || ""
+  const allow = DASHBOARD_ORIGINS.includes(origin) ? origin : DASHBOARD_ORIGINS[0]
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Methods": methods,
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Vary": "Origin",
+  }
+}
+
 app.http("chat", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
@@ -1304,7 +1334,7 @@ app.http("chat", {
         system: systemBlocks,
         messages: messages,
       })
-      let reply = response.content[0].text
+      let reply = leesClaudeTekst(response)
       // Vangnet: matchte er een relevante foto maar liet de bot 'm weg? Voeg 'm alsnog toe.
       if (fotoContext && Array.isArray(fotoContext.fotos)) {
         for (const f of fotoContext.fotos) {
@@ -1334,11 +1364,7 @@ app.http("gesprekken", {
   methods: ["GET", "POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "GET, POST, OPTIONS")
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
@@ -1503,11 +1529,7 @@ app.http("analyse", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "POST, OPTIONS")
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
@@ -1545,7 +1567,7 @@ app.http("analyse", {
         messages: [{ role: "user", content: `Analyseer deze ${Math.min(gesprekken.length, 50)} gesprekken van de Mokum Bot:\n\n${vragenTekst}` }],
       })
 
-      const text = response.content[0].text
+      const text = leesClaudeTekst(response)
       let analyse
       try {
         // Probeer direct te parsen
@@ -1594,11 +1616,7 @@ app.http("kennisbron-upload", {
   methods: ["GET", "POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "GET, POST, OPTIONS")
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
@@ -1692,11 +1710,7 @@ app.http("kennis-suggestie", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "POST, OPTIONS")
     if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
@@ -1735,7 +1749,7 @@ ${omschrijving || "(geen extra omschrijving — leid het af uit de vraag)"}`
         messages: [{ role: "user", content: userMsg }],
       })
 
-      let text = (response.content[0]?.text || "").replace(/```json|```/g, "").trim()
+      let text = leesClaudeTekst(response).replace(/```json|```/g, "").trim()
       let suggestie
       try {
         suggestie = JSON.parse(text)
@@ -1767,11 +1781,7 @@ app.http("foto-suggestie", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "POST, OPTIONS")
     if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
@@ -1805,7 +1815,7 @@ Antwoord ALLEEN met geldig JSON, zonder markdown:
         messages: [{ role: "user", content: userContent }],
       })
 
-      let text = (response.content[0]?.text || "").replace(/```json|```/g, "").trim()
+      let text = leesClaudeTekst(response).replace(/```json|```/g, "").trim()
       let s
       try {
         s = JSON.parse(text)
@@ -1833,11 +1843,7 @@ app.http("kennisbron-vertaal", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "POST, OPTIONS")
     if (request.method === "OPTIONS") return { status: 204, headers: corsHeaders }
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
@@ -1866,7 +1872,7 @@ Regels:
         system,
         messages: [{ role: "user", content: inhoud }],
       })
-      const vertaald = (response.content[0]?.text || "").trim()
+      const vertaald = leesClaudeTekst(response).trim()
       if (!vertaald) return json(502, { error: "Lege vertaling" })
 
       const enPad = pad.replace(/\.(txt|md)$/i, ".en.$1")
@@ -1893,11 +1899,7 @@ app.http("auth", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    }
+    const corsHeaders = dashboardCors(request, "POST, OPTIONS")
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
