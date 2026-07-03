@@ -347,6 +347,7 @@
 
       // Sluit knop
       const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.red};font-size:26px;font-weight:bold;padding:0 2px;line-height:1;`)
+      closeBtn.title = state.lang === 'nl' ? 'Sluit dit venster' : 'Close this window'
 
       hdrR.append(homeBtn, flagsWrap, closeBtn)
       hdr.append(hdrL, hdrR)

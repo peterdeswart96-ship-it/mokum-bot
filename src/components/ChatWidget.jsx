@@ -558,6 +558,7 @@ export default function ChatWidget() {
 
               <button
                 onClick={() => setOpen(false)}
+                title={lang === "nl" ? "Sluit dit venster" : "Close this window"}
                 style={{ background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: "26px", fontWeight: "bold", padding: "0 2px", lineHeight: 1 }}
               >✕</button>
             </div>
