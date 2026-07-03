@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import BUBBLE_TEXTS from "../config/bubble-texts"
 import translations from "../config/translations"
+import cfg from "../../public/configs/default.json"
 
 const API_URL = import.meta.env.VITE_API_URL || "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
 
@@ -26,10 +27,11 @@ const C = {
   anthracite: "#26262b",
 }
 
+// Config-bron (#75): positie uit public/configs/default.json (gedeeld met widget.js)
 const WIDGET_CONFIG = {
-  bottom: "70px",
-  right:  "24px",
-  width:  "440px",
+  bottom: cfg.position.offsetY + "px",
+  right:  cfg.position.offsetX + "px",
+  width:  cfg.position.width,
 }
 
 // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
@@ -39,14 +41,8 @@ const RATE_WINDOW = 30000 // 30 seconden
 const DUP_MAX = 2
 const DUP_WINDOW = 60000 // 60 seconden
 
-// Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
-const CATEGORIES = [
-  { id: "toernooien", emoji: "🏆", topics: ["toernooien", "resultaten", "amsterdam-open"], newTopics: ["resultaten"], starTopics: ["amsterdam-open"] },
-  { id: "spelen",     emoji: "🎱", topics: ["pool", "darts", "spelregels", "gaming"] },
-  { id: "praktisch",  emoji: "ℹ️", topics: ["openingstijden", "tarieven", "locatie", "eten-drinken", "sport"] },
-  { id: "service",    emoji: "🛠️", topics: ["keu-reparatie", "keu-shop", "clinics"] },
-  { id: "overig",     emoji: "📋", topics: ["intern", "anders"] },
-]
+// Rubrieken gegroepeerd per categorie — uit de gedeelde config (#75)
+const CATEGORIES = cfg.categories
 
 // Responsive breedte: op mobiel (< 480px) bijna volledige schermbreedte
 function getWidgetWidth(expanded) {
@@ -75,7 +71,7 @@ function getWidgetRight() {
 }
 
 const INTERN_HASH = "3bed2cb3a3acf7b6a8ef408420cc682d5520e26976d354254f528c965612054f"
-const DEFAULT_LANG = "nl"
+const DEFAULT_LANG = cfg.language.default
 
 // SVG vlaggen — werken altijd, ook zonder emoji-ondersteuning
 function FlagNL({ size = 24 }) {
