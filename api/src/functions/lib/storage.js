@@ -4,6 +4,7 @@
 const https = require("https")
 
 const STORAGE_ACCOUNT = "mokumbotrg904a"
+const CONTAINER = "kennisbronnen"
 
 function httpsRequest(options, body) {
   return new Promise((resolve, reject) => {
@@ -30,4 +31,41 @@ function nieuweBlobNaam() {
   return `${amsTijd}-${random}.json`
 }
 
-module.exports = { STORAGE_ACCOUNT, httpsRequest, nieuweBlobNaam }
+async function fetchBlobContent(blobPath, sasToken) {
+  try {
+    // Encode de bestandsnaam correct — spaties en speciale tekens in bestandsnamen
+    const encodedPath = blobPath.split("/").map(segment => encodeURIComponent(segment)).join("/")
+    const options = {
+      hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+      path: `/${CONTAINER}/${encodedPath}?${sasToken}`,
+      method: "GET",
+      headers: { "x-ms-version": "2020-04-08" },
+    }
+    const result = await httpsRequest(options)
+    if (result.status === 200) return result.body
+    return null
+  } catch (err) {
+    console.log(`Blob ophalen mislukt (${blobPath}):`, err.message)
+    return null
+  }
+}
+
+async function listAllBlobs(sasToken) {
+  try {
+    const options = {
+      hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+      path: `/${CONTAINER}?restype=container&comp=list&${sasToken}`,
+      method: "GET",
+      headers: { "x-ms-version": "2020-04-08" },
+    }
+    const result = await httpsRequest(options)
+    if (result.status !== 200) return []
+    const matches = [...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)]
+    return matches.map(m => m[1])
+  } catch (err) {
+    console.log("Blobs listen mislukt:", err.message)
+    return []
+  }
+}
+
+module.exports = { STORAGE_ACCOUNT, CONTAINER, httpsRequest, nieuweBlobNaam, fetchBlobContent, listAllBlobs }
