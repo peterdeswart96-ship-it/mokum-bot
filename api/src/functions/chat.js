@@ -2082,6 +2082,12 @@ app.timer("terugbelOpschonen", {
             if (!aangevraagd || aangevraagd > grens) continue
             // Persoonsgegevens redigeren, het gesprek zelf behouden.
             data.terugbelData = { aangevraagdOp: td.aangevraagdOp, status: td.status || "verlopen", verlopen: true }
+            // Bij een terugbel-only gesprek (geen echte chat) staat de vrije tekst 'onderwerp' ook in
+            // messages[0] — die kopie ook redigeren, anders blijft PII na 30 dagen achter (#74).
+            // Echte chats (reply gevuld of meerdere berichten) laten we ongemoeid.
+            if (data.terugbelVerzoek && !data.reply && Array.isArray(data.messages) && data.messages.length === 1) {
+              data.messages = [{ role: "user", content: "[terugbelverzoek — persoonsgegevens verwijderd]" }]
+            }
             const content = JSON.stringify(data, null, 2)
             await httpsRequest({ hostname: host, path: `/gesprekken/${encodeURIComponent(naam)}?${sasToken}`, method: "PUT", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(content), "x-ms-blob-type": "BlockBlob", "x-ms-version": "2020-04-08" } }, content)
             geredigeerd++
