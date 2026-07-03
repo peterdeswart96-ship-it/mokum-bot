@@ -24,7 +24,8 @@
     anthracite: '#26262b',
   }
 
- const WIDGET_CONFIG = { bottom: '70px', right: '24px', width: '440px' } // right=24 lijnt de 8-bal-launcher horizontaal uit met de WhatsApp-knop
+ const WIDGET_CONFIG = { bottom: '24px', right: '24px', width: '440px' } // right=24 lijnt de 8-bal-launcher horizontaal uit met de WhatsApp-knop; bottom=24 → gelijke marge rechts/onder
+  const LAUNCHER_SCALE = 1.5 // 8-bal + tekstballon samen 50% groter (verankerd rechtsonder, zie floatWrap)
 
   // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
   const RATE_MAX = 2
@@ -660,7 +661,8 @@
 
     // Floating knop
     if (!state.open) {
-      const floatWrap = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;`)
+      // De hele launcher (8-bal + tekstballon) schaalt als één geheel mee; origin rechtsonder houdt de hoek op zijn plek.
+      const floatWrap = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;transform:scale(${LAUNCHER_SCALE});transform-origin:bottom right;`)
 
       const bubble = el('div', 'position:relative;display:inline-block;margin-bottom:18px;')
       const bubbleInner = el('div', 'background:white;border:3.5px solid #111;border-radius:12px;padding:10px 16px;position:relative;')
