@@ -8,7 +8,7 @@ _Laatst bijgewerkt: 2026-07-03. Zie `docs/sessions/` voor uitgebreide logs per c
 - **🔒 Server-side rate limit + input-cap** op `/api/chat` (#67, gesloten). · **`.env` uit repo** (#70, gesloten) + dode App Setting `AZURE_STORAGE_CONNECTION_STRING` opgeruimd.
 - **AVG terugbelverzoeken** (#74, gesloten): opschoning redigeert nu ook de vrije-tekst-kopie in `messages`; analyse-doc `docs/avg-terugbelverzoeken.md` (input #39).
 - **WhatsApp-nummer verborgen**: bot toont alleen een klikbare WhatsApp-link, nooit losse cijfers (voorkomt bellen i.p.v. appen).
-- **Widget Customizer-epic (#75–#84)** — **parallelle sessie werkt hieraan**; #75 (config-bron), #76 (config-loader), #85/#86 (UI) staan al live. Laat dit blok met rust om botsingen te voorkomen.
+- **Widget Customizer-epic (#75–#84)** — **frontend-lane**: fundering staat live — **#75** (config-bron `public/configs/default.json`, sluit #73), **#76** (config-loader `data-client` + fallback-keten), **#85/#86** (rubrieken-scroll + sluitkruisje) + tooltip op de ✕. **Volgende frontend-stap: #77** (dashboard "Widget Customizer"-pagina + live preview). Widget-teksten wijzigen = `public/configs/default.json` bewerken; zie `docs/config-schema.md`.
 - Ouder: dashboard-endpoints wachtwoord-beveiligd (#65/#66), `DASHBOARD_HASH` uit Azure App Setting (#68), standaardvragen (#33), ranglijsten (#60), foto-nummering (#55/#58/#63).
 
 ## Loopt / wacht

@@ -23,3 +23,6 @@ src/config/bubbletexts.js
 .env
 .env.*
 !.env.example
+
+# Persoonlijke Claude Code-instellingen (niet delen)
+.claude/settings.local.json
