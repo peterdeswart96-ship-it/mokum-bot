@@ -13,11 +13,11 @@
 //   POST {action:"update"}   -> catalogus-entry bewerken (wachtwoord)
 //   POST {action:"delete"}   -> foto + entry verwijderen (wachtwoord)
 
-const https = require("https")
 const crypto = require("crypto")
 const { app } = require("@azure/functions")
+const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
+const { checkPwd } = require("./lib/auth")
 
-const STORAGE_ACCOUNT = "mokumbotrg904a"
 const FOTOS_CONTAINER = "fotos"
 const CATALOG_BLOB = "_catalog.json"
 const META_BLOB = "_meta.json"
@@ -26,9 +26,6 @@ const API_VERSION = "2020-04-08"
 // container is niet publiek toegankelijk. Absolute URL zodat de afbeelding ook
 // vanaf de klant-website (embed-widget) laadt.
 const FUNC_BASE = "https://mokum-bot-api-enchhkeydye0fnek.westeurope-01.azurewebsites.net"
-// Dashboard-wachtwoord-hash uit de App Setting DASHBOARD_HASH in Azure (#68) — geen fallback in de repo.
-const DASHBOARD_HASH = process.env.DASHBOARD_HASH
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
@@ -37,23 +34,6 @@ const corsHeaders = {
 
 function json(status, obj) {
   return { status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) }
-}
-
-function checkPwd(wachtwoord) {
-  return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
-}
-
-function httpsRequest(options, body) {
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
-      const chunks = []
-      res.on("data", (c) => chunks.push(c))
-      res.on("end", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString("utf-8") }))
-    })
-    req.on("error", reject)
-    if (body) req.write(body)
-    req.end()
-  })
 }
 
 function host() {

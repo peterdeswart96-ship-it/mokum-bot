@@ -13,17 +13,14 @@
 //   POST {action:"delete"}    -> één vraag verwijderen (wachtwoord)
 //   POST {action:"import"}    -> hele lijst vervangen, voor seeding (wachtwoord)
 
-const https = require("https")
 const crypto = require("crypto")
 const { app } = require("@azure/functions")
+const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
+const { checkPwd } = require("./lib/auth")
 
-const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "standaardvragen"
 const INDEX_BLOB = "_index.json"
 const API_VERSION = "2020-04-08"
-// Dashboard-wachtwoord-hash uit de App Setting DASHBOARD_HASH in Azure (#68) — geen fallback in de repo.
-const DASHBOARD_HASH = process.env.DASHBOARD_HASH
-
 const RUBRIEKEN = ["toernooien", "spelen", "praktisch", "service", "overig"]
 
 const corsHeaders = {
@@ -36,25 +33,8 @@ function json(status, obj) {
   return { status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) }
 }
 
-function checkPwd(wachtwoord) {
-  return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
-}
-
 function host() {
   return `${STORAGE_ACCOUNT}.blob.core.windows.net`
-}
-
-function httpsRequest(options, body) {
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
-      const chunks = []
-      res.on("data", (c) => chunks.push(c))
-      res.on("end", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString("utf-8") }))
-    })
-    req.on("error", reject)
-    if (body) req.write(body)
-    req.end()
-  })
 }
 
 async function ensureContainer(sasToken) {

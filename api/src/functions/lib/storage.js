@@ -6,12 +6,15 @@ const https = require("https")
 const STORAGE_ACCOUNT = "mokumbotrg904a"
 const CONTAINER = "kennisbronnen"
 
+// Verzamelt de respons als Buffers en decodeert daarna pas naar UTF-8. Belangrijk: bij
+// string-concatenatie per chunk kan een multi-byte teken (é, ë, …) dat over een chunk-grens
+// valt corrupt raken; Buffer.concat voorkomt dat. (#71 — geünificeerd met fotos/standaardvragen.)
 function httpsRequest(options, body) {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
-      let data = ""
-      res.on("data", chunk => data += chunk)
-      res.on("end", () => resolve({ status: res.statusCode, body: data }))
+      const chunks = []
+      res.on("data", (c) => chunks.push(c))
+      res.on("end", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString("utf-8") }))
     })
     req.on("error", reject)
     if (body) req.write(body)
