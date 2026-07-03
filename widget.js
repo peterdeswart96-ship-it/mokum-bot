@@ -24,8 +24,8 @@
     anthracite: '#26262b',
   }
 
- const WIDGET_CONFIG = { bottom: '24px', right: '24px', width: '440px' } // right=24 lijnt de 8-bal-launcher horizontaal uit met de WhatsApp-knop; bottom=24 → gelijke marge rechts/onder
-  const LAUNCHER_SCALE = 1.5 // 8-bal + tekstballon samen 50% groter (verankerd rechtsonder, zie floatWrap)
+ let WIDGET_CONFIG = { bottom: '24px', right: '24px', width: '440px' } // right=24 lijnt de 8-bal-launcher horizontaal uit met de WhatsApp-knop; bottom=24 → gelijke marge rechts/onder
+  let LAUNCHER_SCALE = 1.5 // 8-bal + tekstballon samen 50% groter (verankerd rechtsonder, zie floatWrap)
 
   // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
   const RATE_MAX = 2
@@ -34,188 +34,54 @@
   const DUP_MAX = 2
   const DUP_WINDOW = 60000 // 60 seconden
 
-  // Rubrieken gegroepeerd per categorie (topic-ids verwijzen naar t.topics)
-  const CATEGORIES = [
-    { id: 'toernooien', emoji: '🏆', topics: ['toernooien', 'resultaten', 'amsterdam-open'], newTopics: ['resultaten'], starTopics: ['amsterdam-open'] },
-    { id: 'spelen', emoji: '🎱', topics: ['pool', 'darts', 'spelregels', 'gaming'] },
-    { id: 'praktisch', emoji: 'ℹ️', topics: ['openingstijden', 'tarieven', 'locatie', 'eten-drinken', 'sport'] },
-    { id: 'service', emoji: '🛠️', topics: ['keu-reparatie', 'keu-shop', 'clinics'] },
-    { id: 'overig', emoji: '📋', topics: ['intern', 'anders'] },
-  ]
+  // ── Config-bron (#75) ─────────────────────────────────────────────────────
+  // Eén bestand is de bron voor alle teksten/topics/vragen/bubble/positie:
+  // public/configs/default.json. widget.js fetcht dat at runtime (loadConfig);
+  // de React-build importeert hetzelfde bestand at build-time (src/config/*).
+  // FALLBACK is een minimaal vangnet: faalt de fetch, dan opent de 8-bal nog
+  // steeds en werkt vrij typen/versturen — alleen zonder topic-chips.
+  const SELF_SRC = (document.currentScript && document.currentScript.src) || ''
+  const FALLBACK = {
+    nl: { welcome: 'Hey! Ik ben de Mokum Magic 8 Ball 🎱 Waar kan ik je mee helpen?', typing: 'Aan het typen...', placeholder: 'Stel een vraag...', error: 'Oeps, er ging iets mis. Probeer het nog eens! 🎱', duplicateMsg: 'Die vraag heb je net al gesteld 🙂 Probeer gerust iets anders te vragen!', rateLimitMsg: 'Rustig aan! 😅 Je stelt veel vragen achter elkaar. Wacht nog even ({s}s) en probeer het dan opnieuw.', backToTopics: '← Terug naar onderwerpen', backButton: '← Terug', askOther: '✏️ Ik wil een andere vraag stellen', examplesBtn: 'Voorbeeldvragen per rubriek', topics: [], questions: {}, catTitles: {}, spelregelsDisciplines: [], spelregelsQuestions: {}, hoverInfo: [] },
+    en: { welcome: "Hey! I'm the Mokum Magic 8 Ball 🎱 What can I help you with?", typing: 'Typing...', placeholder: 'Ask a question...', error: 'Oops, something went wrong. Please try again! 🎱', duplicateMsg: 'You just asked that one 🙂 Feel free to ask something else!', rateLimitMsg: "Easy tiger! 🐯😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.", backToTopics: '← Back to topics', backButton: '← Back', askOther: '✏️ I want to ask a different question', examplesBtn: 'Example questions per category', topics: [], questions: {}, catTitles: {}, spelregelsDisciplines: [], spelregelsQuestions: {}, hoverInfo: [] },
+  }
+  // Muteerbaar — starten op FALLBACK, worden vervangen zodra default.json geladen is.
+  let TRANSLATIONS = FALLBACK
+  let BUBBLE_TEXTS = ['Ask me anything!'] // >=1 i.v.m. modulo in de bubbel-rotatie
+  let CATEGORIES = []
 
-  const BUBBLE_TEXTS = [
-    'Ask me anything!',
-    'Have you got any questions?',
-    'I am happy to help you!',
-    'Chalking my cue tip...',
-    'Need some info on arrangements?',
-  ]
+  function configOrigin() {
+    try { if (SELF_SRC) return new URL(SELF_SRC).origin } catch (e) {}
+    return 'https://mokum-bot.pdscloud.nl'
+  }
+  // Cache-buster (per minuut) spiegelt loader.js zodat config-wijzigingen ~1 min doorkomen.
+  function configUrl() { return configOrigin() + '/configs/default.json?v=' + Math.floor(Date.now() / 60000) }
 
-  const TRANSLATIONS = {
-    nl: {
-      welcome: 'Hey! Ik ben de Mokum Magic 8 Ball 🎱 Waar kan ik je mee helpen?',
-      typing: 'Aan het typen...',
-      placeholder: 'Stel een vraag...',
-      error: 'Oeps, er ging iets mis. Probeer het nog eens! 🎱',
-      duplicateMsg: 'Die vraag heb je net al gesteld 🙂 Probeer gerust iets anders te vragen!',
-      rateLimitMsg: 'Rustig aan! 😅 Je stelt veel vragen achter elkaar. Wacht nog even ({s}s) en probeer het dan opnieuw.',
-      backToTopics: '← Terug naar onderwerpen',
-      backButton: '← Terug',
-      askOther: '✏️ Ik wil een andere vraag stellen',
-      spelregelsIntro: 'Over welke spelsoort wil je een vraag stellen?',
-      spelregelsBack: '← Terug naar spelregels',
-      internPwdPrompt: 'Dit is een beveiligde rubriek. Voer het wachtwoord in:',
-      internPwdError: 'Verkeerd wachtwoord',
-      internPwdBtn: 'Toegang',
-      cbCta: 'Laat je terugbellen',
-      cbTitle: 'Laat je terugbellen',
-      cbName: 'Naam',
-      cbPhone: 'Telefoonnummer',
-      cbTopic: 'Waar gaat het over? (optioneel)',
-      cbWhen: 'Wanneer mogen we bellen? (optioneel)',
-      cbPrivacy: 'We gebruiken je gegevens alleen om je terug te bellen. Je gegevens worden na 30 dagen automatisch verwijderd.',
-      cbSubmit: 'Verstuur verzoek',
-      cbThanks: 'Bedankt! We bellen je zo snel mogelijk terug.',
-      cbRequired: 'Vul je naam en telefoonnummer in.',
-      cbError: 'Er ging iets mis. Probeer het later opnieuw.',
-      hoverTitle: 'IK WEET ALLES OVER:',
-      hoverInfo: ['🕐 Openingstijden', '💶 Tarieven & activiteiten', '🏆 Toernooien & inschrijven', '📍 Route & parkeren', '🎯 Darts, biljart & shuffleboard', '🏢 Bedrijfsuitjes & groepen'],
-      beginnerInfo: '👋 Nieuw hier? Stel je vraag direct onderaan in de balk, of bekijk hieronder voorbeeldvragen per rubriek.',
-      examplesBtn: 'Voorbeeldvragen per rubriek',
-      catTitles: { toernooien: 'Toernooien', spelen: 'Spelen & Regels', praktisch: 'Praktisch', service: 'Service', overig: 'Overig' },
-      topics: [
-        { id: 'pool', emoji: '🎱', label: 'Pool & Biljart' },
-        { id: 'darts', emoji: '🎯', label: 'Darts' },
-        { id: 'openingstijden', emoji: '📅', label: 'Openingstijden' },
-        { id: 'tarieven', emoji: '💶', label: 'Tarieven' },
-        { id: 'toernooien', emoji: '🏆', label: 'Toernooien' },
-        { id: 'resultaten', emoji: '📊', label: 'Toernooi resultaten' },
-        { id: 'amsterdam-open', emoji: '🏆', label: 'Amsterdam Open' },
-        { id: 'spelregels', emoji: '📖', label: 'Spelregels' },
-        { id: 'eten-drinken', emoji: '🍺', label: 'Eten & Drinken' },
-        { id: 'sport', emoji: '📺', label: 'Sport kijken' },
-        { id: 'keu-reparatie', emoji: '🔧', label: 'Keu reparatie' },
-        { id: 'keu-shop', emoji: '🛒', label: 'Keu & Accessoires' },
-        { id: 'clinics', emoji: '🎓', label: 'Clinics & Coaching' },
-        { id: 'gaming', emoji: '🕹️', label: 'Spelletjes & Gaming' },
-        { id: 'locatie', emoji: '📍', label: 'Locatie & Parkeren' },
-        { id: 'intern', emoji: '🔒', label: 'Intern' },
-        { id: 'anders', emoji: '❓', label: 'Anders' },
-      ],
-      questions: {
-        pool: ['Hoeveel tafels zijn er beschikbaar?', 'Moet ik reserveren?', 'Wat is het verschil tussen American en English pool?', 'Kan ik mijn eigen keu meenemen?'],
-        darts: ['Wat kost een uur darts?', 'Moet ik eigen pijlen meenemen?', 'Hoeveel dartsborden zijn er?', 'Kan ik darts combineren met pool?'],
-        openingstijden: ['Wanneer zijn jullie open?', 'Zijn jullie ook op feestdagen open?', 'Hoe laat is de laatste inloop?', 'Zijn de tijden in het weekend anders?'],
-        tarieven: ['Wat kost een uur poolen?', 'Zijn er dagprijzen of avondprijzen?', 'Kan ik pinnen?', 'Zijn er groepstarieven?'],
-        toernooien: ['Wanneer is het volgende toernooi?', 'Welke toernooien zijn er aankomende week?', 'Zijn er ook toernooien voor beginnende spelers?', 'Wat kost deelname?'],
-        resultaten: ['Wie won het laatste 8-ball toernooi?', 'Wie zijn de beste spelers van 2026?', 'Top 5 spelers per toernooisoort aller tijden', 'Wie zijn de beste 9-ball spelers dit jaar?', 'Laat de top 20 KNBB-rating zien'],
-        'amsterdam-open': ['Wanneer is het Go Customs Amsterdam Open?', 'Hoe schrijf ik me in voor een qualifier?', 'Wat is het prijzengeld van het Amsterdam Open?', 'Wanneer zijn de qualifiers en de finaledag?', 'Wat is het format van het Amsterdam Open?'],
-        'eten-drinken': ['Wat staat er op het menu?', 'Hebben jullie vegetarische opties?', 'Kunnen jullie pizzas bestellen?'],
-        sport: ['Welke sportwedstrijden kijken jullie vanavond?', 'Tonen jullie Champions League / Eredivisie?', 'Op hoeveel schermen wordt sport getoond?'],
-        'keu-reparatie': ['Wat kost een nieuwe pomerans (tip)?', 'Kunnen jullie een ferrule (dop) repareren?', 'Kan ik mijn eigen pomerans laten plaatsen?', 'Welke reparaties doet Renato?', 'Is er een WhatsApp-groep voor keu-reparatie?'],
-        'keu-shop': ['Verkopen jullie keuen?', 'Welke accessoires zijn er te koop?', 'Verkopen jullie pijlen voor darts?', 'Waar kan ik een keu passen?'],
-        clinics: ['Hoe boek ik een pool clinic?', 'Wat kost een privelес?', 'Voor welk niveau zijn de clinics?', 'Wie geeft de lessen?'],
-        gaming: ['Welke spelletjes zijn er bij Mokum?', 'Hebben jullie ook niet-pool spellen?', 'Zijn er console of arcade games?', 'Kan ik een game avond organiseren?'],
-        locatie: ['Waar is Mokum gevestigd?', 'Hoe kom ik er met het OV?', 'Is er parkeergelegenheid?', 'Hoe ver is het van Amstel Station?'],
-        intern: ['Kun je de werkroosters laten zien?', 'Kun je de keukeninstructies laten zien?', 'Kun je de kassa-instructies laten zien?'],
-      },
-      spelregelsDisciplines: [
-        { id: 'american-pool', emoji: '🎱', label: 'American Pool' },
-        { id: 'english-pool', emoji: '🎱', label: 'English Pool' },
-        { id: 'darts', emoji: '🎯', label: 'Darts' },
-        { id: 'biljart', emoji: '🔵', label: 'Biljart' },
-        { id: 'shuffleboard', emoji: '🛝', label: 'Shuffleboard' },
-      ],
-      spelregelsQuestions: {
-        'american-pool': ['Wat zijn de regels van 8-ball?', 'Hoe speel je 9-ball?', 'Wat zijn de regels van 10-ball?', 'Hoe werkt Straight Pool?', 'Wat zijn de regels van One Pocket?', 'Hoe speel je K-Ball?'],
-        'english-pool': ['Wat zijn de regels van English Pool?', 'Wat is het verschil tussen American en English pool?', 'Welke ballen gebruik je bij English Pool?'],
-        'darts': ['Hoe werkt 501 darts?', 'Wat zijn de regels van Cricket darts?', 'Hoe werkt 301 darts?'],
-        'biljart': ['Wat zijn de regels van libre biljart?', 'Hoe werkt bandstoten?', 'Wat zijn de regels van driebanden?'],
-        'shuffleboard': ['Hoe speel je shuffleboard?', 'Hoeveel spelers doen mee bij shuffleboard?', 'Hoe werkt de puntentelling bij shuffleboard?'],
-      },
-    },
-    en: {
-      welcome: "Hey! I'm the Mokum Magic 8 Ball 🎱 What can I help you with?",
-      typing: 'Typing...',
-      placeholder: 'Ask a question...',
-      error: 'Oops, something went wrong. Please try again! 🎱',
-      duplicateMsg: 'You just asked that one 🙂 Feel free to ask something else!',
-      rateLimitMsg: "Easy tiger! 🐯😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.",
-      backToTopics: '← Back to topics',
-      backButton: '← Back',
-      askOther: '✏️ I want to ask a different question',
-      spelregelsIntro: 'Which discipline would you like to ask about?',
-      spelregelsBack: '← Back to game rules',
-      internPwdPrompt: 'This is a secured section. Please enter the password:',
-      internPwdError: 'Incorrect password',
-      internPwdBtn: 'Access',
-      cbCta: 'Request a callback',
-      cbTitle: 'Request a callback',
-      cbName: 'Name',
-      cbPhone: 'Phone number',
-      cbTopic: "What's it about? (optional)",
-      cbWhen: 'When can we call you? (optional)',
-      cbPrivacy: 'We only use your details to call you back. Your details are automatically deleted after 30 days.',
-      cbSubmit: 'Send request',
-      cbThanks: "Thanks! We'll call you back as soon as possible.",
-      cbRequired: 'Please enter your name and phone number.',
-      cbError: 'Something went wrong. Please try again later.',
-      hoverTitle: 'I KNOW ALL ABOUT:',
-      hoverInfo: ['🕐 Opening hours', '💶 Rates & activities', '🏆 Tournaments & sign-up', '📍 Route & parking', '🎯 Darts, billiards & more', '🏢 Corporate events'],
-      beginnerInfo: '👋 New here? Ask your question directly in the bar below, or browse example questions per category.',
-      examplesBtn: 'Example questions per category',
-      catTitles: { toernooien: 'Tournaments', spelen: 'Games & Rules', praktisch: 'Practical', service: 'Service', overig: 'Other' },
-      topics: [
-        { id: 'pool', emoji: '🎱', label: 'Pool & Billiards' },
-        { id: 'darts', emoji: '🎯', label: 'Darts' },
-        { id: 'openingstijden', emoji: '📅', label: 'Opening Hours' },
-        { id: 'tarieven', emoji: '💶', label: 'Rates' },
-        { id: 'toernooien', emoji: '🏆', label: 'Tournaments' },
-        { id: 'resultaten', emoji: '📊', label: 'Tournament results' },
-        { id: 'amsterdam-open', emoji: '🏆', label: 'Amsterdam Open' },
-        { id: 'spelregels', emoji: '📖', label: 'Game Rules' },
-        { id: 'eten-drinken', emoji: '🍺', label: 'Food & Drinks' },
-        { id: 'sport', emoji: '📺', label: 'Watch Sports' },
-        { id: 'keu-reparatie', emoji: '🔧', label: 'Cue Repair' },
-        { id: 'keu-shop', emoji: '🛒', label: 'Cues & Accessories' },
-        { id: 'clinics', emoji: '🎓', label: 'Clinics & Coaching' },
-        { id: 'gaming', emoji: '🕹️', label: 'Games & Gaming' },
-        { id: 'locatie', emoji: '📍', label: 'Location & Parking' },
-        { id: 'intern', emoji: '🔒', label: 'Internal' },
-        { id: 'anders', emoji: '❓', label: 'Other' },
-      ],
-      questions: {
-        pool: ['How many tables are available?', 'Do I need to reserve?', "What's the difference between American and English pool?", 'Can I bring my own cue?'],
-        darts: ['How much does an hour of darts cost?', 'Do I need to bring my own darts?', 'How many dartboards are there?', 'Can I combine darts with pool?'],
-        openingstijden: ['When are you open?', 'Are you open on public holidays?', "What's the last entry time?", 'Are the weekend hours different?'],
-        tarieven: ['How much does an hour of pool cost?', 'Are there day rates and evening rates?', 'Can I pay by card?', 'Are there group rates?'],
-        toernooien: ['When is the next tournament?', 'Which tournaments are coming up next week?', 'Are there tournaments for beginners?', 'How much does it cost to participate?'],
-        resultaten: ['Who won the last 8-ball tournament?', 'Who are the best players of 2026?', 'Top 5 players per tournament type all-time', 'Who are the best 9-ball players this year?', 'Show the top 20 KNBB rating'],
-        'amsterdam-open': ['When is the Go Customs Amsterdam Open?', 'How do I sign up for a qualifier?', 'What is the prize money of the Amsterdam Open?', 'When are the qualifiers and the final day?', 'What is the format of the Amsterdam Open?'],
-        'eten-drinken': ["What's on the menu?", 'Do you have vegetarian options?', 'Can we order pizzas?'],
-        sport: ['Which sports are you showing tonight?', 'Do you show Champions League / Eredivisie?', 'How many screens do you have for sports?'],
-        'keu-reparatie': ['What does a new cue tip cost?', 'Can you repair a ferrule?', 'Can I bring my own tip to be fitted?', 'What repairs does Renato do?', 'Is there a WhatsApp group for cue repair?'],
-        'keu-shop': ['Do you sell cues?', 'What accessories do you sell?', 'Do you sell darts?', 'Where can I try out a cue?'],
-        clinics: ['How do I book a pool clinic?', 'How much does a private lesson cost?', 'What level are the clinics for?', 'Who gives the lessons?'],
-        gaming: ['What games are available at Mokum?', 'Do you have non-pool games?', 'Are there console or arcade games?', 'Can I organise a game night?'],
-        locatie: ['Where is Mokum located?', 'How do I get there by public transport?', 'Is there parking available?', 'How far is it from Amstel Station?'],
-        intern: ['Can you show me the work schedules?', 'Can you show me instructions for the kitchen?', 'Can you show me instructions for the cash register?'],
-      },
-      spelregelsDisciplines: [
-        { id: 'american-pool', emoji: '🎱', label: 'American Pool' },
-        { id: 'english-pool', emoji: '🎱', label: 'English Pool' },
-        { id: 'darts', emoji: '🎯', label: 'Darts' },
-        { id: 'biljart', emoji: '🔵', label: 'Billiards' },
-        { id: 'shuffleboard', emoji: '🛝', label: 'Shuffleboard' },
-      ],
-      spelregelsQuestions: {
-        'american-pool': ['What are the rules of 8-ball?', 'How do you play 9-ball?', 'What are the rules of 10-ball?', 'How does Straight Pool work?', 'What are the rules of One Pocket?', 'How do you play K-Ball?'],
-        'english-pool': ['What are the rules of English Pool?', 'What is the difference between American and English pool?', 'Which balls are used in English Pool?'],
-        'darts': ['How does 501 darts work?', 'What are the rules of Cricket darts?', 'How does 301 darts work?'],
-        'biljart': ['What are the rules of libre billiards?', 'How does cushion billiards work?', 'What are the rules of three-cushion billiards?'],
-        'shuffleboard': ['How do you play shuffleboard?', 'How many players can play shuffleboard?', 'How does the scoring work in shuffleboard?'],
-      },
-    },
+  function applyConfig(cfg) {
+    TRANSLATIONS = { nl: cfg.texts.nl, en: cfg.texts.en }
+    if (cfg.bubble && Array.isArray(cfg.bubble.texts) && cfg.bubble.texts.length) BUBBLE_TEXTS = cfg.bubble.texts
+    CATEGORIES = Array.isArray(cfg.categories) ? cfg.categories : []
+    if (cfg.position) {
+      WIDGET_CONFIG = { bottom: cfg.position.offsetY + 'px', right: cfg.position.offsetX + 'px', width: cfg.position.width }
+      if (typeof cfg.position.launcherScale === 'number') LAUNCHER_SCALE = cfg.position.launcherScale
+    }
+  }
+
+  async function loadConfig() {
+    for (let poging = 0; poging < 2; poging++) {
+      try {
+        const r = await fetch(configUrl(), { cache: 'no-store' })
+        if (!r.ok) throw new Error('http ' + r.status)
+        const cfg = await r.json()
+        if (!cfg || !cfg.texts || !cfg.texts.nl || !cfg.texts.en) throw new Error('ongeldige config')
+        applyConfig(cfg)
+        return true
+      } catch (e) {
+        if (poging === 0) await new Promise((res) => setTimeout(res, 1500))
+        else console.log('Mokum-widget: config laden mislukt, fallback actief —', e.message)
+      }
+    }
+    return false
   }
 
   let state = {
@@ -891,7 +757,7 @@
       .catch(() => {})
   }
 
-  function init() {
+  async function init() {
     // Host in de pagina; de hele widget leeft in een Shadow DOM zodat thema-CSS er niet in kan lekken.
     const host = document.createElement('div')
     host.id = 'mokum-widget-host'
@@ -903,7 +769,10 @@
     injectStyles()
     state.messages = [{ role: 'assistant', content: tr().welcome }]
     render()
-    laadStandaardvragen()
+    await loadConfig()       // echte config eroverheen (of fallback blijft bij fout)
+    if (!state.open) state.messages = [{ role: 'assistant', content: tr().welcome }] // welkomsttekst bijwerken
+    render()
+    laadStandaardvragen()    // NA config -> questions-override werkt 1-op-1 als voorheen
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init)
