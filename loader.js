@@ -13,8 +13,10 @@
   if (window.__mokumLoaderRan) return
   window.__mokumLoaderRan = true
   var v = Math.floor(Date.now() / 60000) // wijzigt elke minuut
+  // data-client van de embed-tag doorgeven aan widget.js (multi-tenant, #76)
+  var client = (document.currentScript && document.currentScript.getAttribute('data-client')) || ''
   var s = document.createElement('script')
-  s.src = 'https://mokum-bot.pdscloud.nl/widget.js?v=' + v
+  s.src = 'https://mokum-bot.pdscloud.nl/widget.js?v=' + v + (client ? '&client=' + encodeURIComponent(client) : '')
   s.async = true
   s.defer = true
   document.body.appendChild(s)

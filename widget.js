@@ -40,7 +40,17 @@
   // de React-build importeert hetzelfde bestand at build-time (src/config/*).
   // FALLBACK is een minimaal vangnet: faalt de fetch, dan opent de 8-bal nog
   // steeds en werkt vrij typen/versturen — alleen zonder topic-chips.
-  const SELF_SRC = (document.currentScript && document.currentScript.src) || ''
+  const SELF_EL = document.currentScript
+  const SELF_SRC = (SELF_EL && SELF_EL.src) || ''
+  // Client-id (#76): uit het data-client-attribuut op de eigen <script>, of de ?client= queryparam
+  // die loader.js doorgeeft. Gesanitized ([a-z0-9-]) zodat 'ie veilig in de config-URL past.
+  function resolveClient() {
+    let c = ''
+    try { c = (SELF_EL && SELF_EL.getAttribute('data-client')) || '' } catch (e) {}
+    if (!c) { try { c = new URL(SELF_SRC).searchParams.get('client') || '' } catch (e) {} }
+    return /^[a-z0-9-]{1,40}$/.test(c) ? c : ''
+  }
+  const CLIENT = resolveClient()
   const FALLBACK = {
     nl: { welcome: 'Hey! Ik ben de Mokum Magic 8 Ball 🎱 Waar kan ik je mee helpen?', typing: 'Aan het typen...', placeholder: 'Stel een vraag...', error: 'Oeps, er ging iets mis. Probeer het nog eens! 🎱', duplicateMsg: 'Die vraag heb je net al gesteld 🙂 Probeer gerust iets anders te vragen!', rateLimitMsg: 'Rustig aan! 😅 Je stelt veel vragen achter elkaar. Wacht nog even ({s}s) en probeer het dan opnieuw.', backToTopics: '← Terug naar onderwerpen', backButton: '← Terug', askOther: '✏️ Ik wil een andere vraag stellen', examplesBtn: 'Voorbeeldvragen per rubriek', topics: [], questions: {}, catTitles: {}, spelregelsDisciplines: [], spelregelsQuestions: {}, hoverInfo: [] },
     en: { welcome: "Hey! I'm the Mokum Magic 8 Ball 🎱 What can I help you with?", typing: 'Typing...', placeholder: 'Ask a question...', error: 'Oops, something went wrong. Please try again! 🎱', duplicateMsg: 'You just asked that one 🙂 Feel free to ask something else!', rateLimitMsg: "Easy tiger! 🐯😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.", backToTopics: '← Back to topics', backButton: '← Back', askOther: '✏️ I want to ask a different question', examplesBtn: 'Example questions per category', topics: [], questions: {}, catTitles: {}, spelregelsDisciplines: [], spelregelsQuestions: {}, hoverInfo: [] },
@@ -55,7 +65,15 @@
     return 'https://mokum-bot.pdscloud.nl'
   }
   // Cache-buster (per minuut) spiegelt loader.js zodat config-wijzigingen ~1 min doorkomen.
-  function configUrl() { return configOrigin() + '/configs/default.json?v=' + Math.floor(Date.now() / 60000) }
+  function configUrl(naam) { return configOrigin() + '/configs/' + naam + '.json?v=' + Math.floor(Date.now() / 60000) }
+
+  async function fetchConfig(naam) {
+    const r = await fetch(configUrl(naam), { cache: 'no-store' })
+    if (!r.ok) throw new Error('http ' + r.status)
+    const cfg = await r.json()
+    if (!cfg || !cfg.texts || !cfg.texts.nl || !cfg.texts.en) throw new Error('ongeldige config')
+    return cfg
+  }
 
   function applyConfig(cfg) {
     TRANSLATIONS = { nl: cfg.texts.nl, en: cfg.texts.en }
@@ -68,15 +86,14 @@
   }
 
   async function loadConfig() {
+    // 1) Client-config (indien opgegeven) — één poging; faalt 'ie (bv. 404), stil door naar default (#76).
+    if (CLIENT) {
+      try { applyConfig(await fetchConfig(CLIENT)); return true } catch (e) {}
+    }
+    // 2) default.json — kritieke fallback, met 1 retry voor tijdelijke hikken.
     for (let poging = 0; poging < 2; poging++) {
-      try {
-        const r = await fetch(configUrl(), { cache: 'no-store' })
-        if (!r.ok) throw new Error('http ' + r.status)
-        const cfg = await r.json()
-        if (!cfg || !cfg.texts || !cfg.texts.nl || !cfg.texts.en) throw new Error('ongeldige config')
-        applyConfig(cfg)
-        return true
-      } catch (e) {
+      try { applyConfig(await fetchConfig('default')); return true }
+      catch (e) {
         if (poging === 0) await new Promise((res) => setTimeout(res, 1500))
         else console.log('Mokum-widget: config laden mislukt, fallback actief —', e.message)
       }
