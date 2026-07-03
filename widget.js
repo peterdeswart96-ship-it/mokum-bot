@@ -346,7 +346,7 @@
       })
 
       // Sluit knop
-      const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.gray};font-size:13px;font-weight:bold;padding:1px;line-height:1;`)
+      const closeBtn = btn('✕', () => { state.open = false; render() }, `background:none;border:none;color:${C.red};font-size:26px;font-weight:bold;padding:0 2px;line-height:1;`)
 
       hdrR.append(homeBtn, flagsWrap, closeBtn)
       hdr.append(hdrL, hdrR)
@@ -491,7 +491,8 @@
         body.appendChild(btn(t.backToTopics, () => { resetChat(); render() }, null, 'mokum-back-btn'))
       }
 
-      setTimeout(() => { body.scrollTop = body.scrollHeight }, 50)
+      // In de topics-/rubrieken-stage de bovenkant tonen; overige stages scrollen naar onder zoals voorheen (#85)
+      setTimeout(() => { body.scrollTop = state.stage === 'topics' ? 0 : body.scrollHeight }, 50)
 
       // Input — altijd zichtbaar; alles in één rij, strak onderaan
       const inputArea = el('div', `border-top:1px solid ${C.border};background:${C.blackCard};padding:2px 10px;flex-shrink:0;`)
