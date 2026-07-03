@@ -372,7 +372,8 @@ export default function ChatWidget() {
   }, [])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    // In de topics-/rubrieken-stage niet naar onder scrollen (bovenkant tonen); overige stages zoals voorheen (#85)
+    if (stage !== "topics") bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, stage])
 
   useEffect(() => {
@@ -557,7 +558,7 @@ export default function ChatWidget() {
 
               <button
                 onClick={() => setOpen(false)}
-                style={{ background: "none", border: "none", color: C.gray, cursor: "pointer", fontSize: "13px", fontWeight: "bold", padding: "1px", lineHeight: 1 }}
+                style={{ background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: "26px", fontWeight: "bold", padding: "0 2px", lineHeight: 1 }}
               >✕</button>
             </div>
           </div>
