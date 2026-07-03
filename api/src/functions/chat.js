@@ -2,13 +2,10 @@ const Anthropic = require("@anthropic-ai/sdk")
 const https = require("https")
 const crypto = require("crypto")
 
-// Dashboard-wachtwoordcheck (gedeeld met de auth/gesprekken-endpoints).
-// De hash komt uit de App Setting DASHBOARD_HASH in Azure (#68). Geen fallback meer:
-// ontbreekt de env-var, dan faalt elke check (fail-closed) i.p.v. terug te vallen op een hash in de repo.
-const DASHBOARD_HASH = process.env.DASHBOARD_HASH
-function checkPwd(wachtwoord) {
-  return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
-}
+// Gedeelde helpers uit lib/ (#71): dashboard-wachtwoordcheck en dashboard-CORS.
+// checkPwd leest de hash uit de App Setting DASHBOARD_HASH (#68, fail-closed).
+const { checkPwd } = require("./lib/auth")
+const { dashboardCors } = require("./lib/cors")
 
 const SYSTEM_PROMPT = `Je bent Mokum Bot, de digitale gast van Mokum Pool & Darts in Amsterdam Oost. Je helpt bezoekers snel aan de juiste informatie — zonder gedoe.
 
@@ -1185,26 +1182,6 @@ function leesClaudeTekst(response) {
     .join("\n")
 }
 
-// CORS voor dashboard-endpoints (#72): alleen de dashboard-origin, niet '*'. Reflecteert de
-// origin als die op de allowlist staat, anders de canonieke productie-origin — zo blokkeert de
-// browser een niet-toegestane cross-origin respons. Publieke widget-endpoints (chat,
-// terugbelverzoek) houden bewust '*' zodat de widget op elke klant-site blijft werken.
-// NB: CORS beschermt alleen browser-verkeer; de echte gate op deze endpoints is checkPwd.
-const DASHBOARD_ORIGINS = [
-  "https://mokum-bot.pdscloud.nl", // productie-dashboard (GitHub Pages, main-CNAME)
-  "http://localhost:5173",         // lokale dev (Vite)
-]
-function dashboardCors(request, methods) {
-  const origin = request.headers.get("origin") || ""
-  const allow = DASHBOARD_ORIGINS.includes(origin) ? origin : DASHBOARD_ORIGINS[0]
-  return {
-    "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Methods": methods,
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Vary": "Origin",
-  }
-}
-
 app.http("chat", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
@@ -1889,57 +1866,6 @@ Regels:
     } catch (error) {
       context.log("kennisbron-vertaal error:", error)
       return json(500, { error: error.message })
-    }
-  },
-})
-
-// Auth endpoint — wachtwoord verificatie server-side
-// Hash staat alleen op de server, nooit in de frontend
-app.http("auth", {
-  methods: ["POST", "OPTIONS"],
-  authLevel: "anonymous",
-  handler: async (request, context) => {
-    const corsHeaders = dashboardCors(request, "POST, OPTIONS")
-    if (request.method === "OPTIONS") {
-      return { status: 204, headers: corsHeaders }
-    }
-    try {
-      const body = await request.json()
-      const { wachtwoord } = body
-
-      if (!wachtwoord) {
-        return {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          body: JSON.stringify({ success: false, error: "Geen wachtwoord opgegeven" }),
-        }
-      }
-
-      if (checkPwd(wachtwoord)) {
-        // Genereer een tijdelijk sessie token (geldig voor 8 uur)
-        const token = crypto.randomBytes(32).toString("hex")
-        const expiry = Date.now() + (8 * 60 * 60 * 1000)
-        context.log("Dashboard login succesvol")
-        return {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          body: JSON.stringify({ success: true, token, expiry }),
-        }
-      } else {
-        context.log("Dashboard login mislukt — verkeerd wachtwoord")
-        return {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          body: JSON.stringify({ success: false, error: "Verkeerd wachtwoord" }),
-        }
-      }
-    } catch (error) {
-      context.log("Auth error:", error)
-      return {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ success: false, error: error.message }),
-      }
     }
   },
 })
