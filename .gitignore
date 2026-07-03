@@ -18,3 +18,8 @@ kennisbronnen-upload/
 dist/
 upload-kennisbronnen.ps1
 src/config/bubbletexts.js
+
+# Env-bestanden nooit committen — voorkomt per ongeluk lekken van een echte key (#70)
+.env
+.env.*
+!.env.example

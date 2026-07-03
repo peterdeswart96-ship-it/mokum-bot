@@ -1131,6 +1131,50 @@ module.exports = { matchPlayers, normalizeText, parseSeries, parsePeriod, classi
 
 const { app } = require("@azure/functions")
 
+// ── Server-side misbruik-/kostenbescherming voor /api/chat (#67) ──────────────
+// De client-side rem in widget.js is triviaal te omzeilen door de API direct aan
+// te roepen. Twee lagen begrenzen dat server-side:
+//   1) input-cap: lengte per bericht + aantal berichten (chatSanitizeMessages)
+//   2) rate limit per IP: in-memory sliding window. Houdt casual misbruik tegen;
+//      per worker-instance (Flex Consumption kan schalen) — robuuster zou een
+//      Table Storage-teller zijn. CORS-beperking tot bekende origins volgt in #72.
+const CHAT_MAX_CONTENT_LEN = 2000          // tekens per bericht
+const CHAT_MAX_MESSAGES = 20               // laatste N berichten (≈10 vraag/antwoord-paren)
+const CHAT_RATE_MAX = 30                   // max requests ...
+const CHAT_RATE_WINDOW_MS = 5 * 60 * 1000  // ... per 5 minuten per IP
+const chatRateHits = new Map()             // ipHash -> [timestamps]
+
+function chatClientIpHash(request) {
+  const xff = request.headers.get("x-forwarded-for") || ""
+  let ip = xff.split(",")[0].trim()
+  const v4 = ip.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+$/) // Azure hangt vaak :poort aan
+  if (v4) ip = v4[1]
+  return crypto.createHash("sha256").update(ip || "onbekend").digest("hex").slice(0, 16)
+}
+
+// Registreert deze hit en geeft true zodra het IP over de limiet zit.
+function chatRateLimited(ipHash) {
+  const now = Date.now()
+  const hits = (chatRateHits.get(ipHash) || []).filter((t) => now - t < CHAT_RATE_WINDOW_MS)
+  hits.push(now)
+  chatRateHits.set(ipHash, hits)
+  if (chatRateHits.size > 5000) { // opruimen zodat de Map niet blijft groeien
+    for (const [k, v] of chatRateHits) {
+      if (!v.length || now - v[v.length - 1] > CHAT_RATE_WINDOW_MS) chatRateHits.delete(k)
+    }
+  }
+  return hits.length > CHAT_RATE_MAX
+}
+
+// Begrenst de messages-array: alleen geldige user/assistant-berichten, laatste N,
+// content afgekapt op CHAT_MAX_CONTENT_LEN. Beschermt token-kosten en opslag.
+function chatSanitizeMessages(messages) {
+  return messages
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+    .slice(-CHAT_MAX_MESSAGES)
+    .map((m) => ({ role: m.role, content: m.content.slice(0, CHAT_MAX_CONTENT_LEN) }))
+}
+
 app.http("chat", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
@@ -1143,14 +1187,33 @@ app.http("chat", {
     if (request.method === "OPTIONS") {
       return { status: 204, headers: corsHeaders }
     }
+    // Rate limit per IP vóór al het werk (#67) — weigert misbruik snel en goedkoop.
+    const ipHash = chatClientIpHash(request)
+    if (chatRateLimited(ipHash)) {
+      context.log(`Rate limit bereikt voor ${ipHash}`)
+      return {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+        body: JSON.stringify({ error: "rate_limited", reply: "Rustig aan 😅 Je stuurt te veel vragen achter elkaar. Wacht even en probeer het dan opnieuw." }),
+      }
+    }
     try {
       const body = await request.json()
-      const { messages } = body
+      let { messages } = body
       if (!messages || !Array.isArray(messages)) {
         return {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           body: JSON.stringify({ error: "messages array required" }),
+        }
+      }
+      // Server-side input-cap (#67): begrens aantal berichten + lengte per bericht.
+      messages = chatSanitizeMessages(messages)
+      if (!messages.length) {
+        return {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "geen geldige berichten" }),
         }
       }
       // '#test'-prefix: markeer dit gesprek als testvraag (voor het dashboard) en
