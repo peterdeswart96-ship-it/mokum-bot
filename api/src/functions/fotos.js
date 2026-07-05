@@ -14,6 +14,7 @@
 //   POST {action:"delete"}   -> foto + entry verwijderen (wachtwoord)
 
 const crypto = require("crypto")
+const https = require("https") // foto-proxy (getBlobBytes) leest ruwe bytes via https.get; require was bij de #71-refactor weggevallen
 const { app } = require("@azure/functions")
 const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
 const { autoriseer } = require("./_auth")
