@@ -2,7 +2,7 @@
 // Reflecteert de origin als die op de allowlist staat, anders de canonieke productie-origin —
 // zo blokkeert de browser een niet-toegestane cross-origin respons. Publieke widget-endpoints
 // (chat, terugbelverzoek) houden bewust '*'. NB: CORS beschermt alleen browser-verkeer; de
-// echte gate op deze endpoints is checkPwd.
+// echte gate op deze endpoints is autoriseer() (Entra-token óf gedeeld wachtwoord — #42).
 const DASHBOARD_ORIGINS = [
   "https://mokum-bot.pdscloud.nl", // productie-dashboard (GitHub Pages, main-CNAME)
   "http://localhost:5173",         // lokale dev (Vite)
@@ -14,7 +14,8 @@ function dashboardCors(request, methods) {
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": methods,
-    "Access-Control-Allow-Headers": "Content-Type",
+    // Authorization toestaan zodat Fase C (MSAL) een Bearer-token cross-origin kan meesturen (#42/#79).
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin",
   }
 }
