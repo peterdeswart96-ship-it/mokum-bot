@@ -65,6 +65,7 @@
   let BUBBLE_TEXTS = ['Ask me anything!'] // >=1 i.v.m. modulo in de bubbel-rotatie
   let BUBBLE_ENABLED = true               // tekstballon aan/uit (#80)
   let BUBBLE_INTERVAL = 15                // rotatie-interval in seconden (#80)
+  let ICON = null                         // launcher-icoon uit config (#78); null = standaard 8-bal
   let CATEGORIES = []
 
   function configOrigin() {
@@ -91,6 +92,8 @@
       if (Array.isArray(cfg.bubble.texts)) BUBBLE_TEXTS = cfg.bubble.texts.length ? cfg.bubble.texts : []
     }
     CATEGORIES = Array.isArray(cfg.categories) ? cfg.categories : []
+    // Launcher-icoon (#78): 'default'/afwezig = 8-bal; anders een preset-SVG of eigen afbeelding.
+    ICON = (cfg.icon && cfg.icon.type && cfg.icon.type !== 'default') ? cfg.icon : null
     if (cfg.position) {
       WIDGET_CONFIG = { bottom: cfg.position.offsetY + 'px', right: cfg.position.offsetX + 'px', width: cfg.position.width }
       if (typeof cfg.position.launcherScale === 'number') LAUNCHER_SCALE = cfg.position.launcherScale
@@ -250,6 +253,23 @@
         <text x="100" y="52" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="8" font-weight="900" fill="#fff" letter-spacing="1.5">MOKUM</text>
       </g>
     </svg>`
+  }
+
+  // Launcher-icoon (#78): standaard de 8-bal, of het uit de config gekozen preset-/eigen icoon.
+  // Een SVG (preset of eigen upload) komt in een ronde badge en neemt currentColor (wit) over;
+  // een geüploade rasterafbeelding (PNG/WebP) wordt rond bijgesneden getoond.
+  function launcherIconHTML(size) {
+    const ic = ICON
+    if (ic && ic.type && ic.type !== 'default') {
+      if (typeof ic.svg === 'string' && /<svg[\s>]/i.test(ic.svg)) {
+        const inner = Math.round(size * 0.6)
+        return `<div class="mokum-bounce" style="width:${size}px;height:${size}px;border-radius:50%;background:${C.red};color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.15);"><div style="width:${inner}px;height:${inner}px;display:flex;align-items:center;justify-content:center;">${ic.svg}</div></div>`
+      }
+      if (typeof ic.src === 'string' && ic.src) {
+        return `<img class="mokum-bounce" src="${ic.src}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block;" />`
+      }
+    }
+    return eightBallSVG(size, true)
   }
 
   function flagNLSVG() {
@@ -580,7 +600,7 @@
         if (state.messages.length === 0) state.messages = [{ role: 'assistant', content: tr().welcome }]
         render()
       }, 'background:transparent;border:none;padding:0;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.6));transition:transform 0.2s;')
-      ballBtn.innerHTML = eightBallSVG(64, true)
+      ballBtn.innerHTML = launcherIconHTML(64)
       ballBtn.onmouseenter = () => { ballBtn.style.transform = 'scale(1.1)' }
       ballBtn.onmouseleave = () => { ballBtn.style.transform = 'scale(1)' }
 

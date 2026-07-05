@@ -41,6 +41,12 @@ GitHub Pages serveert met een vaste `max-age=600` (10 min) en staat geen custom 
   "client": "mokum",              // id, informatief
   "version": 1,                   // schema-versie (voor toekomstige migraties)
   "language": { "default": "nl", "available": ["nl", "en"] },
+  "icon": {                       // launcher-icoon (#78)
+    "type": "default",            // "default" = 8-bal · "preset" · "custom"
+    "preset": "chat",             // preset-id (bij type "preset"), informatief
+    "svg": "<svg…currentColor…>", // inline SVG voor preset/eigen SVG (in ronde badge)
+    "src": "data:image/png;base64,…" // óf een (data-)URL voor een geüploade PNG/WebP
+  },
   "position": {                   // zwevende launcher
     "anchor": "bottom-right",
     "offsetX": 24, "offsetY": 24, "unit": "px",
