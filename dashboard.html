@@ -1332,6 +1332,22 @@
               <p class="wc-hint">PNG, SVG of WebP · max 100 KB · vierkant advies. Verschijnt direct in de preview.</p>
               <div id="wc-icon-info"></div>
 
+              <label class="wc-label">✨ Genereer met AI</label>
+              <textarea id="wc-ai-desc" rows="2" placeholder="Beschrijf het icoon, bijv. 'biljartkeu gekruist met dartpijl, minimalistisch'"></textarea>
+              <div class="wc-exp-btns">
+                <button class="btn-sm-red" id="wc-ai-gen" onclick="wcAiGenerate()">✨ Genereer</button>
+              </div>
+              <p class="wc-hint">Claude maakt een monochroom SVG-icoon (neemt de themakleur over). Het resultaat komt direct in de preview en is opslaanbaar als klant-icoon.</p>
+              <div id="wc-ai-status"></div>
+              <div id="wc-ai-refine" style="display:none;">
+                <label class="wc-label">Verfijnen</label>
+                <input type="text" id="wc-ai-refinetext" placeholder="bijv. 'maak de lijnen dikker'" onkeydown="if(event.key==='Enter'){event.preventDefault();wcAiRefine()}" />
+                <div class="wc-exp-btns">
+                  <button class="btn" id="wc-ai-refinebtn" onclick="wcAiRefine()">↻ Verfijn</button>
+                  <button class="btn" id="wc-ai-regenbtn" onclick="wcAiGenerate()">✨ Opnieuw genereren</button>
+                </div>
+              </div>
+
               <label class="wc-label">Grootte launcher (icoon + bubble)</label>
               <div class="wc-range-row">
                 <input type="range" id="wc-scale" min="0.8" max="2.5" step="0.1" oninput="wcOnScale()">
@@ -4168,6 +4184,61 @@ function wcIconUpload(ev) {
   }
   if (ext === "svg") reader.readAsText(file)
   else reader.readAsDataURL(file)
+}
+
+// ---- Icoon met AI genereren/verfijnen (#79) ----
+let wcAiLastSvg = null
+function wcAiSetStatus(html, cls) {
+  const el = document.getElementById("wc-ai-status")
+  if (el) el.innerHTML = html ? '<p class="' + (cls || "wc-hint") + '" style="margin:6px 0;">' + html + '</p>' : ""
+}
+function wcAiBusy(b) {
+  ["wc-ai-gen", "wc-ai-refinebtn", "wc-ai-regenbtn"].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = b })
+}
+function wcAiApply(svg) {
+  const clean = wcSanitizeSvg(svg) // defense-in-depth naast de server-side sanitatie
+  if (!/<svg[\s>]/i.test(clean)) { wcAiSetStatus("De gegenereerde SVG was ongeldig — probeer een andere beschrijving.", "wc-err"); return false }
+  wcConfig.icon = { type: "custom", svg: clean, name: "ai-icoon.svg" }
+  wcAiLastSvg = clean
+  const f = document.getElementById("wc-icon-file"); if (f) f.value = ""
+  wcRenderPresets(); wcRenderIconInfo(); wcPush()
+  document.getElementById("wc-ai-refine").style.display = "block"
+  return true
+}
+async function wcAiCall(payload) {
+  const pwd = sessionStorage.getItem("mkm-pwd") || ""
+  const body = Object.assign({ bedrijf: (wcConfig && wcConfig.client) || "Mokum", wachtwoord: pwd }, payload)
+  const res = await fetch(API + "/icoon-genereer", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  })
+  let data = {}
+  try { data = await res.json() } catch (e) {}
+  if (!res.ok) throw new Error((data && data.error) || ("fout " + res.status))
+  if (!data || typeof data.svg !== "string") throw new Error("Geen SVG ontvangen")
+  return data.svg
+}
+async function wcAiGenerate() {
+  const desc = (document.getElementById("wc-ai-desc").value || "").trim()
+  if (!desc) { wcAiSetStatus("Vul eerst een beschrijving in.", "wc-err"); return }
+  wcAiSetStatus("⏳ Icoon genereren met Claude… (kan ~10 sec duren)")
+  wcAiBusy(true)
+  try {
+    const svg = await wcAiCall({ beschrijving: desc })
+    if (wcAiApply(svg)) wcAiSetStatus("✓ Icoon gegenereerd en in de preview gezet.")
+  } catch (e) { wcAiSetStatus("Genereren mislukt: " + e.message, "wc-err") }
+  wcAiBusy(false)
+}
+async function wcAiRefine() {
+  const refine = (document.getElementById("wc-ai-refinetext").value || "").trim()
+  if (!wcAiLastSvg) { wcAiSetStatus("Genereer eerst een icoon.", "wc-err"); return }
+  if (!refine) { wcAiSetStatus("Vul een verfijn-instructie in.", "wc-err"); return }
+  wcAiSetStatus("⏳ Verfijnen…")
+  wcAiBusy(true)
+  try {
+    const svg = await wcAiCall({ vorigeSvg: wcAiLastSvg, verfijning: refine })
+    if (wcAiApply(svg)) { wcAiSetStatus("✓ Verfijnd."); document.getElementById("wc-ai-refinetext").value = "" }
+  } catch (e) { wcAiSetStatus("Verfijnen mislukt: " + e.message, "wc-err") }
+  wcAiBusy(false)
 }
 
 function wcOnTexts() {
