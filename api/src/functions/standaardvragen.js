@@ -15,7 +15,7 @@
 
 const crypto = require("crypto")
 const { app } = require("@azure/functions")
-const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
+const { STORAGE_ACCOUNT, httpsRequest, readBlobText } = require("./lib/storage")
 const { autoriseer } = require("./_auth")
 
 const CONTAINER = "standaardvragen"
@@ -50,21 +50,16 @@ async function ensureContainer(sasToken) {
 }
 
 async function getIndex(sasToken) {
-  const res = await httpsRequest({
-    hostname: host(),
-    path: `/${CONTAINER}/${INDEX_BLOB}?${sasToken}`,
-    method: "GET",
-    headers: { "x-ms-version": API_VERSION },
-  })
-  if (res.status === 200) {
-    try {
-      const arr = JSON.parse(res.body)
-      return Array.isArray(arr) ? arr : []
-    } catch {
-      return []
-    }
+  // #39 fase 1: lezen via managed identity i.p.v. SAS. De sasToken-param blijft (ongebruikt)
+  // zodat de callers ongewijzigd blijven; wordt in de SAS-opruimfase verwijderd.
+  const raw = await readBlobText(undefined, CONTAINER, INDEX_BLOB)
+  if (!raw) return []
+  try {
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return []
   }
-  return []
 }
 
 async function putIndex(index, sasToken) {
