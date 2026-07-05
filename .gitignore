@@ -26,3 +26,6 @@ src/config/bubbletexts.js
 
 # Persoonlijke Claude Code-instellingen (niet delen)
 .claude/settings.local.json
+
+
+wiki/
