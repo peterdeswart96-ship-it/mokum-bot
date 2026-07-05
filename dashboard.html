@@ -321,6 +321,7 @@
   <div class="tab-bar">
     <button class="tab active" id="toptab-analyse" onclick="showAnalyse('overzicht')">🔍 Analyse</button>
     <button class="tab" onclick="showTab('fotos', this)">📷 Foto's</button>
+    <button class="tab" onclick="showTab('widget', this)">🎨 Widget</button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
   </div>
@@ -1212,6 +1213,157 @@
     </main>
   </div>
 
+  <!-- TAB: WIDGET CUSTOMIZER (#77) -->
+  <div id="tab-widget" class="tab-content">
+    <style>
+      .wc-wrap { display: grid; grid-template-columns: minmax(330px, 440px) 1fr; gap: 18px; align-items: start; max-width: 1320px; margin: 0 auto; }
+      @media (max-width: 1040px) { .wc-wrap { grid-template-columns: 1fr; } }
+      .wc-note { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin: 0 0 14px; }
+      .wc-label { display: block; font-size: 12px; color: var(--muted); margin: 14px 0 5px; font-weight: 600; }
+      .wc-label:first-child { margin-top: 0; }
+      .wc-hint { font-size: 11.5px; color: var(--muted-2); margin: 4px 0 0; line-height: 1.5; }
+      .wc-status { font-size: 12px; color: var(--muted-2); margin-top: 8px; min-height: 16px; }
+      .wc-subnav { display: flex; gap: 4px; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 16px; overflow-x: auto; }
+      .wc-sub { display: none; }
+      .wc-sub.active { display: block; }
+      .wc-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 480px) { .wc-2col { grid-template-columns: 1fr; } }
+      .wc-range-row { display: flex; align-items: center; gap: 10px; }
+      .wc-range-row input[type=range] { flex: 1; width: auto; padding: 0; }
+      .wc-range-val { font-size: 12px; color: var(--text-2); min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+      .wc-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
+      .wc-preview-card { position: sticky; top: 12px; }
+      .wc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+      .wc-seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
+      .wc-seg-btn { border: none; background: none; color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+      .wc-seg-btn.active { background: var(--accent-soft); color: var(--accent); }
+      .wc-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+      .wc-check input { width: auto; }
+      .wc-stage { background: repeating-linear-gradient(45deg, var(--card-2), var(--card-2) 12px, transparent 12px, transparent 24px); border: 1px solid var(--border); border-radius: 14px; padding: 18px; display: flex; justify-content: center; overflow: auto; }
+      .wc-device { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-lg); transition: width .25s ease, height .25s ease; flex-shrink: 0; }
+      .wc-device.desktop { width: 100%; max-width: 100%; height: 640px; }
+      .wc-device.mobile { width: 390px; height: 720px; border-radius: 30px; border: 11px solid #0c0c0f; box-shadow: 0 0 0 2px #2a2a30, var(--shadow-lg); }
+      .wc-device iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+    </style>
+    <main>
+      <div class="wc-wrap">
+
+        <!-- LINKS: instellingen -->
+        <div>
+          <div class="card">
+            <div class="card-title">Widget Customizer</div>
+            <p class="wc-note">Pas de widget aan en zie het resultaat direct in de preview rechts. Wijzigingen zijn een <b>voorbeeld</b> — nog niet opgeslagen. (Opslaan &amp; embed-snippet volgen in <b>#83</b>.)</p>
+            <label class="wc-label">Startpunt: klant-config</label>
+            <select id="wc-client" onchange="wcOnClientChange()"></select>
+            <p class="wc-hint">Laadt een bestaande config als beginpunt. Nieuwe klant-JSON's verschijnen hier automatisch zodra ze bestaan.</p>
+            <div id="wc-status" class="wc-status"></div>
+          </div>
+
+          <div class="card">
+            <div class="wc-subnav">
+              <button class="subtab active" id="wcsub-icoon" onclick="wcShowSub('icoon')">🎱 Icoon</button>
+              <button class="subtab" id="wcsub-bubble" onclick="wcShowSub('bubble')">💬 Bubble</button>
+              <button class="subtab" id="wcsub-positie" onclick="wcShowSub('positie')">📐 Positie</button>
+              <button class="subtab" id="wcsub-teksten" onclick="wcShowSub('teksten')">✏️ Teksten</button>
+            </div>
+
+            <!-- Icoon -->
+            <div class="wc-sub active" id="wcpanel-icoon">
+              <p class="wc-note">Het launcher-icoon is nu de vaste 8-bal. <b>Uploaden van een eigen icoon en een preset-bibliotheek</b> komen in <b>#78</b>.</p>
+              <label class="wc-label">Grootte launcher (8-bal + bubble)</label>
+              <div class="wc-range-row">
+                <input type="range" id="wc-scale" min="0.8" max="2.5" step="0.1" oninput="wcOnScale()">
+                <span class="wc-range-val" id="wc-scale-val">1.5×</span>
+              </div>
+              <p class="wc-hint">Schaal van de zwevende 8-bal en het tekstballonnetje samen.</p>
+            </div>
+
+            <!-- Bubble -->
+            <div class="wc-sub" id="wcpanel-bubble">
+              <label class="wc-label">Tekstballon-teksten <span class="wc-hint" style="font-weight:400;">— één per regel</span></label>
+              <textarea id="wc-bubble-texts" rows="6" oninput="wcOnBubbleTexts()" placeholder="Ask me anything!&#10;Have you got any questions?"></textarea>
+              <p class="wc-hint">Rouleren boven de 8-bal. De volledige bubble-instellingen (o.a. timing) komen in <b>#80</b>.</p>
+              <label class="wc-label">Interval <span class="wc-badge">actief in #80</span></label>
+              <input type="text" id="wc-bubble-interval" oninput="wcOnBubbleInterval()" placeholder="15" />
+              <p class="wc-hint">Seconden tussen twee teksten. Wordt door de widget nog niet gelezen — reflecteert dus (nog) niet in de preview.</p>
+            </div>
+
+            <!-- Positie -->
+            <div class="wc-sub" id="wcpanel-positie">
+              <p class="wc-note">Vrije positionering (ook links verankeren) komt in <b>#81</b>. Nu: marge vanaf rechtsonder + breedte van het chatvenster.</p>
+              <div class="wc-2col">
+                <div>
+                  <label class="wc-label">Marge rechts (px)</label>
+                  <input type="text" id="wc-offx" inputmode="numeric" oninput="wcOnOffset()" placeholder="24" />
+                </div>
+                <div>
+                  <label class="wc-label">Marge onder (px)</label>
+                  <input type="text" id="wc-offy" inputmode="numeric" oninput="wcOnOffset()" placeholder="24" />
+                </div>
+              </div>
+              <label class="wc-label">Breedte chatvenster (desktop)</label>
+              <input type="text" id="wc-width" oninput="wcOnWidth()" placeholder="440px" />
+              <p class="wc-hint">Bijv. <code>440px</code>. Op mobiel schaalt de widget automatisch naar de schermbreedte.</p>
+            </div>
+
+            <!-- Teksten -->
+            <div class="wc-sub" id="wcpanel-teksten">
+              <p class="wc-note">Een greep uit de teksten voor de live preview. De <b>volledige teksten-editor</b> (topics, vragen, alle labels nl/en) komt in <b>#82</b>.</p>
+              <label class="wc-label">Welkomstbericht</label>
+              <div class="wc-2col">
+                <div>
+                  <p class="wc-hint" style="margin:0 0 4px;">🇳🇱 Nederlands</p>
+                  <textarea id="wc-welcome-nl" rows="3" oninput="wcOnTexts()"></textarea>
+                </div>
+                <div>
+                  <p class="wc-hint" style="margin:0 0 4px;">🇬🇧 Engels</p>
+                  <textarea id="wc-welcome-en" rows="3" oninput="wcOnTexts()"></textarea>
+                </div>
+              </div>
+              <label class="wc-label">Placeholder invoerveld</label>
+              <div class="wc-2col">
+                <div>
+                  <p class="wc-hint" style="margin:0 0 4px;">🇳🇱 Nederlands</p>
+                  <input type="text" id="wc-ph-nl" oninput="wcOnTexts()" />
+                </div>
+                <div>
+                  <p class="wc-hint" style="margin:0 0 4px;">🇬🇧 Engels</p>
+                  <input type="text" id="wc-ph-en" oninput="wcOnTexts()" />
+                </div>
+              </div>
+              <p class="wc-hint" style="margin-top:8px;">Tip: zet <b>“Chat geopend”</b> aan in de preview-balk om welkomstbericht en invoerveld te zien.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECHTS: live preview -->
+        <div>
+          <div class="card wc-preview-card">
+            <div class="card-title">Live preview</div>
+            <div class="wc-toolbar">
+              <div class="wc-seg">
+                <button class="wc-seg-btn active" id="wc-dev-desktop" onclick="wcSetDevice('desktop')">🖥️ Desktop</button>
+                <button class="wc-seg-btn" id="wc-dev-mobile" onclick="wcSetDevice('mobile')">📱 Mobiel</button>
+              </div>
+              <label class="wc-check"><input type="checkbox" id="wc-open" onchange="wcToggleOpen()"> Chat geopend</label>
+              <select id="wc-lang" onchange="wcSetLang()" style="width:auto;">
+                <option value="nl">🇳🇱 NL</option>
+                <option value="en">🇬🇧 EN</option>
+              </select>
+              <button class="btn" onclick="wcReloadPreview()" title="Preview opnieuw laden">↻ Herlaad</button>
+            </div>
+            <div class="wc-stage">
+              <div class="wc-device desktop" id="wc-device">
+                <iframe id="wc-iframe" title="Widget preview" src="about:blank"></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
 </div><!-- end dashboard -->
 
 <script>
@@ -1294,6 +1446,7 @@ function showTab(name, btn) {
   const subnav = document.getElementById("analyse-subnav")
   if (subnav) subnav.style.display = "none"
   if (name === "fotos") laadFotos()
+  if (name === "widget") initWidgetCustomizer()
   if (name === "rubriekvragen") laadStandaardvragen()
   // Tab is nu zichtbaar → speel de cascade-intro van die tab opnieuw af.
   if (name === "mark") speelOverzichtIntro()
@@ -3622,6 +3775,162 @@ document.addEventListener("DOMContentLoaded", () => {
   showHTab("overzicht")
   updateHCalc()
 })
+
+// ====================================================================
+//  Widget Customizer (#77) — live preview via iframe + postMessage
+// ====================================================================
+// De preview draait de échte widget.js in een iframe (widget-preview.html,
+// preview-modus). We sturen de nog niet opgeslagen config met postMessage;
+// elke wijziging in het paneel wordt direct doorgestuurd en her-rendert.
+
+// Bekende klant-configs (breidt vanzelf uit zodra er meer JSON's bestaan).
+const WC_CLIENTS = [{ id: "default", label: "Standaard (Mokum)" }]
+
+let wcInited = false     // tab-init maar één keer
+let wcReady = false      // iframe-widget klaar om config te ontvangen
+let wcConfig = null      // huidige (bewerkte) config-state
+let wcDevice = "desktop"
+
+function wcIframe() { return document.getElementById("wc-iframe") }
+function wcSetStatus(t) { const el = document.getElementById("wc-status"); if (el) el.textContent = t || "" }
+
+// Post een bericht naar de preview-iframe (widget in preview-modus).
+function wcPost(msg) {
+  const f = wcIframe()
+  if (f && f.contentWindow) { try { f.contentWindow.postMessage(msg, "*") } catch (e) {} }
+}
+// Stuur de huidige config + open/taal-status door zodra de widget klaar is.
+function wcPush() {
+  if (!wcReady || !wcConfig) return
+  wcPost({ type: "mokum-preview-config", config: wcConfig })
+  wcPost({ type: "mokum-preview-lang", lang: document.getElementById("wc-lang").value })
+  wcPost({ type: "mokum-preview-open", open: document.getElementById("wc-open").checked })
+}
+
+function initWidgetCustomizer() {
+  if (wcInited) return
+  wcInited = true
+
+  // Klant-dropdown vullen
+  const sel = document.getElementById("wc-client")
+  sel.innerHTML = WC_CLIENTS.map(c => `<option value="${c.id}">${c.label}</option>`).join("")
+
+  // Luister naar de "ready"-melding van de iframe-widget
+  window.addEventListener("message", (ev) => {
+    const d = ev && ev.data
+    if (d && d.type === "mokum-preview-ready") { wcReady = true; wcPush() }
+  })
+
+  // Config laden en preview starten
+  wcLoadConfig(WC_CLIENTS[0].id).then(() => {
+    wcReloadPreview()
+  })
+}
+
+// Haal een klant-config op en zet de bedieningsvelden.
+async function wcLoadConfig(clientId) {
+  wcSetStatus("Config laden…")
+  try {
+    const r = await fetch(`configs/${clientId}.json?v=${Math.floor(Date.now() / 60000)}`, { cache: "no-store" })
+    if (!r.ok) throw new Error("http " + r.status)
+    wcConfig = await r.json()
+    wcFillControls()
+    wcSetStatus("Config geladen: " + clientId)
+    wcPush()
+  } catch (e) {
+    wcSetStatus("Kon config niet laden (" + e.message + ")")
+  }
+}
+
+function wcOnClientChange() { wcLoadConfig(document.getElementById("wc-client").value) }
+
+// Bedieningsvelden vullen vanuit wcConfig
+function wcFillControls() {
+  if (!wcConfig) return
+  const pos = wcConfig.position || {}
+  const scale = typeof pos.launcherScale === "number" ? pos.launcherScale : 1.5
+  document.getElementById("wc-scale").value = scale
+  document.getElementById("wc-scale-val").textContent = scale.toFixed(1) + "×"
+  document.getElementById("wc-offx").value = pos.offsetX != null ? pos.offsetX : 24
+  document.getElementById("wc-offy").value = pos.offsetY != null ? pos.offsetY : 24
+  document.getElementById("wc-width").value = pos.width || "440px"
+
+  const bub = wcConfig.bubble || {}
+  document.getElementById("wc-bubble-texts").value = (bub.texts || []).join("\n")
+  document.getElementById("wc-bubble-interval").value = bub.intervalSeconds != null ? bub.intervalSeconds : ""
+
+  const tx = wcConfig.texts || { nl: {}, en: {} }
+  document.getElementById("wc-welcome-nl").value = (tx.nl && tx.nl.welcome) || ""
+  document.getElementById("wc-welcome-en").value = (tx.en && tx.en.welcome) || ""
+  document.getElementById("wc-ph-nl").value = (tx.nl && tx.nl.placeholder) || ""
+  document.getElementById("wc-ph-en").value = (tx.en && tx.en.placeholder) || ""
+}
+
+// ---- Bedieningshandlers: muteren wcConfig en pushen live ----
+function wcEnsure(path) { // zorgt dat een genest object bestaat
+  let o = wcConfig
+  for (const k of path) { if (!o[k] || typeof o[k] !== "object") o[k] = {}; o = o[k] }
+  return o
+}
+function wcOnScale() {
+  const v = parseFloat(document.getElementById("wc-scale").value)
+  document.getElementById("wc-scale-val").textContent = v.toFixed(1) + "×"
+  wcEnsure(["position"]).launcherScale = v
+  wcPush()
+}
+function wcOnOffset() {
+  const x = parseInt(document.getElementById("wc-offx").value, 10)
+  const y = parseInt(document.getElementById("wc-offy").value, 10)
+  const p = wcEnsure(["position"])
+  if (!isNaN(x)) p.offsetX = x
+  if (!isNaN(y)) p.offsetY = y
+  wcPush()
+}
+function wcOnWidth() { wcEnsure(["position"]).width = document.getElementById("wc-width").value || "440px"; wcPush() }
+function wcOnBubbleTexts() {
+  const lines = document.getElementById("wc-bubble-texts").value.split("\n").map(s => s.trim()).filter(Boolean)
+  wcEnsure(["bubble"]).texts = lines.length ? lines : ["Ask me anything!"]
+  wcPush()
+}
+function wcOnBubbleInterval() {
+  const n = parseInt(document.getElementById("wc-bubble-interval").value, 10)
+  if (!isNaN(n)) wcEnsure(["bubble"]).intervalSeconds = n
+  // reflecteert (nog) niet in de widget — geen push nodig
+}
+function wcOnTexts() {
+  const nl = wcEnsure(["texts", "nl"]), en = wcEnsure(["texts", "en"])
+  nl.welcome = document.getElementById("wc-welcome-nl").value
+  en.welcome = document.getElementById("wc-welcome-en").value
+  nl.placeholder = document.getElementById("wc-ph-nl").value
+  en.placeholder = document.getElementById("wc-ph-en").value
+  wcPush()
+}
+
+// ---- Sub-tabs (Icoon/Bubble/Positie/Teksten) ----
+function wcShowSub(name) {
+  ["icoon", "bubble", "positie", "teksten"].forEach(s => {
+    document.getElementById("wcpanel-" + s).classList.toggle("active", s === name)
+    document.getElementById("wcsub-" + s).classList.toggle("active", s === name)
+  })
+}
+
+// ---- Preview-toolbar ----
+function wcSetDevice(dev) {
+  wcDevice = dev
+  document.getElementById("wc-device").className = "wc-device " + dev
+  document.getElementById("wc-dev-desktop").classList.toggle("active", dev === "desktop")
+  document.getElementById("wc-dev-mobile").classList.toggle("active", dev === "mobile")
+}
+function wcToggleOpen() { wcPost({ type: "mokum-preview-open", open: document.getElementById("wc-open").checked }) }
+function wcSetLang() {
+  wcPost({ type: "mokum-preview-lang", lang: document.getElementById("wc-lang").value })
+  if (document.getElementById("wc-open").checked) wcPost({ type: "mokum-preview-open", open: true })
+}
+function wcReloadPreview() {
+  wcReady = false
+  wcIframe().src = "widget-preview.html?v=" + Date.now()
+  // wcPush() volgt automatisch zodra de iframe "ready" meldt
+}
 
 // Init
 if (isIngelogd()) {

@@ -51,6 +51,11 @@
     return /^[a-z0-9-]{1,40}$/.test(c) ? c : ''
   }
   const CLIENT = resolveClient()
+  // Preview-modus (Widget Customizer, #77): de dashboard-preview zet window.__MOKUM_PREVIEW__
+  // vóór het laden van widget.js. Dan NIET fetchen en geen /api-calls, maar wachten op de
+  // (nog niet opgeslagen) config van de parent via postMessage. Het productiepad — en dus de
+  // live embed op de klantsite — blijft volledig onaangeroerd (PREVIEW is daar altijd false).
+  const PREVIEW = (function () { try { return !!window.__MOKUM_PREVIEW__ } catch (e) { return false } })()
   const FALLBACK = {
     nl: { welcome: 'Hey! Ik ben de Mokum Magic 8 Ball 🎱 Waar kan ik je mee helpen?', typing: 'Aan het typen...', placeholder: 'Stel een vraag...', error: 'Oeps, er ging iets mis. Probeer het nog eens! 🎱', duplicateMsg: 'Die vraag heb je net al gesteld 🙂 Probeer gerust iets anders te vragen!', rateLimitMsg: 'Rustig aan! 😅 Je stelt veel vragen achter elkaar. Wacht nog even ({s}s) en probeer het dan opnieuw.', backToTopics: '← Terug naar onderwerpen', backButton: '← Terug', askOther: '✏️ Ik wil een andere vraag stellen', examplesBtn: 'Voorbeeldvragen per rubriek', topics: [], questions: {}, catTitles: {}, spelregelsDisciplines: [], spelregelsQuestions: {}, hoverInfo: [] },
     en: { welcome: "Hey! I'm the Mokum Magic 8 Ball 🎱 What can I help you with?", typing: 'Typing...', placeholder: 'Ask a question...', error: 'Oops, something went wrong. Please try again! 🎱', duplicateMsg: 'You just asked that one 🙂 Feel free to ask something else!', rateLimitMsg: "Easy tiger! 🐯😅 You're asking a lot of questions quickly. Please wait a moment ({s}s) and try again.", backToTopics: '← Back to topics', backButton: '← Back', askOther: '✏️ I want to ask a different question', examplesBtn: 'Example questions per category', topics: [], questions: {}, catTitles: {}, spelregelsDisciplines: [], spelregelsQuestions: {}, hoverInfo: [] },
@@ -611,6 +616,13 @@
     const cb = state.callback
     if (!cb.naam.trim() || !cb.telefoon.trim()) { state.callbackError = tr().cbRequired; render(); return }
     state.callbackError = ''
+    // Preview-modus (#77): geen echt terugbelverzoek versturen — alleen de bevestiging tonen.
+    if (PREVIEW) {
+      state.callbackSent = true
+      state.callback = { naam: '', telefoon: '', onderwerp: '', voorkeurstijd: '' }
+      render()
+      return
+    }
     try {
       const res = await fetch(`${API_URL}/api/terugbelverzoek`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -655,6 +667,18 @@
     if (!msg.trim()) return
     // Blokkeer terwijl er al een antwoord wordt opgehaald (geen 5x dezelfde request bij snel klikken)
     if (state.loading) return
+
+    // Preview-modus (#77): geen echte API-call (voorkomt vervuiling van de gesprekslogs);
+    // toon een voorbeeld-antwoord zodat de Teksten-preview realistisch oogt.
+    if (PREVIEW) {
+      state.input = ''; state.stage = 'chat'
+      state.messages.push({ role: 'user', content: msg })
+      state.messages.push({ role: 'assistant', content: state.lang === 'nl'
+        ? 'Dit is een preview — in de echte widget verschijnt hier het antwoord van de bot. 🎱'
+        : 'This is a preview — in the live widget the bot’s answer appears here. 🎱' })
+      render()
+      return
+    }
 
     const genormaliseerd = msg.trim().toLowerCase()
 
@@ -776,6 +800,29 @@
       .catch(() => {})
   }
 
+  // ── Preview-modus (Widget Customizer, #77) ────────────────────────────────
+  // De dashboard-preview draait de widget in een iframe en stuurt de (nog niet
+  // opgeslagen) config via postMessage. We passen 'm toe en her-renderen live.
+  function applyPreviewConfig(cfg) {
+    try { applyConfig(cfg) } catch (e) {}
+    if (!state.open) state.messages = [{ role: 'assistant', content: tr().welcome }]
+    render()
+  }
+  function onPreviewMessage(ev) {
+    const d = ev && ev.data
+    if (!d || typeof d !== 'object') return
+    if (d.type === 'mokum-preview-config' && d.config) {
+      applyPreviewConfig(d.config)
+    } else if (d.type === 'mokum-preview-open') {
+      if (d.open) { resetChat(); state.open = true } else { state.open = false }
+      render()
+    } else if (d.type === 'mokum-preview-lang' && (d.lang === 'nl' || d.lang === 'en')) {
+      state.lang = d.lang
+      if (!state.open) state.messages = [{ role: 'assistant', content: tr().welcome }]
+      render()
+    }
+  }
+
   async function init() {
     // Host in de pagina; de hele widget leeft in een Shadow DOM zodat thema-CSS er niet in kan lekken.
     const host = document.createElement('div')
@@ -788,6 +835,13 @@
     injectStyles()
     state.messages = [{ role: 'assistant', content: tr().welcome }]
     render()
+    if (PREVIEW) {
+      // Preview: geen config-fetch en geen /api/standaardvragen-override. Wacht op de
+      // config van de parent (dashboard) en meld dat we klaar zijn om te ontvangen.
+      window.addEventListener('message', onPreviewMessage)
+      try { if (window.parent) window.parent.postMessage({ type: 'mokum-preview-ready' }, '*') } catch (e) {}
+      return
+    }
     await loadConfig()       // echte config eroverheen (of fallback blijft bij fout)
     if (!state.open) state.messages = [{ role: 'assistant', content: tr().welcome }] // welkomsttekst bijwerken
     render()

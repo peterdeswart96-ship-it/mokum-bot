@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preview — voorbeeldwebsite</title>
+  <!--
+    Dummy-webpagina voor de Widget Customizer-preview (#77). Deze pagina wordt in
+    een iframe in het dashboard geladen. Ze zet window.__MOKUM_PREVIEW__ vóór het
+    laden van widget.js, waardoor de widget in preview-modus draait: geen config-
+    fetch en geen echte API-calls, maar aansturing via postMessage vanuit het
+    dashboard. De inhoud hieronder is puur decor zodat positionering realistisch
+    te beoordelen is — het stelt een willekeurige klantsite voor.
+  -->
+  <style>
+    :root {
+      --bg: #f4f5f7; --ink: #1c2333; --muted: #6b7280; --line: #e5e7eb;
+      --brand: #10233f; --brand-2: #1f3a63; --accent: #c8a15a; --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink); background: var(--bg); line-height: 1.55; -webkit-font-smoothing: antialiased;
+    }
+    .site-nav {
+      position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 14px 20px; background: var(--brand); color: #fff;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+    .brand .dot { width: 26px; height: 26px; border-radius: 50%; background: #0a0a0a; color: #fff; display: grid; place-items: center; font-size: 13px; box-shadow: inset 0 0 0 2px #fff2; }
+    .nav-links { display: flex; gap: 16px; font-size: 13px; color: #dfe6f2; }
+    .nav-links span { white-space: nowrap; }
+    .hero {
+      padding: 56px 20px 40px; text-align: center;
+      background: linear-gradient(160deg, var(--brand) 0%, var(--brand-2) 100%); color: #fff;
+    }
+    .hero .eyebrow { text-transform: uppercase; letter-spacing: .18em; font-size: 11px; color: var(--accent); font-weight: 700; }
+    .hero h1 { margin: 10px 0 12px; font-size: clamp(24px, 5vw, 40px); line-height: 1.1; }
+    .hero p { margin: 0 auto; max-width: 620px; color: #d7deea; font-size: 15px; }
+    .hero .cta { margin-top: 22px; display: inline-block; background: var(--accent); color: #1a1300; font-weight: 700; padding: 11px 22px; border-radius: 999px; font-size: 14px; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 34px 20px 90px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-top: 6px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: 0 1px 2px rgba(16,24,40,.05); }
+    .card h3 { margin: 0 0 8px; font-size: 16px; }
+    .card p { margin: 0; color: var(--muted); font-size: 13.5px; }
+    .card .ico { font-size: 22px; }
+    .section-title { font-size: 20px; margin: 34px 0 4px; }
+    .lead { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+    .rows { display: grid; gap: 12px; margin-top: 8px; }
+    .row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+    .row .price { color: var(--brand-2); font-weight: 700; }
+    .site-foot { padding: 26px 20px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); background: #fff; }
+    .skeleton { height: 12px; border-radius: 6px; background: linear-gradient(90deg, #eef0f3, #e3e6ea, #eef0f3); margin: 10px 0; }
+    .skeleton.w70 { width: 70%; } .skeleton.w50 { width: 50%; } .skeleton.w85 { width: 85%; }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="brand"><span class="dot">8</span> Poolcafé Voorbeeld</div>
+    <div class="nav-links"><span>Home</span><span>Toernooien</span><span>Reserveren</span><span>Contact</span></div>
+  </nav>
+
+  <header class="hero">
+    <div class="eyebrow">Pool · Darts · Snooker</div>
+    <h1>Welkom in het gezelligste poolcafé van de stad</h1>
+    <p>Boek een tafel, schrijf je in voor een toernooi of stel je vraag aan onze slimme assistent — rechtsonder in beeld.</p>
+    <span class="cta">Reserveer een tafel</span>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <div class="card"><div class="ico">🎱</div><h3>16 pooltafels</h3><p>Professionele tafels, altijd goed onderhouden en strak gelakt laken.</p></div>
+      <div class="card"><div class="ico">🎯</div><h3>Darts & snooker</h3><p>Elektronische dartbanen en twee volwaardige snookertafels.</p></div>
+      <div class="card"><div class="ico">🍻</div><h3>Bar &amp; keuken</h3><p>Speciaalbieren, borrelplanken en een verse keuken tot laat.</p></div>
+    </div>
+
+    <h2 class="section-title">Tarieven</h2>
+    <p class="lead">Een greep uit onze prijzen — vraag de assistent naar de actuele lijst.</p>
+    <div class="rows">
+      <div class="row"><span>Pooltafel — per uur (dal)</span><span class="price">€ 9,50</span></div>
+      <div class="row"><span>Pooltafel — per uur (piek)</span><span class="price">€ 12,50</span></div>
+      <div class="row"><span>Snookertafel — per uur</span><span class="price">€ 14,00</span></div>
+    </div>
+
+    <h2 class="section-title">Over ons</h2>
+    <div class="skeleton w85"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton w70"></div>
+    <div class="skeleton w50"></div>
+  </main>
+
+  <footer class="site-foot">© Poolcafé Voorbeeld — dit is een voorbeeldpagina voor de widget-preview.</footer>
+
+  <!-- Preview-modus aanzetten vóór widget.js laadt. In preview blokkeert widget.js zelf
+       álle API-writes (chat + terugbelverzoek), dus er kan niets in de logs belanden. -->
+  <script>window.__MOKUM_PREVIEW__ = true</script>
+  <script src="/widget.js"></script>
+</body>
+</html>
