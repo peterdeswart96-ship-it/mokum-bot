@@ -16,7 +16,7 @@
 const crypto = require("crypto")
 const { app } = require("@azure/functions")
 const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
-const { checkPwd } = require("./lib/auth")
+const { autoriseer } = require("./_auth")
 
 const FOTOS_CONTAINER = "fotos"
 const CATALOG_BLOB = "_catalog.json"
@@ -181,8 +181,8 @@ app.http("fotos", {
       const body = await request.json()
       const action = body.action || "upload"
 
-      // Alle muterende acties zijn wachtwoord-gated
-      if (!checkPwd(body.wachtwoord)) {
+      // Alle muterende acties zijn beheer-gated (dual-mode: Entra-token óf wachtwoord — #42)
+      if (!(await autoriseer(request, body)).ok) {
         return json(401, { error: "Onjuist wachtwoord" })
       }
 

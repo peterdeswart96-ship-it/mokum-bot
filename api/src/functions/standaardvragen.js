@@ -16,7 +16,7 @@
 const crypto = require("crypto")
 const { app } = require("@azure/functions")
 const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
-const { checkPwd } = require("./lib/auth")
+const { autoriseer } = require("./_auth")
 
 const CONTAINER = "standaardvragen"
 const INDEX_BLOB = "_index.json"
@@ -139,7 +139,7 @@ app.http("standaardvragen", {
       const body = await request.json()
       const action = body.action || "save"
 
-      if (!checkPwd(body.wachtwoord)) {
+      if (!(await autoriseer(request, body)).ok) {
         return json(401, { error: "Onjuist wachtwoord" })
       }
 

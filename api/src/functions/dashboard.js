@@ -1,10 +1,10 @@
 // Dashboard-endpoints (#71 — geëxtraheerd uit chat.js): beheer van gesprekken + de Claude-
 // ondersteunde beheeracties (analyse, kennisbron-upload/-suggestie, foto-suggestie, vertaal).
-// Alle wachtwoord-beveiligd (checkPwd) en met dashboard-CORS. Deelt helpers via lib/.
+// Alle beheer-beveiligd via autoriseer() — dual-mode: Entra-token óf gedeeld wachtwoord (#42) — en met dashboard-CORS. Deelt helpers via lib/.
 const { app } = require("@azure/functions")
 const Anthropic = require("@anthropic-ai/sdk")
 const { STORAGE_ACCOUNT, CONTAINER, httpsRequest, fetchBlobContent, listAllBlobs } = require("./lib/storage")
-const { checkPwd } = require("./lib/auth")
+const { autoriseer } = require("./_auth")
 const { dashboardCors } = require("./lib/cors")
 const { leesClaudeTekst } = require("./lib/claude")
 
@@ -61,7 +61,7 @@ app.http("gesprekken", {
       if ((action === "delete" || action === "mark") && request.method === "POST") {
         let cbody = {}
         try { cbody = await request.json() } catch {}
-        if (!checkPwd(cbody.wachtwoord)) {
+        if (!(await autoriseer(request, cbody)).ok) {
           return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
         }
         const naam = cbody.blob
@@ -113,8 +113,8 @@ app.http("gesprekken", {
       if (action === "cleanup" && request.method === "POST") {
         let cbody = {}
         try { cbody = await request.json() } catch {}
-        const { wachtwoord, voor, dryrun } = cbody
-        if (!checkPwd(wachtwoord)) {
+        const { voor, dryrun } = cbody
+        if (!(await autoriseer(request, cbody)).ok) {
           return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
         }
         if (!voor || !/^\d{4}-\d{2}-\d{2}(T\d{2}-\d{2}(-\d{2})?)?$/.test(voor)) {
@@ -183,7 +183,7 @@ app.http("analyse", {
     }
     try {
       const body = await request.json()
-      if (!checkPwd(body.wachtwoord)) {
+      if (!(await autoriseer(request, body)).ok) {
         return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
       }
       const { gesprekken, type } = body
@@ -285,7 +285,7 @@ app.http("kennisbron-upload", {
     }
     try {
       const body = await request.json()
-      if (!checkPwd(body.wachtwoord)) {
+      if (!(await autoriseer(request, body)).ok) {
         return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
       }
       const { bestandsnaam, map, inhoud } = body
@@ -363,7 +363,7 @@ app.http("kennis-suggestie", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
-      if (!checkPwd(body.wachtwoord)) return json(401, { error: "Onjuist wachtwoord" })
+      if (!(await autoriseer(request, body)).ok) return json(401, { error: "Onjuist wachtwoord" })
       const omschrijving = (body.omschrijving || "").toString().trim()
       const vraag = (body.vraag || "").toString().trim()
       const antwoord = (body.antwoord || "").toString().trim()
@@ -434,7 +434,7 @@ app.http("foto-suggestie", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
-      if (!checkPwd(body.wachtwoord)) return json(401, { error: "Onjuist wachtwoord" })
+      if (!(await autoriseer(request, body)).ok) return json(401, { error: "Onjuist wachtwoord" })
       const b64 = body.contentBase64
       const mediaType = body.contentType || "image/jpeg"
       const categorieen = Array.isArray(body.categorieen) && body.categorieen.length ? body.categorieen : ["Overig"]
@@ -496,7 +496,7 @@ app.http("kennisbron-vertaal", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
-      if (!checkPwd(body.wachtwoord)) return json(401, { error: "Onjuist wachtwoord" })
+      if (!(await autoriseer(request, body)).ok) return json(401, { error: "Onjuist wachtwoord" })
       const pad = (body.pad || "").toString().trim()
       const doel = (body.doelTaal || "en").toString().trim()
       if (!pad || /\.en\.(txt|md)$/i.test(pad)) return json(400, { error: "geldig bron-pad vereist (geen .en-bestand)" })

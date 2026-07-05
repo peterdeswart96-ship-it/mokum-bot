@@ -7,8 +7,8 @@
 //      uitgefaseerd.
 //
 // Zonder Entra-config gedraagt dit zich exact als de huidige wachtwoord-check.
-// Deze helper is nog NIET op de endpoints aangesloten; dat gebeurt in stap B van
-// het implementatieplan (na de Azure/Entra-setup), zodat we het eerst kunnen testen.
+// Aangesloten op de dashboard-endpoints (dashboard.js/fotos.js/standaardvragen.js) — stap B.
+// Entra-acceptatie activeert zodra de ENTRA_*-App-Settings in Azure zijn gezet.
 
 const crypto = require("crypto")
 
