@@ -1,16 +1,35 @@
-# React + Vite
+# Mokum Magic 8 Ball 🎱
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Slimme chat-widget voor **Mokum Pool & Darts** (poolen-amsterdam.nl), met een beheer-dashboard en een white-label configurator om de widget per klant aan te passen.
 
-Currently, two official plugins are available:
+## Architectuur
+- **Frontend** (static, GitHub Pages op `mokum-bot.pdscloud.nl`):
+  - `public/widget.js` — de embed-widget op de klantsite (laadt z'n config at runtime).
+  - `public/loader.js` — laadt `widget.js` met cache-buster + geeft `data-client` door.
+  - `public/dashboard.html` — beheer-dashboard (analyse, foto's, en de **Widget Customizer**).
+  - `public/configs/<client>.json` — één config-bron per klant (teksten, topics, icoon, positie, bubble).
+  - React-bron in `src/` (bouwt met Vite).
+- **Backend** (Azure Functions, `api/src/functions/`): o.a. `chat`, `fotos`, `standaardvragen`, `terugbelverzoek`, `icoon-genereer`. Deploy via GitHub Actions (`func azure functionapp publish mokum-bot-api`).
+- **Opslag:** Azure Blob + Table Storage.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Widget Customizer
+Dashboard-tab **🎨 Widget**: stel per klant het **icoon**, de **tekstballon**, de **positie** en alle **teksten** (nl/en) in — met een **live preview** die de echte widget draait — en **exporteer** een klant-config-JSON + embed-snippet.
 
-## React Compiler
+➡️ **Nieuwe klant toevoegen:** [`docs/nieuwe-klant.md`](docs/nieuwe-klant.md) · **Configformaat:** [`docs/config-schema.md`](docs/config-schema.md)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Ontwikkelen
+```bash
+npm install
+npm run dev      # Vite dev-server; open http://localhost:5173/dashboard.html
+npm run build    # productie-build naar dist/
+```
+De widget en configs zitten in `public/` en worden 1-op-1 naar `dist/` gekopieerd. Het dashboard achter een gedeeld wachtwoord (migratie naar Entra External ID loopt — zie [`docs/entra-setup.md`](docs/entra-setup.md)).
 
-## Expanding the ESLint configuration
+## Deploy
+Push naar **`main`** → GitHub Actions bouwt en publiceert naar GitHub Pages (frontend) en deployt de Azure Functions (backend). Config-wijzigingen zijn binnen ~1 minuut live.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Documentatie
+- [`docs/STATUS.md`](docs/STATUS.md) — actuele projectstand
+- [`docs/config-schema.md`](docs/config-schema.md) — widget-configformaat
+- [`docs/nieuwe-klant.md`](docs/nieuwe-klant.md) — nieuwe klant in 5 stappen
+- [`docs/sessions/`](docs/sessions/) — logs per werksessie

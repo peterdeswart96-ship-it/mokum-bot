@@ -48,8 +48,8 @@ GitHub Pages serveert met een vaste `max-age=600` (10 min) en staat geen custom 
     "src": "data:image/png;base64,…" // óf een (data-)URL voor een geüploade PNG/WebP
   },
   "position": {                   // zwevende launcher
-    "anchor": "bottom-right",
-    "offsetX": 24, "offsetY": 24, "unit": "px",
+    "anchor": "bottom-right",       // hoek: top-left · top-right · bottom-left · bottom-right (#81)
+    "offsetX": 24, "offsetY": 24, "unit": "px", // marge vanaf de gekozen hoek
     "width": "440px",             // breedte open chatvenster (desktop)
     "launcherScale": 1.5          // schaal 8-bal + tekstballon
   },
@@ -77,10 +77,15 @@ Verplichte sleutels per taal onder `texts.<lang>`: `welcome, typing, placeholder
 
 **Runtime-override:** het dashboard-endpoint `/api/standaardvragen` overschrijft ná het laden alléén `questions` per onderwerp/taal (issue #33). De rest van de config is statisch.
 
-**In code (bewust NIET in de config):** kleuren, rate-limits, `INTERN_HASH`, `API_URL`, bubble-timing.
+**In code (bewust NIET in de config):** kleuren, rate-limits, `INTERN_HASH`, `API_URL`.
 
-## Nieuwe klant toevoegen (3 stappen)
+## Nieuwe klant toevoegen
 
+**Aanbevolen:** gebruik de **Widget Customizer** in het dashboard (tab **🎨 Widget**) — daar stel je icoon/bubble/positie/teksten visueel in met live preview, en exporteer je de klant-JSON + embed-snippet. Volledige stappen: **[docs/nieuwe-klant.md](nieuwe-klant.md)**.
+
+**Handmatig (zonder dashboard):**
 1. Kopieer `public/configs/default.json` naar `public/configs/<client>.json` en pas teksten/topics/positie aan (houd de validatieregels aan).
 2. Zet op de klantsite: `<script src="https://mokum-bot.pdscloud.nl/loader.js" data-client="<client>" async defer></script>`.
 3. Commit naar `main` (Vite kopieert `public/configs/` → `dist/` → gh-pages). Binnen ~1 min live.
+
+> **`configs/test.json`** is een voorbeeld-klantconfig (linksonder verankerd, chat-icoon, eigen bubble/welkomst) — laad 'm via `data-client="test"` om multi-tenant te testen zonder de Mokum-config te raken.
