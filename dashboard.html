@@ -1232,6 +1232,12 @@
       .wc-range-row input[type=range] { flex: 1; width: auto; padding: 0; }
       .wc-range-val { font-size: 12px; color: var(--text-2); min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
       .wc-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
+      .wc-brow { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+      .wc-brow input[type=text] { flex: 1; }
+      .wc-iconbtn { border: 1px solid var(--border); background: transparent; color: var(--text-2); border-radius: 8px; min-width: 34px; height: 38px; cursor: pointer; font-size: 14px; line-height: 1; flex-shrink: 0; }
+      .wc-iconbtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+      .wc-iconbtn:disabled { opacity: .3; cursor: default; }
+      .wc-empty { font-size: 12px; color: var(--muted-2); margin: 6px 0; font-style: italic; }
       .wc-preview-card { position: sticky; top: 12px; }
       .wc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
       .wc-seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
@@ -1280,12 +1286,19 @@
 
             <!-- Bubble -->
             <div class="wc-sub" id="wcpanel-bubble">
-              <label class="wc-label">Tekstballon-teksten <span class="wc-hint" style="font-weight:400;">— één per regel</span></label>
-              <textarea id="wc-bubble-texts" rows="6" oninput="wcOnBubbleTexts()" placeholder="Ask me anything!&#10;Have you got any questions?"></textarea>
-              <p class="wc-hint">Rouleren boven de 8-bal. De volledige bubble-instellingen (o.a. timing) komen in <b>#80</b>.</p>
-              <label class="wc-label">Interval <span class="wc-badge">actief in #80</span></label>
-              <input type="text" id="wc-bubble-interval" oninput="wcOnBubbleInterval()" placeholder="15" />
-              <p class="wc-hint">Seconden tussen twee teksten. Wordt door de widget nog niet gelezen — reflecteert dus (nog) niet in de preview.</p>
+              <label class="wc-check" style="margin-bottom:6px;"><input type="checkbox" id="wc-bubble-enabled" onchange="wcOnBubbleEnabled()"> Tekstballon tonen boven de 8-bal</label>
+              <p class="wc-hint">Uit — of een lege lijst — verbergt de ballon; dan zie je alleen de 8-bal.</p>
+
+              <label class="wc-label">Teksten <span class="wc-hint" style="font-weight:400;">— rouleren boven de 8-bal</span></label>
+              <div id="wc-bubble-list"></div>
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                <input type="text" id="wc-bubble-new" placeholder="Nieuwe tekst toevoegen…" onkeydown="if(event.key==='Enter'){event.preventDefault();wcBubbleAdd()}" />
+                <button class="btn" onclick="wcBubbleAdd()" style="white-space:nowrap;">+ Toevoegen</button>
+              </div>
+
+              <label class="wc-label">Rotatie-interval (seconden)</label>
+              <input type="text" id="wc-bubble-interval" inputmode="numeric" oninput="wcOnBubbleInterval()" placeholder="15" style="max-width:120px;" />
+              <p class="wc-hint">Tijd tussen twee teksten (minimaal 2). Reflecteert direct in de preview.</p>
             </div>
 
             <!-- Positie -->
@@ -3856,8 +3869,9 @@ function wcFillControls() {
   document.getElementById("wc-width").value = pos.width || "440px"
 
   const bub = wcConfig.bubble || {}
-  document.getElementById("wc-bubble-texts").value = (bub.texts || []).join("\n")
-  document.getElementById("wc-bubble-interval").value = bub.intervalSeconds != null ? bub.intervalSeconds : ""
+  document.getElementById("wc-bubble-enabled").checked = bub.enabled !== false
+  document.getElementById("wc-bubble-interval").value = bub.intervalSeconds != null ? bub.intervalSeconds : 15
+  wcRenderBubbleList()
 
   const tx = wcConfig.texts || { nl: {}, en: {} }
   document.getElementById("wc-welcome-nl").value = (tx.nl && tx.nl.welcome) || ""
@@ -3887,15 +3901,42 @@ function wcOnOffset() {
   wcPush()
 }
 function wcOnWidth() { wcEnsure(["position"]).width = document.getElementById("wc-width").value || "440px"; wcPush() }
-function wcOnBubbleTexts() {
-  const lines = document.getElementById("wc-bubble-texts").value.split("\n").map(s => s.trim()).filter(Boolean)
-  wcEnsure(["bubble"]).texts = lines.length ? lines : ["Ask me anything!"]
-  wcPush()
+// ---- Bubble-teksten editor (#80): toevoegen / verwijderen / herordenen ----
+function wcAttr(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;") }
+function wcBubbleArr() { const b = wcEnsure(["bubble"]); if (!Array.isArray(b.texts)) b.texts = []; return b.texts }
+function wcRenderBubbleList() {
+  const list = document.getElementById("wc-bubble-list")
+  if (!list) return
+  const texts = (wcConfig.bubble && wcConfig.bubble.texts) || []
+  if (!texts.length) { list.innerHTML = '<p class="wc-empty">Geen teksten — de tekstballon is uit.</p>'; return }
+  list.innerHTML = texts.map((t, i) => (
+    '<div class="wc-brow">' +
+      '<input type="text" value="' + wcAttr(t) + '" oninput="wcBubbleEdit(' + i + ', this.value)" />' +
+      '<button class="wc-iconbtn" title="Omhoog" onclick="wcBubbleMove(' + i + ',-1)"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
+      '<button class="wc-iconbtn" title="Omlaag" onclick="wcBubbleMove(' + i + ',1)"' + (i === texts.length - 1 ? " disabled" : "") + '>↓</button>' +
+      '<button class="wc-iconbtn" title="Verwijderen" onclick="wcBubbleDel(' + i + ')">✕</button>' +
+    '</div>'
+  )).join("")
+}
+function wcOnBubbleEnabled() { wcEnsure(["bubble"]).enabled = document.getElementById("wc-bubble-enabled").checked; wcPush() }
+function wcBubbleEdit(i, v) { const a = wcBubbleArr(); a[i] = v; wcPush() } // geen re-render: houdt focus in het veld
+function wcBubbleMove(i, dir) {
+  const a = wcBubbleArr(), j = i + dir
+  if (j < 0 || j >= a.length) return
+  const t = a[i]; a[i] = a[j]; a[j] = t
+  wcRenderBubbleList(); wcPush()
+}
+function wcBubbleDel(i) { const a = wcBubbleArr(); a.splice(i, 1); wcRenderBubbleList(); wcPush() }
+function wcBubbleAdd() {
+  const inp = document.getElementById("wc-bubble-new")
+  const v = inp.value.trim()
+  if (!v) return
+  wcBubbleArr().push(v); inp.value = ""
+  wcRenderBubbleList(); wcPush()
 }
 function wcOnBubbleInterval() {
   const n = parseInt(document.getElementById("wc-bubble-interval").value, 10)
-  if (!isNaN(n)) wcEnsure(["bubble"]).intervalSeconds = n
-  // reflecteert (nog) niet in de widget — geen push nodig
+  if (!isNaN(n) && n > 0) { wcEnsure(["bubble"]).intervalSeconds = Math.max(2, n); wcPush() }
 }
 function wcOnTexts() {
   const nl = wcEnsure(["texts", "nl"]), en = wcEnsure(["texts", "en"])
