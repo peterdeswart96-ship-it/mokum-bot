@@ -1254,6 +1254,33 @@
       .wc-anchor button { border: 1px solid var(--border); background: var(--card); border-radius: 7px; cursor: pointer; padding: 0; transition: background .12s, border-color .12s; }
       .wc-anchor button:hover { border-color: var(--accent); }
       .wc-anchor button.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+      .wc-teksten-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 18px 0 6px; }
+      .wc-rub { border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: var(--card-2); }
+      .wc-rub-head { display: flex; gap: 6px; align-items: flex-start; }
+      .wc-rub-titles, .wc-topic-labels { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+      .wc-flaginput { display: flex; align-items: center; gap: 6px; }
+      .wc-flag { flex-shrink: 0; width: 20px; text-align: center; font-size: 13px; }
+      .wc-emoji { width: 46px !important; text-align: center; flex-shrink: 0; padding: 8px 4px !important; }
+      .wc-rub-btns, .wc-topic-btns { display: flex; gap: 3px; flex-shrink: 0; }
+      .wc-topics { margin-top: 10px; padding-left: 8px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+      .wc-topic-block { display: flex; flex-direction: column; gap: 4px; }
+      .wc-topic { display: flex; gap: 6px; align-items: flex-start; }
+      .wc-add-topic { align-self: flex-start; padding: 5px 10px !important; font-size: 12px !important; }
+      .wc-special { font-size: 11px; color: var(--muted-2); font-style: italic; padding: 0 0 0 52px; }
+      .wc-topic-vragen { align-self: flex-start; margin-left: 52px; font-size: 11.5px; color: var(--text-2); background: none; border: 1px solid var(--border); border-radius: 8px; padding: 4px 9px; cursor: pointer; }
+      .wc-topic-vragen:hover { border-color: var(--accent); color: var(--accent); }
+      .wc-qwrap { margin: 2px 0 2px 52px; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 8px; background: var(--card); }
+      .wc-qsec { margin-bottom: 8px; }
+      .wc-qsec:last-child { margin-bottom: 0; }
+      .wc-qsec-title { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 5px; }
+      .wc-qrow { display: flex; gap: 6px; margin-bottom: 5px; }
+      .wc-qrow input, .wc-qadd input { flex: 1; }
+      .wc-qadd { display: flex; gap: 6px; margin-top: 4px; }
+      .wc-val { margin-top: 14px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; border: 1px solid var(--border); line-height: 1.5; }
+      .wc-val.ok { border-color: #2f9e55; color: #7bd88f; background: rgba(47,158,85,0.08); }
+      .wc-val.bad { border-color: #e5484d; color: #e5848a; background: rgba(229,72,77,0.07); }
+      .wc-val ul { margin: 6px 0 0; padding-left: 18px; }
+      .wc-val li { margin: 2px 0; }
       .wc-preview-card { position: sticky; top: 12px; }
       .wc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
       .wc-seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
@@ -1352,30 +1379,26 @@
 
             <!-- Teksten -->
             <div class="wc-sub" id="wcpanel-teksten">
-              <p class="wc-note">Een greep uit de teksten voor de live preview. De <b>volledige teksten-editor</b> (topics, vragen, alle labels nl/en) komt in <b>#82</b>.</p>
+              <p class="wc-note">🇳🇱 en 🇬🇧 staan onder elkaar zodat vertalingen nooit half blijven. Wijzigingen zijn direct zichtbaar in de preview.</p>
+
               <label class="wc-label">Welkomstbericht</label>
-              <div class="wc-2col">
-                <div>
-                  <p class="wc-hint" style="margin:0 0 4px;">🇳🇱 Nederlands</p>
-                  <textarea id="wc-welcome-nl" rows="3" oninput="wcOnTexts()"></textarea>
-                </div>
-                <div>
-                  <p class="wc-hint" style="margin:0 0 4px;">🇬🇧 Engels</p>
-                  <textarea id="wc-welcome-en" rows="3" oninput="wcOnTexts()"></textarea>
-                </div>
-              </div>
+              <div class="wc-flaginput" style="align-items:flex-start;margin-bottom:6px;"><span class="wc-flag">🇳🇱</span><textarea id="wc-welcome-nl" rows="2" oninput="wcOnTexts()"></textarea></div>
+              <div class="wc-flaginput" style="align-items:flex-start;"><span class="wc-flag">🇬🇧</span><textarea id="wc-welcome-en" rows="2" oninput="wcOnTexts()"></textarea></div>
+
               <label class="wc-label">Placeholder invoerveld</label>
-              <div class="wc-2col">
-                <div>
-                  <p class="wc-hint" style="margin:0 0 4px;">🇳🇱 Nederlands</p>
-                  <input type="text" id="wc-ph-nl" oninput="wcOnTexts()" />
-                </div>
-                <div>
-                  <p class="wc-hint" style="margin:0 0 4px;">🇬🇧 Engels</p>
-                  <input type="text" id="wc-ph-en" oninput="wcOnTexts()" />
+              <div class="wc-flaginput" style="margin-bottom:6px;"><span class="wc-flag">🇳🇱</span><input type="text" id="wc-ph-nl" oninput="wcOnTexts()" /></div>
+              <div class="wc-flaginput"><span class="wc-flag">🇬🇧</span><input type="text" id="wc-ph-en" oninput="wcOnTexts()" /></div>
+
+              <div class="wc-teksten-head">
+                <label class="wc-label" style="margin:0;">Rubrieken &amp; topics</label>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn" style="padding:6px 10px;" onclick="wcShowExamples()" title="Toon de rubrieken in de preview">👁 In preview</button>
+                  <button class="btn" style="padding:6px 10px;" onclick="wcAddRubriek()">+ Rubriek</button>
                 </div>
               </div>
-              <p class="wc-hint" style="margin-top:8px;">Tip: zet <b>“Chat geopend”</b> aan in de preview-balk om welkomstbericht en invoerveld te zien.</p>
+              <p class="wc-hint" style="margin-top:0;">Elke rubriek heeft een emoji + titel (nl/en) en groepeert topics. Elk topic: emoji (gedeeld) + label per taal. Vragen per topic volgen in de vragen-editor.</p>
+              <div id="wc-rubrieken"></div>
+              <div id="wc-teksten-val" class="wc-val ok"></div>
             </div>
           </div>
         </div>
@@ -3922,6 +3945,7 @@ function wcFillControls() {
   document.getElementById("wc-welcome-en").value = (tx.en && tx.en.welcome) || ""
   document.getElementById("wc-ph-nl").value = (tx.nl && tx.nl.placeholder) || ""
   document.getElementById("wc-ph-en").value = (tx.en && tx.en.placeholder) || ""
+  wcRenderRubrieken()
 }
 
 // ---- Bedieningshandlers: muteren wcConfig en pushen live ----
@@ -4108,7 +4132,202 @@ function wcOnTexts() {
   en.welcome = document.getElementById("wc-welcome-en").value
   nl.placeholder = document.getElementById("wc-ph-nl").value
   en.placeholder = document.getElementById("wc-ph-en").value
-  wcPush()
+  wcPush(); wcRenderVal()
+}
+
+// ---- Teksten: rubrieken & topics (#82) ----
+const WC_SPECIAL_TOPICS = ["spelregels", "intern", "anders"]
+function wcCats() { if (!Array.isArray(wcConfig.categories)) wcConfig.categories = []; return wcConfig.categories }
+function wcTopicsArr(lang) { const t = wcEnsure(["texts", lang]); if (!Array.isArray(t.topics)) t.topics = []; return t.topics }
+function wcCatTitles(lang) { const t = wcEnsure(["texts", lang]); if (!t.catTitles || typeof t.catTitles !== "object") t.catTitles = {}; return t.catTitles }
+function wcQ(lang) { const t = wcEnsure(["texts", lang]); if (!t.questions || typeof t.questions !== "object") t.questions = {}; return t.questions }
+function wcFindTopic(lang, id) { return wcTopicsArr(lang).find(t => t.id === id) }
+function wcNewTopicId() {
+  const ids = new Set(wcTopicsArr("nl").map(t => t.id).concat(wcTopicsArr("en").map(t => t.id)))
+  let n = 1, id
+  do { id = "topic-" + n++ } while (ids.has(id))
+  return id
+}
+function wcNewCatId() {
+  const ids = new Set(wcCats().map(c => c.id))
+  let n = 1, id
+  do { id = "rubriek-" + n++ } while (ids.has(id))
+  return id
+}
+function wcShowExamples() {
+  document.getElementById("wc-open").checked = true
+  wcPost({ type: "mokum-preview-examples" })
+}
+
+function wcRenderRubrieken() {
+  const wrap = document.getElementById("wc-rubrieken")
+  if (!wrap) return
+  const cats = wcCats(), tNL = wcCatTitles("nl"), tEN = wcCatTitles("en")
+  wrap.innerHTML = cats.map((cat, ci) => {
+    const topicsHtml = (cat.topics || []).map((tid, ti) => {
+      const tnl = wcFindTopic("nl", tid) || { emoji: "", label: "" }
+      const ten = wcFindTopic("en", tid) || { emoji: "", label: "" }
+      const special = WC_SPECIAL_TOPICS.includes(tid)
+        ? '<div class="wc-special">⚙️ Speciale rubriek (' + tid + ') — eigen gedrag in de widget</div>' : ""
+      const nq = (wcQ("nl")[tid] || []).length
+      const expanded = wcExpandedTopics.has(tid)
+      return '<div class="wc-topic-block">' +
+          '<div class="wc-topic">' +
+            '<input class="wc-emoji" maxlength="4" value="' + wcAttr(tnl.emoji) + '" oninput="wcTopEmoji(\'' + tid + '\', this.value)" title="Emoji (gedeeld nl/en)" />' +
+            '<div class="wc-topic-labels">' +
+              '<div class="wc-flaginput"><span class="wc-flag">🇳🇱</span><input type="text" value="' + wcAttr(tnl.label) + '" oninput="wcTopLabel(\'' + tid + '\',\'nl\',this.value)" placeholder="Label (nl)" /></div>' +
+              '<div class="wc-flaginput"><span class="wc-flag">🇬🇧</span><input type="text" value="' + wcAttr(ten.label) + '" oninput="wcTopLabel(\'' + tid + '\',\'en\',this.value)" placeholder="Label (en)" /></div>' +
+            '</div>' +
+            '<div class="wc-topic-btns">' +
+              '<button class="wc-iconbtn" title="Omhoog" onclick="wcTopMove(' + ci + ',' + ti + ',-1)"' + (ti === 0 ? " disabled" : "") + '>↑</button>' +
+              '<button class="wc-iconbtn" title="Omlaag" onclick="wcTopMove(' + ci + ',' + ti + ',1)"' + (ti === cat.topics.length - 1 ? " disabled" : "") + '>↓</button>' +
+              '<button class="wc-iconbtn" title="Verwijderen" onclick="wcTopDel(' + ci + ',\'' + tid + '\')">✕</button>' +
+            '</div>' +
+          '</div>' + special +
+          '<button class="wc-topic-vragen" onclick="wcToggleQ(\'' + tid + '\')">' + (expanded ? "▾" : "▸") + ' Vragen (' + nq + ')</button>' +
+          (expanded ? wcQuestionsHtml(tid) : "") +
+        '</div>'
+    }).join("")
+    return '<div class="wc-rub">' +
+        '<div class="wc-rub-head">' +
+          '<input class="wc-emoji" maxlength="4" value="' + wcAttr(cat.emoji || "") + '" oninput="wcRubEmoji(' + ci + ', this.value)" title="Emoji" />' +
+          '<div class="wc-rub-titles">' +
+            '<div class="wc-flaginput"><span class="wc-flag">🇳🇱</span><input type="text" value="' + wcAttr(tNL[cat.id] || "") + '" oninput="wcRubTitle(' + ci + ',\'nl\',this.value)" placeholder="Rubriek (nl)" /></div>' +
+            '<div class="wc-flaginput"><span class="wc-flag">🇬🇧</span><input type="text" value="' + wcAttr(tEN[cat.id] || "") + '" oninput="wcRubTitle(' + ci + ',\'en\',this.value)" placeholder="Category (en)" /></div>' +
+          '</div>' +
+          '<div class="wc-rub-btns">' +
+            '<button class="wc-iconbtn" title="Omhoog" onclick="wcRubMove(' + ci + ',-1)"' + (ci === 0 ? " disabled" : "") + '>↑</button>' +
+            '<button class="wc-iconbtn" title="Omlaag" onclick="wcRubMove(' + ci + ',1)"' + (ci === cats.length - 1 ? " disabled" : "") + '>↓</button>' +
+            '<button class="wc-iconbtn" title="Rubriek verwijderen" onclick="wcRubDel(' + ci + ')">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wc-topics">' + topicsHtml +
+          '<button class="btn wc-add-topic" onclick="wcAddTopic(' + ci + ')">+ Topic</button>' +
+        '</div>' +
+      '</div>'
+  }).join("")
+  wcRenderVal()
+}
+
+// Tekst-edits (geen re-render → behoudt focus)
+function wcRubEmoji(ci, v) { const c = wcCats()[ci]; if (c) { c.emoji = v; wcPush() } }
+function wcRubTitle(ci, lang, v) { const c = wcCats()[ci]; if (c) { wcCatTitles(lang)[c.id] = v; wcPush(); wcRenderVal() } }
+function wcTopEmoji(id, v) { ["nl", "en"].forEach(l => { const t = wcFindTopic(l, id); if (t) t.emoji = v }); wcPush() }
+function wcTopLabel(id, lang, v) { const t = wcFindTopic(lang, id); if (t) { t.label = v; wcPush(); wcRenderVal() } }
+
+// Structuur-edits (re-render + push)
+function wcRubMove(ci, dir) { const c = wcCats(), j = ci + dir; if (j < 0 || j >= c.length) return; const x = c[ci]; c[ci] = c[j]; c[j] = x; wcRenderRubrieken(); wcPush() }
+function wcAddRubriek() {
+  const id = wcNewCatId()
+  wcCats().push({ id: id, emoji: "🆕", topics: [] })
+  wcCatTitles("nl")[id] = "Nieuwe rubriek"; wcCatTitles("en")[id] = "New category"
+  wcRenderRubrieken(); wcPush()
+}
+function wcRemoveTopicData(id) {
+  ["nl", "en"].forEach(l => {
+    const arr = wcTopicsArr(l); const i = arr.findIndex(t => t.id === id); if (i >= 0) arr.splice(i, 1)
+    delete wcQ(l)[id]
+  })
+}
+function wcRubDel(ci) {
+  const c = wcCats(), cat = c[ci]; if (!cat) return
+  if (!confirm('Rubriek "' + (wcCatTitles("nl")[cat.id] || cat.id) + '" verwijderen? De topics erin worden ook verwijderd.')) return
+  ;(cat.topics || []).slice().forEach(tid => wcRemoveTopicData(tid))
+  delete wcCatTitles("nl")[cat.id]; delete wcCatTitles("en")[cat.id]
+  c.splice(ci, 1); wcRenderRubrieken(); wcPush()
+}
+function wcTopMove(ci, ti, dir) { const arr = wcCats()[ci].topics, j = ti + dir; if (j < 0 || j >= arr.length) return; const x = arr[ti]; arr[ti] = arr[j]; arr[j] = x; wcRenderRubrieken(); wcPush() }
+function wcAddTopic(ci) {
+  const cat = wcCats()[ci]; if (!cat) return
+  const id = wcNewTopicId()
+  wcTopicsArr("nl").push({ id: id, emoji: "🆕", label: "Nieuw topic" })
+  wcTopicsArr("en").push({ id: id, emoji: "🆕", label: "New topic" })
+  wcQ("nl")[id] = []; wcQ("en")[id] = []
+  if (!Array.isArray(cat.topics)) cat.topics = []
+  cat.topics.push(id)
+  wcRenderRubrieken(); wcPush()
+}
+function wcTopDel(ci, id) {
+  const cat = wcCats()[ci]; if (!cat) return
+  const i = (cat.topics || []).indexOf(id); if (i >= 0) cat.topics.splice(i, 1)
+  wcRemoveTopicData(id)
+  wcRenderRubrieken(); wcPush()
+}
+
+// ---- Vragen per topic (#82, etappe 2) ----
+const wcExpandedTopics = new Set()
+function wcToggleQ(tid) { if (wcExpandedTopics.has(tid)) wcExpandedTopics.delete(tid); else wcExpandedTopics.add(tid); wcRenderRubrieken() }
+function wcQuestionsHtml(tid) {
+  const sec = (lang, title) => {
+    const arr = wcQ(lang)[tid] || []
+    const rows = arr.map((q, i) =>
+      '<div class="wc-qrow"><input type="text" value="' + wcAttr(q) + '" oninput="wcQEdit(\'' + tid + '\',\'' + lang + '\',' + i + ',this.value)" />' +
+      '<button class="wc-iconbtn" title="Verwijderen" onclick="wcQDel(\'' + tid + '\',\'' + lang + '\',' + i + ')">✕</button></div>'
+    ).join("")
+    return '<div class="wc-qsec"><div class="wc-qsec-title">' + title + '</div>' + rows +
+      '<div class="wc-qadd"><input type="text" id="wc-qnew-' + tid + '-' + lang + '" placeholder="Vraag toevoegen…" onkeydown="if(event.key===\'Enter\'){event.preventDefault();wcQAdd(\'' + tid + '\',\'' + lang + '\')}" />' +
+      '<button class="btn" style="padding:6px 11px;" onclick="wcQAdd(\'' + tid + '\',\'' + lang + '\')">+</button></div></div>'
+  }
+  const note = WC_SPECIAL_TOPICS.includes(tid)
+    ? '<p class="wc-hint" style="margin:0 0 6px;">⚙️ Speciale rubriek — deze vragen worden in de widget niet als chips getoond.</p>' : ""
+  return '<div class="wc-qwrap">' + note + sec("nl", "🇳🇱 Voorbeeldvragen") + sec("en", "🇬🇧 Example questions") + '</div>'
+}
+function wcQEdit(tid, lang, i, v) { const a = wcQ(lang)[tid]; if (a && i < a.length) { a[i] = v; wcPush(); wcRenderVal() } }
+function wcQAdd(tid, lang) {
+  const inp = document.getElementById("wc-qnew-" + tid + "-" + lang)
+  const v = inp ? inp.value.trim() : ""
+  if (!v) return
+  if (!Array.isArray(wcQ(lang)[tid])) wcQ(lang)[tid] = []
+  wcQ(lang)[tid].push(v)
+  wcRenderRubrieken(); wcPush()
+  const ni = document.getElementById("wc-qnew-" + tid + "-" + lang); if (ni) ni.focus()
+}
+function wcQDel(tid, lang, i) { const a = wcQ(lang)[tid]; if (a && i < a.length) { a.splice(i, 1); wcRenderRubrieken(); wcPush() } }
+
+// ---- Validatie (#82): blokkeert straks het opslaan/exporteren in #83 ----
+function wcValidate() {
+  if (!wcConfig) return []
+  const issues = []
+  const nl = (wcConfig.texts && wcConfig.texts.nl) || {}, en = (wcConfig.texts && wcConfig.texts.en) || {}
+  if (!(nl.welcome || "").trim()) issues.push("Welkomstbericht (nl) is leeg")
+  if (!(en.welcome || "").trim()) issues.push("Welkomstbericht (en) is leeg")
+  const cats = wcCats()
+  cats.forEach(cat => {
+    if (!(wcCatTitles("nl")[cat.id] || "").trim()) issues.push('Rubriek "' + cat.id + '": titel (nl) ontbreekt')
+    if (!(wcCatTitles("en")[cat.id] || "").trim()) issues.push('Rubriek "' + cat.id + '": titel (en) ontbreekt')
+  })
+  const idsNL = wcTopicsArr("nl").map(t => t.id).slice().sort().join(",")
+  const idsEN = wcTopicsArr("en").map(t => t.id).slice().sort().join(",")
+  if (idsNL !== idsEN) issues.push("Topic-id's verschillen tussen nl en en — structuur ongelijk")
+  const seen = new Set()
+  cats.forEach(cat => (cat.topics || []).forEach(tid => {
+    if (seen.has(tid)) return
+    seen.add(tid)
+    const tnl = wcFindTopic("nl", tid), ten = wcFindTopic("en", tid)
+    if (!(tnl && (tnl.label || "").trim())) issues.push('Topic "' + tid + '": label (nl) ontbreekt')
+    if (!(ten && (ten.label || "").trim())) issues.push('Topic "' + tid + '": label (en) ontbreekt')
+    if (!WC_SPECIAL_TOPICS.includes(tid)) {
+      const qn = (wcQ("nl")[tid] || []).filter(q => (q || "").trim()).length
+      const qe = (wcQ("en")[tid] || []).filter(q => (q || "").trim()).length
+      if (qn !== qe) issues.push('Topic "' + tid + '": ' + qn + ' vragen (nl) vs ' + qe + ' (en) — vertaling ongelijk')
+    }
+  }))
+  return issues
+}
+function wcRenderVal() {
+  const el = document.getElementById("wc-teksten-val")
+  if (!el) return
+  const issues = wcValidate()
+  if (!issues.length) {
+    el.className = "wc-val ok"
+    el.innerHTML = "✓ Alle verplichte teksten zijn ingevuld en nl/en zijn in balans."
+    return
+  }
+  el.className = "wc-val bad"
+  const shown = issues.slice(0, 12).map(i => "<li>" + wcAttr(i) + "</li>").join("")
+  const more = issues.length > 12 ? "<li>… en " + (issues.length - 12) + " meer</li>" : ""
+  el.innerHTML = "⚠ " + issues.length + " aandachtspunt" + (issues.length > 1 ? "en" : "") +
+    " — deze blokkeren straks het opslaan/exporteren (#83):<ul>" + shown + more + "</ul>"
 }
 
 // ---- Sub-tabs (Icoon/Bubble/Positie/Teksten) ----

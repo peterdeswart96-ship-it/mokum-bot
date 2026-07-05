@@ -921,12 +921,18 @@
     if (d.type === 'mokum-preview-config' && d.config) {
       applyPreviewConfig(d.config)
     } else if (d.type === 'mokum-preview-open') {
-      if (d.open) { resetChat(); state.open = true } else { state.open = false }
+      // Alleen verversen bij de overgang dicht→open; anders zou elke config-push (die
+      // open:true meestuurt) de chat resetten en o.a. de examples-panel dichtklappen (#82).
+      if (d.open) { if (!state.open) { resetChat(); state.open = true } } else { state.open = false }
       render()
     } else if (d.type === 'mokum-preview-lang' && (d.lang === 'nl' || d.lang === 'en')) {
       state.lang = d.lang
       if (!state.open) state.messages = [{ role: 'assistant', content: tr().welcome }]
       render()
+    } else if (d.type === 'mokum-preview-examples') {
+      // #82: open de chat en klap "Voorbeeldvragen per rubriek" uit zodat de
+      // rubrieken/topics-bewerking direct zichtbaar is in de preview.
+      resetChat(); state.open = true; state.examplesOpen = true; render()
     }
   }
 
