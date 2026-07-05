@@ -1250,6 +1250,10 @@
       .wc-icon-thumb img, .wc-icon-thumb svg { width: 100%; height: 100%; object-fit: cover; }
       .wc-fname { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; color: var(--text-2); word-break: break-all; }
       .wc-err { color: #e5484d; font-size: 12px; margin: 6px 0; }
+      .wc-anchor { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; width: 132px; height: 84px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 4px; }
+      .wc-anchor button { border: 1px solid var(--border); background: var(--card); border-radius: 7px; cursor: pointer; padding: 0; transition: background .12s, border-color .12s; }
+      .wc-anchor button:hover { border-color: var(--accent); }
+      .wc-anchor button.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
       .wc-preview-card { position: sticky; top: 12px; }
       .wc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
       .wc-seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
@@ -1322,17 +1326,25 @@
 
             <!-- Positie -->
             <div class="wc-sub" id="wcpanel-positie">
-              <p class="wc-note">Vrije positionering (ook links verankeren) komt in <b>#81</b>. Nu: marge vanaf rechtsonder + breedte van het chatvenster.</p>
+              <p class="wc-note">💡 Tip: <b>sleep de widget</b> in de preview om 'm te verplaatsen — hij snapt naar de dichtstbijzijnde hoek en de velden hieronder lopen mee.</p>
+              <label class="wc-label">Hoek (anker)</label>
+              <div class="wc-anchor" id="wc-anchor">
+                <button type="button" data-anchor="top-left"     title="Linksboven"   onclick="wcPickAnchor('top-left')"></button>
+                <button type="button" data-anchor="top-right"    title="Rechtsboven"  onclick="wcPickAnchor('top-right')"></button>
+                <button type="button" data-anchor="bottom-left"  title="Linksonder"   onclick="wcPickAnchor('bottom-left')"></button>
+                <button type="button" data-anchor="bottom-right" title="Rechtsonder"  onclick="wcPickAnchor('bottom-right')"></button>
+              </div>
               <div class="wc-2col">
                 <div>
-                  <label class="wc-label">Marge rechts (px)</label>
+                  <label class="wc-label">Horizontale marge (px)</label>
                   <input type="text" id="wc-offx" inputmode="numeric" oninput="wcOnOffset()" placeholder="24" />
                 </div>
                 <div>
-                  <label class="wc-label">Marge onder (px)</label>
+                  <label class="wc-label">Verticale marge (px)</label>
                   <input type="text" id="wc-offy" inputmode="numeric" oninput="wcOnOffset()" placeholder="24" />
                 </div>
               </div>
+              <p class="wc-hint">Marge vanaf de gekozen hoek.</p>
               <label class="wc-label">Breedte chatvenster (desktop)</label>
               <input type="text" id="wc-width" oninput="wcOnWidth()" placeholder="440px" />
               <p class="wc-hint">Bijv. <code>440px</code>. Op mobiel schaalt de widget automatisch naar de schermbreedte.</p>
@@ -3850,7 +3862,17 @@ function initWidgetCustomizer() {
   // Luister naar de "ready"-melding van de iframe-widget
   window.addEventListener("message", (ev) => {
     const d = ev && ev.data
-    if (d && d.type === "mokum-preview-ready") { wcReady = true; wcPush() }
+    if (!d) return
+    if (d.type === "mokum-preview-ready") { wcReady = true; wcPush() }
+    // Widget is in de preview versleept (#81): anker + offset overnemen in de velden.
+    else if (d.type === "mokum-preview-position" && /^(top|bottom)-(left|right)$/.test(d.anchor || "")) {
+      const p = wcEnsure(["position"])
+      p.anchor = d.anchor
+      if (Number.isFinite(d.offsetX)) p.offsetX = d.offsetX
+      if (Number.isFinite(d.offsetY)) p.offsetY = d.offsetY
+      wcFillPosition()
+      wcPush()
+    }
   })
 
   // Config laden en preview starten
@@ -3888,6 +3910,7 @@ function wcFillControls() {
   document.getElementById("wc-offx").value = pos.offsetX != null ? pos.offsetX : 24
   document.getElementById("wc-offy").value = pos.offsetY != null ? pos.offsetY : 24
   document.getElementById("wc-width").value = pos.width || "440px"
+  wcRenderAnchor()
 
   const bub = wcConfig.bubble || {}
   document.getElementById("wc-bubble-enabled").checked = bub.enabled !== false
@@ -3922,6 +3945,20 @@ function wcOnOffset() {
   wcPush()
 }
 function wcOnWidth() { wcEnsure(["position"]).width = document.getElementById("wc-width").value || "440px"; wcPush() }
+// ---- Positie (#81): anker (hoek) ----
+function wcPickAnchor(a) { wcEnsure(["position"]).anchor = a; wcRenderAnchor(); wcPush() }
+function wcRenderAnchor() {
+  const cur = (wcConfig && wcConfig.position && wcConfig.position.anchor) || "bottom-right"
+  document.querySelectorAll("#wc-anchor button").forEach(b => b.classList.toggle("active", b.dataset.anchor === cur))
+}
+// Vult de positie-velden (na drag of config-load).
+function wcFillPosition() {
+  const pos = (wcConfig && wcConfig.position) || {}
+  document.getElementById("wc-offx").value = pos.offsetX != null ? pos.offsetX : 24
+  document.getElementById("wc-offy").value = pos.offsetY != null ? pos.offsetY : 24
+  document.getElementById("wc-width").value = pos.width || "440px"
+  wcRenderAnchor()
+}
 // ---- Bubble-teksten editor (#80): toevoegen / verwijderen / herordenen ----
 function wcAttr(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;") }
 function wcBubbleArr() { const b = wcEnsure(["bubble"]); if (!Array.isArray(b.texts)) b.texts = []; return b.texts }

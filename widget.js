@@ -24,8 +24,10 @@
     anthracite: '#26262b',
   }
 
- let WIDGET_CONFIG = { bottom: '24px', right: '24px', width: '440px' } // right=24 lijnt de 8-bal-launcher horizontaal uit met de WhatsApp-knop; bottom=24 → gelijke marge rechts/onder
-  let LAUNCHER_SCALE = 1.5 // 8-bal + tekstballon samen 50% groter (verankerd rechtsonder, zie floatWrap)
+ // Positie (#81): anker (hoek) + offsets i.p.v. absolute x/y — offsets zijn de marge
+  // vanaf de gekozen hoek, robuust op elk schermformaat. Standaard rechtsonder.
+  let WIDGET_CONFIG = { anchor: 'bottom-right', offX: 24, offY: 24, width: '440px' }
+  let LAUNCHER_SCALE = 1.5 // 8-bal + tekstballon samen 50% groter (verankerd op de gekozen hoek, zie floatWrap)
 
   // Rate-limit: max aantal vragen binnen een tijdvenster (anti-spam)
   const RATE_MAX = 2
@@ -95,7 +97,10 @@
     // Launcher-icoon (#78): 'default'/afwezig = 8-bal; anders een preset-SVG of eigen afbeelding.
     ICON = (cfg.icon && cfg.icon.type && cfg.icon.type !== 'default') ? cfg.icon : null
     if (cfg.position) {
-      WIDGET_CONFIG = { bottom: cfg.position.offsetY + 'px', right: cfg.position.offsetX + 'px', width: cfg.position.width }
+      if (typeof cfg.position.anchor === 'string' && /^(top|bottom)-(left|right)$/.test(cfg.position.anchor)) WIDGET_CONFIG.anchor = cfg.position.anchor
+      if (cfg.position.offsetX != null) WIDGET_CONFIG.offX = parseInt(cfg.position.offsetX, 10) || 0
+      if (cfg.position.offsetY != null) WIDGET_CONFIG.offY = parseInt(cfg.position.offsetY, 10) || 0
+      if (cfg.position.width) WIDGET_CONFIG.width = cfg.position.width
       if (typeof cfg.position.launcherScale === 'number') LAUNCHER_SCALE = cfg.position.launcherScale
     }
     startBubbleTimer() // interval/aan-uit direct laten ingaan (ook live in preview)
@@ -150,7 +155,7 @@
     if (mobile) return (window.innerWidth - 12) + 'px'
     if (state.size === 'groot') return 'calc(100vw - 32px)' // MAX: vrijwel het hele scherm
     if (state.size === 'klein') return '380px'
-    return '460px' // middel
+    return WIDGET_CONFIG.width || '460px' // middel — instelbaar via config (#81)
   }
 
   function getHeight() {
@@ -163,13 +168,28 @@
     return `min(${cap}px, calc(100dvh - 90px - 80px - 16px))`
   }
 
-  function getBottom() {
-    // Open venster zit laag (overlapt o.a. de WhatsApp-knop rechtsonder) en gebruikt de ruimte optimaal.
-    return window.innerWidth < 480 ? '8px' : '12px'
+  // Anker → verticale/horizontale kant (#81). Fallback rechtsonder bij een rare waarde.
+  function anchorVH() {
+    const a = /^(top|bottom)-(left|right)$/.test(WIDGET_CONFIG.anchor) ? WIDGET_CONFIG.anchor : 'bottom-right'
+    const p = a.split('-')
+    return { v: p[0], h: p[1] } // v: top|bottom, h: left|right
   }
-
-  function getRight() {
-    return window.innerWidth < 480 ? '6px' : WIDGET_CONFIG.right
+  // Positie-CSS voor de gesloten launcher: offset-marges vanaf de gekozen hoek.
+  // Mobiel clampt de horizontale marge klein zodat 'ie niet buiten beeld valt.
+  function launcherPosCss() {
+    const { v, h } = anchorVH()
+    const hVal = window.innerWidth < 480 ? 6 : (WIDGET_CONFIG.offX || 0)
+    return `${v}:${WIDGET_CONFIG.offY || 0}px;${h}:${hVal}px;`
+  }
+  // Positie-CSS voor het open venster: strak in de hoek met kleine vaste marge.
+  // Op mobiel altijd vanaf onder (fitMobileWindow tilt 't boven het toetsenbord).
+  function windowPosCss() {
+    const { v, h } = anchorVH()
+    const mobile = window.innerWidth < 480
+    const hVal = mobile ? 6 : (WIDGET_CONFIG.offX || 0)
+    const vVal = mobile ? 8 : 12
+    const vSide = mobile ? 'bottom' : v
+    return `${vSide}:${vVal}px;${h}:${hVal}px;`
   }
 
   // Houdt het mobiele paneel binnen het zichtbare deel van het scherm en tilt het
@@ -365,12 +385,11 @@
 
     const t = tr()
     const w = getWidth()
-    const r = getRight()
     const isMobile = window.innerWidth < 480
     const chatHeight = getHeight()
 
     if (state.open) {
-      const win = el('div', `position:fixed;bottom:${getBottom()};right:${r};width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:2147483000;`, undefined, { id: 'mokum-chat-window' })
+      const win = el('div', `position:fixed;${windowPosCss()}width:${w};height:${chatHeight};border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.8),0 0 0 1px #2a2a2a;display:flex;flex-direction:column;background:${C.black};transition:width 0.3s ease,height 0.3s ease;z-index:2147483000;`, undefined, { id: 'mokum-chat-window' })
 
       // Header
       const hdr = el('div', `background:${C.blackCard};border-bottom:1px solid ${C.border};padding:2px 9px;display:flex;align-items:stretch;justify-content:space-between;gap:6px;flex-shrink:0;`)
@@ -581,16 +600,24 @@
 
     // Floating knop
     if (!state.open) {
-      // De hele launcher (8-bal + tekstballon) schaalt als één geheel mee; origin rechtsonder houdt de hoek op zijn plek.
-      const floatWrap = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;transform:scale(${LAUNCHER_SCALE});transform-origin:bottom right;`)
+      // De hele launcher (8-bal + tekstballon) schaalt als één geheel mee; de transform-origin
+      // op de gekozen hoek houdt die hoek op z'n plek. Bij een top-anker staat de bal boven de
+      // ballon (column-reverse) en wijst de pijl omhoog; links spiegelt de uitlijning (#81).
+      const { v, h } = anchorVH()
+      const alignItems = h === 'left' ? 'flex-start' : 'flex-end'
+      const flexDir = v === 'top' ? 'column-reverse' : 'column'
+      const floatWrap = el('div', `position:fixed;${launcherPosCss()}z-index:9999;display:flex;flex-direction:${flexDir};align-items:${alignItems};gap:10px;transform:scale(${LAUNCHER_SCALE});transform-origin:${v} ${h};`)
 
       // Tekstballon alleen tonen als 'ie actief is (aan + minstens 1 tekst) — #80.
       let bubble = null
       if (bubbleActief()) {
-        bubble = el('div', 'position:relative;display:inline-block;margin-bottom:18px;')
+        const bubbleMargin = v === 'top' ? 'margin-top:18px' : 'margin-bottom:18px'
+        bubble = el('div', `position:relative;display:inline-block;${bubbleMargin};`)
         const bubbleInner = el('div', 'background:white;border:3.5px solid #111;border-radius:12px;padding:10px 16px;position:relative;')
         const bubbleText = el('span', 'font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;color:#cc0000;display:block;white-space:nowrap;text-align:center;', BUBBLE_TEXTS[state.bubbleTextIndex % BUBBLE_TEXTS.length])
-        const arrow = el('div', 'position:absolute;bottom:-16px;right:32px;width:4px;height:16px;background:#111;border-radius:2px;')
+        const arrowV = v === 'top' ? 'top:-16px' : 'bottom:-16px'
+        const arrowH = h === 'left' ? 'left:32px' : 'right:32px'
+        const arrow = el('div', `position:absolute;${arrowV};${arrowH};width:4px;height:16px;background:#111;border-radius:2px;`)
         bubbleInner.appendChild(bubbleText)
         bubble.append(bubbleInner, arrow)
       }
@@ -607,14 +634,50 @@
       if (bubble) floatWrap.append(bubble, ballBtn)
       else floatWrap.append(ballBtn)
       root.appendChild(floatWrap)
+      if (PREVIEW) enableLauncherDrag(floatWrap) // #81: verslepen in de dashboard-preview
     }
 
     // Sluit knop onder venster
     if (state.open) {
-      const cw = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;margin-top:8px;`)
+      const cw = el('div', `position:fixed;${windowPosCss()}z-index:9999;margin-top:8px;`)
 
       root.appendChild(cw)
     }
+  }
+
+  // Verslepen van de launcher in de preview (#81). Op pointerup bepaalt de widget de
+  // dichtstbijzijnde hoek + offset en stuurt die naar het dashboard (parent), dat de
+  // config bijwerkt en terugstuurt — waarna de widget netjes op het anker snapt.
+  function enableLauncherDrag(wrap) {
+    let dragging = false, moved = false, sx = 0, sy = 0
+    wrap.style.cursor = 'grab'
+    wrap.addEventListener('pointerdown', (e) => {
+      dragging = true; moved = false; sx = e.clientX; sy = e.clientY
+      try { wrap.setPointerCapture(e.pointerId) } catch (err) {}
+      wrap.style.cursor = 'grabbing'
+      e.preventDefault()
+    })
+    wrap.addEventListener('pointermove', (e) => {
+      if (!dragging) return
+      if (Math.abs(e.clientX - sx) > 4 || Math.abs(e.clientY - sy) > 4) moved = true
+      if (moved) {
+        wrap.style.left = (e.clientX - 32) + 'px'; wrap.style.top = (e.clientY - 32) + 'px'
+        wrap.style.right = 'auto'; wrap.style.bottom = 'auto'; wrap.style.transformOrigin = 'center center'
+      }
+    })
+    wrap.addEventListener('pointerup', (e) => {
+      if (!dragging) return
+      dragging = false; wrap.style.cursor = 'grab'
+      if (!moved) return // gewone klik → de open-handler doet z'n werk
+      const vw = window.innerWidth, vh = window.innerHeight
+      const hh = e.clientX < vw / 2 ? 'left' : 'right'
+      const vv = e.clientY < vh / 2 ? 'top' : 'bottom'
+      const offX = Math.max(8, Math.round((hh === 'left' ? e.clientX : vw - e.clientX) - 32))
+      const offY = Math.max(8, Math.round((vv === 'top' ? e.clientY : vh - e.clientY) - 32))
+      try { window.parent.postMessage({ type: 'mokum-preview-position', anchor: vv + '-' + hh, offsetX: offX, offsetY: offY }, '*') } catch (err) {}
+    })
+    // Onderdruk de klik (die 'de chat openen' triggert) als er gesleept is.
+    wrap.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false } }, true)
   }
 
   function selectTopic(topic) {
@@ -797,7 +860,9 @@
   // De hoogte/breedte zijn dvh/vw-gebaseerd en passen zich zonder re-render aan.
   let lastViewportWidth = window.innerWidth
   window.addEventListener('resize', () => {
-    if (!state.open) return
+    // Alleen bij een echte BREEDTE-wijziging (oriëntatie/desktop-resize/preview-device).
+    // Zo blijft het openende mobiele toetsenbord (alleen hoogte) buiten schot, maar
+    // herpositioneert de gesloten launcher wél bij de mobiel-clamp (#81).
     if (window.innerWidth === lastViewportWidth) return
     lastViewportWidth = window.innerWidth
     render()
