@@ -1238,6 +1238,18 @@
       .wc-iconbtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
       .wc-iconbtn:disabled { opacity: .3; cursor: default; }
       .wc-empty { font-size: 12px; color: var(--muted-2); margin: 6px 0; font-style: italic; }
+      .wc-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin-bottom: 4px; }
+      .wc-preset { aspect-ratio: 1; border: 1px solid var(--border); background: var(--card-2); border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px; transition: border-color .15s, transform .1s; }
+      .wc-preset:hover { border-color: var(--accent); }
+      .wc-preset.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+      .wc-preset svg, .wc-preset img { width: 100%; height: 100%; object-fit: contain; display: block; }
+      .wc-preset .wc-badgeicon { width: 100%; height: 100%; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; }
+      .wc-preset .wc-badgeicon svg { width: 62%; height: 62%; }
+      .wc-icon-file-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+      .wc-icon-thumb { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--card-2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .wc-icon-thumb img, .wc-icon-thumb svg { width: 100%; height: 100%; object-fit: cover; }
+      .wc-fname { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; color: var(--text-2); word-break: break-all; }
+      .wc-err { color: #e5484d; font-size: 12px; margin: 6px 0; }
       .wc-preview-card { position: sticky; top: 12px; }
       .wc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
       .wc-seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
@@ -1275,13 +1287,20 @@
 
             <!-- Icoon -->
             <div class="wc-sub active" id="wcpanel-icoon">
-              <p class="wc-note">Het launcher-icoon is nu de vaste 8-bal. <b>Uploaden van een eigen icoon en een preset-bibliotheek</b> komen in <b>#78</b>.</p>
-              <label class="wc-label">Grootte launcher (8-bal + bubble)</label>
+              <label class="wc-label">Preset-bibliotheek</label>
+              <div class="wc-presets" id="wc-icon-presets"></div>
+
+              <label class="wc-label">Eigen icoon uploaden</label>
+              <input type="file" id="wc-icon-file" accept=".png,.svg,.webp,image/png,image/svg+xml,image/webp" onchange="wcIconUpload(event)" />
+              <p class="wc-hint">PNG, SVG of WebP · max 100 KB · vierkant advies. Verschijnt direct in de preview.</p>
+              <div id="wc-icon-info"></div>
+
+              <label class="wc-label">Grootte launcher (icoon + bubble)</label>
               <div class="wc-range-row">
                 <input type="range" id="wc-scale" min="0.8" max="2.5" step="0.1" oninput="wcOnScale()">
                 <span class="wc-range-val" id="wc-scale-val">1.5×</span>
               </div>
-              <p class="wc-hint">Schaal van de zwevende 8-bal en het tekstballonnetje samen.</p>
+              <p class="wc-hint">Schaal van de zwevende launcher en het tekstballonnetje samen.</p>
             </div>
 
             <!-- Bubble -->
@@ -3864,6 +3883,8 @@ function wcFillControls() {
   const scale = typeof pos.launcherScale === "number" ? pos.launcherScale : 1.5
   document.getElementById("wc-scale").value = scale
   document.getElementById("wc-scale-val").textContent = scale.toFixed(1) + "×"
+  wcRenderPresets()
+  wcRenderIconInfo()
   document.getElementById("wc-offx").value = pos.offsetX != null ? pos.offsetX : 24
   document.getElementById("wc-offy").value = pos.offsetY != null ? pos.offsetY : 24
   document.getElementById("wc-width").value = pos.width || "440px"
@@ -3938,6 +3959,112 @@ function wcOnBubbleInterval() {
   const n = parseInt(document.getElementById("wc-bubble-interval").value, 10)
   if (!isNaN(n) && n > 0) { wcEnsure(["bubble"]).intervalSeconds = Math.max(2, n); wcPush() }
 }
+
+// ---- Icoon (#78): preset-bibliotheek + upload ----
+// Preset-SVG's zijn monochroom met currentColor → de widget rendert ze in een ronde
+// badge (wit op accent). "eight-ball" mapt op type "default" = de echte Mokum-8-bal.
+const WC_ICON_PRESETS = [
+  { id: "eight-ball", label: "Mokum 8-bal", kind: "default",
+    thumb: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0a0a0a"/><circle cx="12" cy="12" r="4.4" fill="#fff"/><text x="12" y="15.3" text-anchor="middle" font-family="Georgia,serif" font-size="7" font-weight="700" fill="#0a0a0a">8</text></svg>' },
+  { id: "chat", label: "Chat", kind: "badge",
+    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg>' },
+  { id: "cue", label: "Keu & dart", kind: "badge",
+    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/><line x1="20" y1="20" x2="4" y2="4"/><circle cx="5" cy="19" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="19" r="1.7" fill="currentColor" stroke="none"/></svg>' },
+  { id: "question", label: "Vraagteken", kind: "badge",
+    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.3 9a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.2-2.7 4"/><circle cx="12" cy="17.4" r="0.7" fill="currentColor" stroke="none"/></svg>' },
+  { id: "sparkles", label: "AI", kind: "badge",
+    svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 5.6L19 9l-5.3 1.4L12 16l-1.7-5.6L5 9l5.3-1.4L12 2z"/><path d="M18.5 14l.8 2.5L22 17l-2.7.7-.8 2.5-.8-2.5L15 17l2.7-.5.8-2.5z"/></svg>' },
+  { id: "target", label: "Dartboard", kind: "badge",
+    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>' },
+]
+function wcCurrentPresetId() {
+  const ic = wcConfig && wcConfig.icon
+  if (!ic || ic.type === "default" || !ic.type) return "eight-ball"
+  if (ic.type === "preset") return ic.preset || ""
+  return "" // custom upload → geen preset actief
+}
+function wcRenderPresets() {
+  const wrap = document.getElementById("wc-icon-presets")
+  if (!wrap) return
+  const cur = wcCurrentPresetId()
+  wrap.innerHTML = WC_ICON_PRESETS.map(p => {
+    const inner = p.kind === "default" ? p.thumb : '<div class="wc-badgeicon">' + p.svg + '</div>'
+    return '<button class="wc-preset' + (p.id === cur ? ' active' : '') + '" title="' + wcAttr(p.label) + '" onclick="wcPickPreset(\'' + p.id + '\')">' + inner + '</button>'
+  }).join("")
+}
+function wcPickPreset(id) {
+  const p = WC_ICON_PRESETS.find(x => x.id === id)
+  if (!p) return
+  wcConfig.icon = p.kind === "default" ? { type: "default" } : { type: "preset", preset: p.id, svg: p.svg }
+  const f = document.getElementById("wc-icon-file"); if (f) f.value = ""
+  wcRenderPresets(); wcRenderIconInfo(); wcPush()
+}
+function wcRenderIconInfo() {
+  const info = document.getElementById("wc-icon-info")
+  if (!info) return
+  const ic = wcConfig && wcConfig.icon
+  if (ic && ic.type === "custom") {
+    const thumb = ic.src ? '<img src="' + ic.src + '" alt="" />' : (ic.svg || "")
+    info.innerHTML = '<div class="wc-icon-file-row"><span class="wc-icon-thumb">' + thumb + '</span>' +
+      '<div><div class="wc-fname">public/assets/clients/&lt;client&gt;/' + wcAttr(ic.name || "icoon") + '</div>' +
+      '<button class="btn" style="margin-top:6px;padding:6px 10px;" onclick="wcIconReset()">Verwijderen</button></div></div>'
+  } else {
+    info.innerHTML = ""
+  }
+}
+function wcIconReset() {
+  wcConfig.icon = { type: "default" }
+  const f = document.getElementById("wc-icon-file"); if (f) f.value = ""
+  wcRenderPresets(); wcRenderIconInfo(); wcPush()
+}
+// Lowercase-hyphen bestandsnaam (Linux build-server is case-sensitive).
+function wcIconName(file, ext) {
+  const base = (file.name || "icoon").replace(/\.[^.]+$/, "")
+  const slug = base.toLowerCase().normalize("NFD")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "icoon"
+  return slug + "." + ext
+}
+// Lichte SVG-sanitatie (defense-in-depth): scripts/handlers/externe verwijzingen eruit.
+function wcSanitizeSvg(text) {
+  return String(text)
+    .replace(/<\?xml[\s\S]*?\?>/gi, "")
+    .replace(/<!DOCTYPE[\s\S]*?>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, "")
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+    .replace(/(?:xlink:href|href)\s*=\s*(["'])\s*(?!#)[^"']*\1/gi, "")
+    .trim()
+}
+function wcIconErr(msg) {
+  const info = document.getElementById("wc-icon-info")
+  if (info) info.innerHTML = '<p class="wc-err">' + wcAttr(msg) + '</p>'
+}
+function wcIconUpload(ev) {
+  const file = ev.target.files && ev.target.files[0]
+  if (!file) return
+  const byType = { "image/png": "png", "image/svg+xml": "svg", "image/webp": "webp" }
+  let ext = byType[file.type]
+  if (!ext) { const m = /\.(png|svg|webp)$/i.exec(file.name || ""); ext = m ? m[1].toLowerCase() : null }
+  if (!ext) { wcIconErr("Alleen PNG, SVG of WebP toegestaan."); ev.target.value = ""; return }
+  if (file.size > 100 * 1024) { wcIconErr("Bestand te groot (" + Math.round(file.size / 1024) + " KB) — max 100 KB."); ev.target.value = ""; return }
+  const name = wcIconName(file, ext)
+  const reader = new FileReader()
+  reader.onerror = () => wcIconErr("Kon het bestand niet lezen.")
+  reader.onload = () => {
+    if (ext === "svg") {
+      const clean = wcSanitizeSvg(String(reader.result))
+      if (!/<svg[\s>]/i.test(clean)) { wcIconErr("Ongeldig SVG-bestand."); return }
+      wcConfig.icon = { type: "custom", svg: clean, name: name }
+    } else {
+      wcConfig.icon = { type: "custom", src: String(reader.result), name: name }
+    }
+    wcRenderPresets(); wcRenderIconInfo(); wcPush()
+  }
+  if (ext === "svg") reader.readAsText(file)
+  else reader.readAsDataURL(file)
+}
+
 function wcOnTexts() {
   const nl = wcEnsure(["texts", "nl"]), en = wcEnsure(["texts", "en"])
   nl.welcome = document.getElementById("wc-welcome-nl").value

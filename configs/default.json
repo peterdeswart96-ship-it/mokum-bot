@@ -8,6 +8,9 @@
       "en"
     ]
   },
+  "icon": {
+    "type": "default"
+  },
   "position": {
     "anchor": "bottom-right",
     "offsetX": 24,
