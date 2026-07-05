@@ -1,29 +1,29 @@
 # Projectstand — Mokum-bot
 
-_Laatst bijgewerkt: 2026-07-03. Zie `docs/sessions/` voor uitgebreide logs per chat, en `git log` / gesloten issues voor details._
+_Laatst bijgewerkt: 2026-07-05. Zie `docs/sessions/` voor uitgebreide logs per chat, en `git log` / gesloten issues voor details._
 
 ## Live op productie (recent gebouwd)
-- **🔒 Backend opgesplitst in modules** (#71, gesloten): `chat.js` 2103 → 1269 r. Nieuwe modules `auth.js`, `terugbel.js`, `dashboard.js` (6 dashboard-endpoints) + een `lib/`-laag: `storage.js` (blob-helpers), `auth.js` (`checkPwd`), `cors.js` (`dashboardCors`), `claude.js` (`leesClaudeTekst`). `fotos.js`/`standaardvragen.js` delen die helpers nu ook. `lib/` valt buiten de host-glob → alleen ge-require'd.
-- **🔒 Respons-robuustheid + CORS** (#72, gesloten): `leesClaudeTekst()` i.p.v. `content[0].text`; dashboard-endpoints geven alleen de dashboard-origin terug (niet `*`); widget-endpoints houden `*`. (Azure Portal-CORS doet de preflight; code doet de echte-respons-ACAO.)
-- **🔒 Server-side rate limit + input-cap** op `/api/chat` (#67, gesloten). · **`.env` uit repo** (#70, gesloten) + dode App Setting `AZURE_STORAGE_CONNECTION_STRING` opgeruimd.
-- **AVG terugbelverzoeken** (#74, gesloten): opschoning redigeert nu ook de vrije-tekst-kopie in `messages`; analyse-doc `docs/avg-terugbelverzoeken.md` (input #39).
-- **WhatsApp-nummer verborgen**: bot toont alleen een klikbare WhatsApp-link, nooit losse cijfers (voorkomt bellen i.p.v. appen).
-- **Widget Customizer-epic (#75–#84)** — **frontend-lane**: fundering staat live — **#75** (config-bron `public/configs/default.json`, sluit #73), **#76** (config-loader `data-client` + fallback-keten), **#85/#86** (rubrieken-scroll + sluitkruisje) + tooltip op de ✕. **Volgende frontend-stap: #77** (dashboard "Widget Customizer"-pagina + live preview). Widget-teksten wijzigen = `public/configs/default.json` bewerken; zie `docs/config-schema.md`.
-- Ouder: dashboard-endpoints wachtwoord-beveiligd (#65/#66), `DASHBOARD_HASH` uit Azure App Setting (#68), standaardvragen (#33), ranglijsten (#60), foto-nummering (#55/#58/#63).
+- **🔒 #42 Fase B — dual-mode auth (Entra + wachtwoord)** live: `autoriseer()` uit `_auth.js` op alle 9 beheer-checkpunten (dashboard 7×, fotos, standaardvragen); `auth.js` login houdt `checkPwd`. App Settings `ENTRA_ISSUER/AUDIENCE/JWKS_URI` gezet → Entra-token wordt geaccepteerd náást het wachtwoord (geen verstoring). Commit `3e7a32a`.
+- **#79 backend — `/api/icoon-genereer`** live: Claude genereert een **gesaneerde SVG** (currentColor, geen script/handlers/externe refs), iteratief te verfijnen. Commit `c984809`. Frontend-knop + opslaan (na #78) = frontend-lane.
+- **CORS** — dashboard-endpoints staan nu `Authorization` toe (prep #42 Fase C). Commit `0c552e2`.
+- **Widget Customizer (frontend-lane)** — dashboardpagina + live preview (#77), icoon-tab preset+upload (#78), bubble-instellingen (#80), vrije positionering (#81). Commits `61cf2ba`/`75ba9c5`/`3eb2873`/`5cbbdc7`.
+- Ouder: backend opgesplitst in modules + `lib/` (#71), respons-robuustheid + CORS (#72), rate-limit + input-cap (#67), AVG-terugbel (#74), config-loader `data-client` + fallback (#75/#76), dashboard-auth (#65/#66/#68), standaardvragen (#33), ranglijsten (#60), foto-nummering (#55/#58/#63).
 
 ## Loopt / wacht
-- **#42 — Entra External ID auth** (high-priority, **actief**). **Fase A (Azure-setup) is COMPLEET**: externe tenant `Mokum` (`mokumpooldarts.onmicrosoft.com`, EU), app-registratie `Mokum Dashboard` (SPA), sign-in user flow + testgebruiker. De **4 waarden + het exacte Fase B/C-plan staan in de #42-comment** (2026-07-03). Nog te doen: **Fase B** (App Settings `ENTRA_*` + `autoriseer()` uit `_auth.js` op 9 checkpunten — dual-mode, wachtwoord blijft werken), **Fase C** (MSAL-login in `dashboard.html`), **Fase D** (testen + `DASHBOARD_HASH` uitfaseren).
-- **#43 — Rollen** (admin/editor/lezer): volgt ná #42.
-- **#39 — Epic white-label template** (multi-tenant): bouwt op de auth-fundering.
+- **#39 — multi-tenant white-label** (epic, **actief backend-track**). Ontwerp vastgelegd: `docs/multi-tenant-plan.md` (**eigen RG + storage account per klant**, **Managed Identity + RBAC** i.p.v. SAS, blob-registry, Mokum = default-tenant zonder migratie, toernooien uitgesteld).
+  - **Fase 0 ✅** — managed identity op `mokum-bot-api` (`bdb7606c-…`) + RBAC `Storage Blob Data Contributor` op `mokumbotrg904a`; `@azure/storage-blob` + `@azure/identity` toegevoegd.
+  - **Fase 1 ⏳ (gestart)** — SDK+MI blob-helper in `lib/storage.js` klaar + lokaal geverifieerd; **canary** `standaardvragen` GET leest nu via managed identity (live, 58 vragen). **Nog te doen:** overige lees- + alle schrijf-/delete-paden migreren, dan SAS uit de blob-callers. Zie de session-log 2026-07-05 voor de exacte lijst.
+- **#42 — Entra auth**: Fase B (backend) ✅. **Fase C** (MSAL-login in `dashboard.html`) = **frontend-sessie**; daarna Fase D (`DASHBOARD_HASH` uitfaseren, backend) + **#43 rollen** (`autoriseer()` geeft al `roles` terug). Waarden/plan in de #42-comment.
+- **Overige widget-customizer** (frontend): #82 teksten-editor, #83 export/embed, #84 docs/testronde.
 
 ## Open content-issues (input van gebruiker/Mokum nodig)
-- **#87** — verzamel-issue "Content aanleveren door Mokum" (`nice-to-have`): drankprijzen, keu-shop, keu-reparatie (#36), arrangementen (#27), oefeningen (#28). Was #49/#36/#27/#28.
-- **#56** website poolen-amsterdam.nl (2 punten) · **#57** screenshots bij handleidingen (voor Peter) · **#12** NTFY push (nice-to-have) · **#63** onderschriften-fijnafstelling.
+- **#87** verzamel-issue content (drankprijzen, keu-shop/-reparatie, arrangementen, oefeningen). · **#56** website poolen-amsterdam.nl · **#57** screenshots handleidingen.
 
 ## Volgende stap
-**#42 Fase B/C** ligt klaar: de gebruiker heeft de Azure-setup gedaan en de 4 waarden staan op #42. Direct oppakbaar — begin met Fase B (backend, dual-mode, veilig), zoals uitgeschreven in de #42-comment. Daarna Fase C (frontend). Overige open werk is óf van de parallelle sessie (#75–#84) óf wacht op content-input (#87/#56/#57).
+**#39 Fase 1 voortzetten** (backend): de overige blob-leespaden + schrijf-/delete-paden naar de managed-identity-helper migreren (per stuk deployen + verifiëren; Mokum = default → nul gedragswijziging), daarna SAS uit de blob-callers. Details + valkuilen in `docs/sessions/2026-07-05-backend-auth-icoon-multitenant.md`. Parallel loopt de frontend-lane (#82/#83/#84 + #42 Fase C).
 
 ## Werkwijze (kort — zie ook CLAUDE.md)
 - Deploy **direct naar main**; grote wijzigingen eerst lokaal-testen aanbieden. `develop` == `main` (zelfde Function App).
-- Meerdere chats werken tegelijk: check branch/tree vóór elke git-actie, stage alleen eigen bestanden, clobber geen vreemde wijzigingen.
+- Meerdere chats werken tegelijk (gedeelde working copy): check branch/tree vóór elke git-actie, stage alleen eigen bestanden, clobber geen vreemde wijzigingen.
 - Geen grote Anthropic-runs zonder akkoord. Afgeronde issues sluiten met samenvatting.
+- **Azure RBAC:** `az role assignment create` faalt hier (MissingSubscription) → gebruik ARM-PUT via `az rest` (zie geheugen).
