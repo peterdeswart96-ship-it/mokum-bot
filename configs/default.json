@@ -17,6 +17,7 @@
     "launcherScale": 1.5
   },
   "bubble": {
+    "enabled": true,
     "intervalSeconds": 15,
     "texts": [
       "Ask me anything!",
