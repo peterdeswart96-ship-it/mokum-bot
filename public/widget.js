@@ -63,6 +63,8 @@
   // Muteerbaar — starten op FALLBACK, worden vervangen zodra default.json geladen is.
   let TRANSLATIONS = FALLBACK
   let BUBBLE_TEXTS = ['Ask me anything!'] // >=1 i.v.m. modulo in de bubbel-rotatie
+  let BUBBLE_ENABLED = true               // tekstballon aan/uit (#80)
+  let BUBBLE_INTERVAL = 15                // rotatie-interval in seconden (#80)
   let CATEGORIES = []
 
   function configOrigin() {
@@ -82,13 +84,21 @@
 
   function applyConfig(cfg) {
     TRANSLATIONS = { nl: cfg.texts.nl, en: cfg.texts.en }
-    if (cfg.bubble && Array.isArray(cfg.bubble.texts) && cfg.bubble.texts.length) BUBBLE_TEXTS = cfg.bubble.texts
+    if (cfg.bubble) {
+      if (typeof cfg.bubble.enabled === 'boolean') BUBBLE_ENABLED = cfg.bubble.enabled
+      if (typeof cfg.bubble.intervalSeconds === 'number' && cfg.bubble.intervalSeconds > 0) BUBBLE_INTERVAL = cfg.bubble.intervalSeconds
+      // Lege lijst = bubble uit (#80): expliciet leegmaken, niet de oude teksten houden.
+      if (Array.isArray(cfg.bubble.texts)) BUBBLE_TEXTS = cfg.bubble.texts.length ? cfg.bubble.texts : []
+    }
     CATEGORIES = Array.isArray(cfg.categories) ? cfg.categories : []
     if (cfg.position) {
       WIDGET_CONFIG = { bottom: cfg.position.offsetY + 'px', right: cfg.position.offsetX + 'px', width: cfg.position.width }
       if (typeof cfg.position.launcherScale === 'number') LAUNCHER_SCALE = cfg.position.launcherScale
     }
+    startBubbleTimer() // interval/aan-uit direct laten ingaan (ook live in preview)
   }
+  // Tekstballon zichtbaar? Alleen als 'ie aanstaat én er teksten zijn (#80).
+  function bubbleActief() { return BUBBLE_ENABLED && BUBBLE_TEXTS.length > 0 }
 
   async function loadConfig() {
     // 1) Client-config (indien opgegeven) — één poging; faalt 'ie (bv. 404), stil door naar default (#76).
@@ -554,12 +564,16 @@
       // De hele launcher (8-bal + tekstballon) schaalt als één geheel mee; origin rechtsonder houdt de hoek op zijn plek.
       const floatWrap = el('div', `position:fixed;bottom:${WIDGET_CONFIG.bottom};right:${r};z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;transform:scale(${LAUNCHER_SCALE});transform-origin:bottom right;`)
 
-      const bubble = el('div', 'position:relative;display:inline-block;margin-bottom:18px;')
-      const bubbleInner = el('div', 'background:white;border:3.5px solid #111;border-radius:12px;padding:10px 16px;position:relative;')
-      const bubbleText = el('span', 'font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;color:#cc0000;display:block;white-space:nowrap;text-align:center;', BUBBLE_TEXTS[state.bubbleTextIndex])
-      const arrow = el('div', 'position:absolute;bottom:-16px;right:32px;width:4px;height:16px;background:#111;border-radius:2px;')
-      bubbleInner.appendChild(bubbleText)
-      bubble.append(bubbleInner, arrow)
+      // Tekstballon alleen tonen als 'ie actief is (aan + minstens 1 tekst) — #80.
+      let bubble = null
+      if (bubbleActief()) {
+        bubble = el('div', 'position:relative;display:inline-block;margin-bottom:18px;')
+        const bubbleInner = el('div', 'background:white;border:3.5px solid #111;border-radius:12px;padding:10px 16px;position:relative;')
+        const bubbleText = el('span', 'font-family:Arial Black,Arial,sans-serif;font-size:12px;font-weight:900;color:#cc0000;display:block;white-space:nowrap;text-align:center;', BUBBLE_TEXTS[state.bubbleTextIndex % BUBBLE_TEXTS.length])
+        const arrow = el('div', 'position:absolute;bottom:-16px;right:32px;width:4px;height:16px;background:#111;border-radius:2px;')
+        bubbleInner.appendChild(bubbleText)
+        bubble.append(bubbleInner, arrow)
+      }
 
       const ballBtn = btn('', () => {
         state.open = true
@@ -570,7 +584,8 @@
       ballBtn.onmouseenter = () => { ballBtn.style.transform = 'scale(1.1)' }
       ballBtn.onmouseleave = () => { ballBtn.style.transform = 'scale(1)' }
 
-      floatWrap.append(bubble, ballBtn)
+      if (bubble) floatWrap.append(bubble, ballBtn)
+      else floatWrap.append(ballBtn)
       root.appendChild(floatWrap)
     }
 
@@ -745,9 +760,16 @@
     finally { state.loading = false; render() }
   }
 
-  setInterval(() => {
-    if (!state.open) { state.bubbleTextIndex = (state.bubbleTextIndex + 1) % BUBBLE_TEXTS.length; render() }
-  }, 15000)
+  // Bubble-rotatie met instelbaar interval (#80). applyConfig() herstart 'm na elke
+  // config-wissel, zodat een gewijzigd interval/aan-uit direct ingaat (ook in preview).
+  let bubbleTimer = null
+  function startBubbleTimer() {
+    if (bubbleTimer) clearInterval(bubbleTimer)
+    bubbleTimer = setInterval(() => {
+      if (!state.open && bubbleActief()) { state.bubbleTextIndex = (state.bubbleTextIndex + 1) % BUBBLE_TEXTS.length; render() }
+    }, Math.max(2, BUBBLE_INTERVAL) * 1000)
+  }
+  startBubbleTimer()
 
   // Alleen opnieuw renderen als de BREEDTE wijzigt (oriëntatie/desktop-resize).
   // Op mobiel verandert het openende toetsenbord alleen de hoogte; een volledige

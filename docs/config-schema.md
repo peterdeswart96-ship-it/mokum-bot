@@ -48,7 +48,8 @@ GitHub Pages serveert met een vaste `max-age=600` (10 min) en staat geen custom 
     "launcherScale": 1.5          // schaal 8-bal + tekstballon
   },
   "bubble": {
-    "intervalSeconds": 15,        // (nog niet door widget.js gelezen; #80)
+    "enabled": true,              // tekstballon aan/uit (#80); leeg 'texts' = ook uit
+    "intervalSeconds": 15,        // rotatie-interval in seconden (min. 2; #80)
     "texts": ["…"]                // roterende tekstballon-teksten
   },
   "categories": [                 // rubrieken-groepering in "Voorbeeldvragen per rubriek"
