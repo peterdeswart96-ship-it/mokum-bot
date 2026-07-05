@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"if (Test-Path 'wiki/index.md') { Write-Output '## Projectwiki — index (automatisch geladen bij sessiestart)'; Get-Content 'wiki/index.md' -TotalCount 60; Write-Output ''; Write-Output '## Projectwiki — recente log (laatste 15 regels)'; if (Test-Path 'wiki/log.md') { Get-Content 'wiki/log.md' -Tail 15 } }\""
+          }
+        ]
+      }
+    ]
+  }
+}
