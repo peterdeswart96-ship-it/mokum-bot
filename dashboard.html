@@ -1281,6 +1281,11 @@
       .wc-val.bad { border-color: #e5484d; color: #e5848a; background: rgba(229,72,77,0.07); }
       .wc-val ul { margin: 6px 0 0; padding-left: 18px; }
       .wc-val li { margin: 2px 0; }
+      .wc-code { font-family: ui-monospace, Menlo, Consolas, monospace !important; font-size: 11px !important; line-height: 1.5; white-space: pre; overflow-x: auto; }
+      .wc-exp-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px; }
+      .wc-files { display: flex; flex-direction: column; gap: 6px; }
+      .wc-file { font-size: 12px; color: var(--text-2); }
+      .wc-file code, .wc-note code, .wc-hint code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; background: var(--card-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--text); }
       .wc-preview-card { position: sticky; top: 12px; }
       .wc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
       .wc-seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
@@ -1314,6 +1319,7 @@
               <button class="subtab" id="wcsub-bubble" onclick="wcShowSub('bubble')">💬 Bubble</button>
               <button class="subtab" id="wcsub-positie" onclick="wcShowSub('positie')">📐 Positie</button>
               <button class="subtab" id="wcsub-teksten" onclick="wcShowSub('teksten')">✏️ Teksten</button>
+              <button class="subtab" id="wcsub-opslaan" onclick="wcShowSub('opslaan')">💾 Opslaan</button>
             </div>
 
             <!-- Icoon -->
@@ -1399,6 +1405,44 @@
               <p class="wc-hint" style="margin-top:0;">Elke rubriek heeft een emoji + titel (nl/en) en groepeert topics. Elk topic: emoji (gedeeld) + label per taal. Vragen per topic volgen in de vragen-editor.</p>
               <div id="wc-rubrieken"></div>
               <div id="wc-teksten-val" class="wc-val ok"></div>
+            </div>
+
+            <!-- Opslaan / Export -->
+            <div class="wc-sub" id="wcpanel-opslaan">
+              <p class="wc-note">Genereer de klant-config + embed-snippet. Alles blijft lokaal: je <b>downloadt</b> de bestanden en commit ze in de repo (MVP).</p>
+
+              <label class="wc-label">Klant-id</label>
+              <input type="text" id="wc-exp-client" oninput="wcRenderExport()" placeholder="bijv. poolcafe-x" />
+              <p class="wc-hint">Kleine letters, cijfers en koppeltekens (a–z, 0–9, -). Wordt het <code>data-client</code> én de bestandsnaam.</p>
+              <div id="wc-exp-clienterr" class="wc-hint" style="display:none;"></div>
+
+              <div id="wc-exp-valgate"></div>
+
+              <div id="wc-exp-body" style="display:none;">
+                <label class="wc-label">Klant-config (JSON)</label>
+                <textarea id="wc-exp-json" rows="8" readonly class="wc-code"></textarea>
+                <div class="wc-exp-btns">
+                  <button class="btn-sm-red" onclick="wcDownloadConfig()">⬇ Download JSON</button>
+                  <button class="btn" onclick="wcCopy('wc-exp-json', this)">📋 Kopieer</button>
+                </div>
+
+                <label class="wc-label">Embed-snippet (op de klantsite)</label>
+                <textarea id="wc-exp-snippet" rows="2" readonly class="wc-code"></textarea>
+                <div class="wc-exp-btns">
+                  <button class="btn" onclick="wcCopy('wc-exp-snippet', this)">📋 Kopieer snippet</button>
+                </div>
+
+                <div id="wc-exp-icon"></div>
+
+                <label class="wc-label">Waar horen de bestanden in de repo?</label>
+                <div id="wc-exp-files" class="wc-files"></div>
+              </div>
+
+              <div class="divider"></div>
+              <label class="wc-label">Bestaande config bewerken (round-trip)</label>
+              <input type="file" id="wc-exp-load" accept=".json,application/json" onchange="wcLoadConfigFile(event)" />
+              <p class="wc-hint">Laad een eerder geëxporteerde <code>&lt;client&gt;.json</code> terug in om verder te bewerken.</p>
+              <div id="wc-exp-loadmsg" class="wc-hint"></div>
             </div>
           </div>
         </div>
@@ -4330,12 +4374,117 @@ function wcRenderVal() {
     " — deze blokkeren straks het opslaan/exporteren (#83):<ul>" + shown + more + "</ul>"
 }
 
+// ---- Opslaan / Export (#83) ----
+let wcExportClient = "", wcExportIconFile = null
+function wcSanitizeClient(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40)
+}
+// Bouwt de te exporteren config: kopie + client + version; een geüpload raster-icoon
+// wordt een asset-bestand (URL i.p.v. data-URI in de JSON).
+function wcBuildExportConfig(client) {
+  const config = JSON.parse(JSON.stringify(wcConfig || {}))
+  config.client = client
+  if (config.version == null) config.version = 1
+  let iconFile = null
+  const ic = config.icon
+  if (ic && ic.type === "custom" && typeof ic.src === "string" && ic.src.indexOf("data:") === 0) {
+    const m = /^data:([^;]+)/.exec(ic.src)
+    const mime = m ? m[1] : "image/png"
+    const ext = mime === "image/webp" ? "webp" : (mime === "image/svg+xml" ? "svg" : "png")
+    const name = ic.name || ("icoon." + ext)
+    iconFile = { name: name, dataUri: ic.src }
+    config.icon = { type: "custom", src: "https://mokum-bot.pdscloud.nl/assets/clients/" + client + "/" + name }
+  } else if (ic && typeof ic === "object" && ic.name) {
+    const clean = Object.assign({}, ic); delete clean.name; config.icon = clean
+  }
+  return { config: config, iconFile: iconFile }
+}
+function wcRenderExport() {
+  const inp = document.getElementById("wc-exp-client")
+  if (!inp) return
+  const raw = inp.value
+  const client = wcSanitizeClient(raw)
+  const errEl = document.getElementById("wc-exp-clienterr")
+  const gate = document.getElementById("wc-exp-valgate")
+  const body = document.getElementById("wc-exp-body")
+  if (raw && client !== raw.toLowerCase()) { errEl.style.display = "block"; errEl.innerHTML = "Wordt: <code>" + wcAttr(client || "(ongeldig)") + "</code>" }
+  else errEl.style.display = "none"
+
+  const issues = wcValidate()
+  if (issues.length) {
+    gate.innerHTML = '<div class="wc-val bad" style="margin:12px 0;">⚠ ' + issues.length + ' aandachtspunt' + (issues.length > 1 ? "en" : "") + ' — los ze eerst op in de <b>Teksten</b>-tab voordat je exporteert.</div>'
+    body.style.display = "none"; return
+  }
+  if (!/^[a-z0-9-]{1,40}$/.test(client)) {
+    gate.innerHTML = '<div class="wc-val bad" style="margin:12px 0;">Vul een geldig klant-id in (a–z, 0–9, -).</div>'
+    body.style.display = "none"; return
+  }
+  gate.innerHTML = '<div class="wc-val ok" style="margin:12px 0;">✓ Klaar om te exporteren.</div>'
+  body.style.display = "block"
+  wcExportClient = client
+  const built = wcBuildExportConfig(client)
+  wcExportIconFile = built.iconFile
+  document.getElementById("wc-exp-json").value = JSON.stringify(built.config, null, 2)
+  document.getElementById("wc-exp-snippet").value = '<script src="https://mokum-bot.pdscloud.nl/loader.js" data-client="' + client + '" async defer><\/script>'
+  const iconEl = document.getElementById("wc-exp-icon")
+  iconEl.innerHTML = built.iconFile
+    ? '<label class="wc-label">Icoon-bestand</label><div class="wc-exp-btns"><button class="btn" onclick="wcDownloadIcon()">⬇ Download ' + wcAttr(built.iconFile.name) + '</button></div>'
+    : ""
+  const files = ['<div class="wc-file"><code>public/configs/' + client + '.json</code> — de JSON hierboven</div>']
+  if (built.iconFile) files.push('<div class="wc-file"><code>public/assets/clients/' + client + '/' + wcAttr(built.iconFile.name) + '</code> — het icoon-bestand</div>')
+  document.getElementById("wc-exp-files").innerHTML = files.join("")
+}
+function wcDownloadText(filename, text, mime) {
+  const blob = new Blob([text], { type: mime || "text/plain" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1500)
+}
+function wcDownloadConfig() { wcDownloadText((wcExportClient || "client") + ".json", document.getElementById("wc-exp-json").value, "application/json") }
+function wcDownloadIcon() {
+  if (!wcExportIconFile) return
+  const a = document.createElement("a"); a.href = wcExportIconFile.dataUri; a.download = wcExportIconFile.name; document.body.appendChild(a); a.click(); a.remove()
+}
+function wcCopy(id, btn) {
+  const el = document.getElementById(id); if (!el) return
+  const done = () => { if (btn) { const o = btn.textContent; btn.textContent = "✓ Gekopieerd"; setTimeout(() => { btn.textContent = o }, 1200) } }
+  const fallback = () => { try { el.removeAttribute("readonly"); el.select(); document.execCommand("copy"); el.setAttribute("readonly", "readonly") } catch (e) {} done() }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(done).catch(fallback)
+  else fallback()
+}
+function wcLoadConfigFile(ev) {
+  const file = ev.target.files && ev.target.files[0]
+  if (!file) return
+  const msg = document.getElementById("wc-exp-loadmsg")
+  const reader = new FileReader()
+  reader.onerror = () => { msg.innerHTML = '<span class="wc-err">Kon het bestand niet lezen.</span>' }
+  reader.onload = () => {
+    let parsed
+    try { parsed = JSON.parse(String(reader.result)) } catch (e) { msg.innerHTML = '<span class="wc-err">Geen geldige JSON.</span>'; return }
+    if (!parsed || !parsed.texts || !parsed.texts.nl || !parsed.texts.en) { msg.innerHTML = '<span class="wc-err">Config mist texts.nl/en — geen geldige widget-config.</span>'; return }
+    wcConfig = parsed
+    wcExpandedTopics.clear()
+    wcFillControls()
+    document.getElementById("wc-exp-client").value = wcSanitizeClient(parsed.client || "")
+    wcRenderExport()
+    wcPush()
+    msg.textContent = "Config geladen: " + (parsed.client || "onbekend") + " — bewerk 'm in de tabs."
+  }
+  reader.readAsText(file)
+  ev.target.value = ""
+}
+
 // ---- Sub-tabs (Icoon/Bubble/Positie/Teksten) ----
 function wcShowSub(name) {
-  ["icoon", "bubble", "positie", "teksten"].forEach(s => {
+  ["icoon", "bubble", "positie", "teksten", "opslaan"].forEach(s => {
     document.getElementById("wcpanel-" + s).classList.toggle("active", s === name)
     document.getElementById("wcsub-" + s).classList.toggle("active", s === name)
   })
+  if (name === "opslaan") {
+    const inp = document.getElementById("wc-exp-client")
+    if (inp && !inp.value) inp.value = wcSanitizeClient((wcConfig && wcConfig.client) || "")
+    wcRenderExport()
+  }
 }
 
 // ---- Preview-toolbar ----
