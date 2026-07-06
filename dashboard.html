@@ -286,6 +286,8 @@
     catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
   })();
 </script>
+<!-- Microsoft Entra External ID login (MSAL) — Fase C (#42) -->
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
 </head>
 <body>
 
@@ -298,6 +300,11 @@
     <input type="password" id="pwd-input" placeholder="Wachtwoord" onkeydown="if(event.key==='Enter')login()" />
     <button class="btn-red btn-block" onclick="login()">Inloggen</button>
     <div id="login-error">Verkeerd wachtwoord</div>
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--muted);font-size:12px;"><div style="flex:1;height:1px;background:var(--border);"></div>of<div style="flex:1;height:1px;background:var(--border);"></div></div>
+    <button class="btn btn-block" onclick="loginMicrosoft()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 21 21" aria-hidden="true"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Inloggen met Microsoft
+    </button>
   </div>
 </div>
 
@@ -1540,9 +1547,7 @@ async function login() {
       sessionStorage.setItem("mkm-auth", data.token)
       sessionStorage.setItem("mkm-expiry", data.expiry)
       sessionStorage.setItem("mkm-pwd", pwd) // nodig voor beheer-acties (foto-upload e.d.)
-      document.getElementById("login-screen").style.display = "none"
-      document.getElementById("dashboard").style.display = "block"
-      laadGesprekken()
+      toonDashboard()
     } else {
       errEl.style.display = "block"
     }
@@ -1561,7 +1566,77 @@ function isIngelogd() {
 function logout() {
   sessionStorage.removeItem("mkm-auth")
   sessionStorage.removeItem("mkm-expiry")
+  sessionStorage.removeItem("mkm-pwd")
+  if (msalApp && entraAccount) {
+    // Lokale MSAL-sessie opruimen zonder naar Microsoft te redirecten.
+    try { msalApp.logoutRedirect({ account: entraAccount, onRedirectNavigate: () => false }) } catch (e) {}
+    entraAccount = null; entraIdToken = null
+  }
   location.reload()
+}
+
+function toonDashboard() {
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("dashboard").style.display = "block"
+  laadGesprekken()
+}
+
+// ── Microsoft Entra (MSAL) — dual-mode login, Fase C (#42) ─────────────────
+// Náást het gedeelde wachtwoord kun je met een Microsoft-account inloggen. De
+// backend (autoriseer/_auth.js) accepteert het ID-token (aud = client-ID) als
+// Bearer; het wachtwoord-pad blijft als fallback werken.
+const MSAL_CONFIG = {
+  auth: {
+    clientId: "47cb056c-aa80-4f12-b06a-486edecaff2e",
+    authority: "https://mokumpooldarts.ciamlogin.com/e465b433-027c-4be1-b5af-e8eda1f0a44a",
+    knownAuthorities: ["mokumpooldarts.ciamlogin.com"],
+    redirectUri: window.location.origin + window.location.pathname,
+  },
+  cache: { cacheLocation: "sessionStorage" },
+}
+let msalApp = null, entraAccount = null, entraIdToken = null
+
+async function initMsal() {
+  if (!window.msal || !window.msal.PublicClientApplication) return
+  try {
+    msalApp = new msal.PublicClientApplication(MSAL_CONFIG)
+    await msalApp.initialize()
+    const res = await msalApp.handleRedirectPromise()
+    if (res && res.account) { entraAccount = res.account; entraIdToken = res.idToken }
+    if (!entraAccount) {
+      const accs = msalApp.getAllAccounts()
+      if (accs && accs.length) entraAccount = accs[0]
+    }
+  } catch (e) { console.log("MSAL init/redirect:", e && e.message) }
+}
+function entraIngelogd() { return !!entraAccount }
+async function getEntraToken() {
+  if (!msalApp || !entraAccount) return entraIdToken
+  try {
+    const r = await msalApp.acquireTokenSilent({ account: entraAccount, scopes: ["openid", "profile"] })
+    if (r && r.idToken) { entraIdToken = r.idToken; return r.idToken }
+  } catch (e) {}
+  return entraIdToken
+}
+function loginMicrosoft() {
+  if (!msalApp) { alert("Inloggen met Microsoft is nu niet beschikbaar (MSAL niet geladen)."); return }
+  msalApp.loginRedirect({ scopes: ["openid", "profile"] })
+}
+
+// Voegt automatisch een Bearer ID-token toe aan beheer-calls naar de API zodra je
+// via Entra bent ingelogd. Dekt álle beheer-POSTs in één keer (dual-mode: zonder
+// Entra blijft het wachtwoord in de body werken).
+const _origFetch = window.fetch.bind(window)
+window.fetch = async function (url, opts) {
+  opts = opts || {}
+  try {
+    const u = typeof url === "string" ? url : (url && url.url) || ""
+    if (u.indexOf(API) === 0 && entraIngelogd()) {
+      const tok = await getEntraToken()
+      if (tok) opts = Object.assign({}, opts, { headers: Object.assign({}, opts.headers, { Authorization: "Bearer " + tok }) })
+    }
+  } catch (e) {}
+  return _origFetch(url, opts)
 }
 
 function showTab(name, btn) {
@@ -4576,12 +4651,12 @@ function wcReloadPreview() {
   // wcPush() volgt automatisch zodra de iframe "ready" meldt
 }
 
-// Init
-if (isIngelogd()) {
-  document.getElementById("login-screen").style.display = "none"
-  document.getElementById("dashboard").style.display = "block"
-  laadGesprekken()
-}
+// Init — MSAL eerst (vangt de redirect na Microsoft-login), dan dashboard tonen
+// bij een geldige Entra- óf wachtwoord-sessie.
+;(async function () {
+  await initMsal()
+  if (isIngelogd() || entraIngelogd()) toonDashboard()
+})()
 </script>
 </body>
 </html>
