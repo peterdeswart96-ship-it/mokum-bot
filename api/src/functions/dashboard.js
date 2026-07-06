@@ -4,7 +4,7 @@
 const { app } = require("@azure/functions")
 const Anthropic = require("@anthropic-ai/sdk")
 const { STORAGE_ACCOUNT, CONTAINER, httpsRequest, fetchBlobContent, listAllBlobs } = require("./lib/storage")
-const { autoriseer } = require("./_auth")
+const { autoriseer, magMinstens } = require("./_auth")
 const { dashboardCors } = require("./lib/cors")
 const { leesClaudeTekst } = require("./lib/claude")
 
@@ -61,9 +61,10 @@ app.http("gesprekken", {
       if ((action === "delete" || action === "mark") && request.method === "POST") {
         let cbody = {}
         try { cbody = await request.json() } catch {}
-        if (!(await autoriseer(request, cbody)).ok) {
-          return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
-        }
+        const auth = await autoriseer(request, cbody)
+        if (!auth.ok) return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+        // Verwijderen = superuser; markeren (triage) = users (#43).
+        if (!magMinstens(auth.roles, action === "delete" ? "superuser" : "users")) return { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onvoldoende rechten voor deze actie" }) }
         const naam = cbody.blob
         if (!naam || naam.includes("/") || naam.includes("..")) {
           return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Ongeldige blobnaam" }) }
@@ -114,9 +115,10 @@ app.http("gesprekken", {
         let cbody = {}
         try { cbody = await request.json() } catch {}
         const { voor, dryrun } = cbody
-        if (!(await autoriseer(request, cbody)).ok) {
-          return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
-        }
+        const auth = await autoriseer(request, cbody)
+        if (!auth.ok) return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+        // Bulk verwijderen = superuser (#43).
+        if (!magMinstens(auth.roles, "superuser")) return { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onvoldoende rechten voor deze actie" }) }
         if (!voor || !/^\d{4}-\d{2}-\d{2}(T\d{2}-\d{2}(-\d{2})?)?$/.test(voor)) {
           return { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Geef 'voor' op als YYYY-MM-DD of YYYY-MM-DDThh-mm (zoals de tijd in de blobnaam staat; nieuwe gesprekken staan in Amsterdam-tijd)" }) }
         }
@@ -183,9 +185,10 @@ app.http("analyse", {
     }
     try {
       const body = await request.json()
-      if (!(await autoriseer(request, body)).ok) {
-        return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
-      }
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+      // AI-analyse genereren (Claude, kost geld) = admin (#43).
+      if (!magMinstens(auth.roles, "admin")) return { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onvoldoende rechten voor deze actie" }) }
       const { gesprekken, type } = body
       if (!gesprekken || !Array.isArray(gesprekken)) {
         return {
@@ -285,9 +288,10 @@ app.http("kennisbron-upload", {
     }
     try {
       const body = await request.json()
-      if (!(await autoriseer(request, body)).ok) {
-        return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
-      }
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onjuist wachtwoord" }) }
+      // Kennisbron uploaden = admin (#43).
+      if (!magMinstens(auth.roles, "admin")) return { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onvoldoende rechten voor deze actie" }) }
       const { bestandsnaam, map, inhoud } = body
 
       if (!bestandsnaam || !map || !inhoud) {
@@ -363,7 +367,10 @@ app.http("kennis-suggestie", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
-      if (!(await autoriseer(request, body)).ok) return json(401, { error: "Onjuist wachtwoord" })
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return json(401, { error: "Onjuist wachtwoord" })
+      // AI kennis-suggestie (Claude) = admin (#43).
+      if (!magMinstens(auth.roles, "admin")) return json(403, { error: "Onvoldoende rechten voor deze actie" })
       const omschrijving = (body.omschrijving || "").toString().trim()
       const vraag = (body.vraag || "").toString().trim()
       const antwoord = (body.antwoord || "").toString().trim()
@@ -434,7 +441,10 @@ app.http("foto-suggestie", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
-      if (!(await autoriseer(request, body)).ok) return json(401, { error: "Onjuist wachtwoord" })
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return json(401, { error: "Onjuist wachtwoord" })
+      // AI foto-suggestie (Claude) = users — personeel mag de fotohulp gebruiken (#43).
+      if (!magMinstens(auth.roles, "users")) return json(403, { error: "Onvoldoende rechten voor deze actie" })
       const b64 = body.contentBase64
       const mediaType = body.contentType || "image/jpeg"
       const categorieen = Array.isArray(body.categorieen) && body.categorieen.length ? body.categorieen : ["Overig"]
@@ -496,7 +506,10 @@ app.http("kennisbron-vertaal", {
     const json = (status, obj) => ({ status, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify(obj) })
     try {
       const body = await request.json()
-      if (!(await autoriseer(request, body)).ok) return json(401, { error: "Onjuist wachtwoord" })
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return json(401, { error: "Onjuist wachtwoord" })
+      // AI kennisbron-vertaling (Claude) = admin (#43).
+      if (!magMinstens(auth.roles, "admin")) return json(403, { error: "Onvoldoende rechten voor deze actie" })
       const pad = (body.pad || "").toString().trim()
       const doel = (body.doelTaal || "en").toString().trim()
       if (!pad || /\.en\.(txt|md)$/i.test(pad)) return json(400, { error: "geldig bron-pad vereist (geen .en-bestand)" })

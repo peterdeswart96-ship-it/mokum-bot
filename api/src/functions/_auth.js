@@ -34,6 +34,21 @@ function entraUserToegestaan(payload) {
   return ids.some((id) => ENTRA_ALLOWED.includes(id))
 }
 
+// Rol-hiërarchie (#43): superuser ⊇ admin ⊇ users. De rollen komen uit de
+// app-rol-claim (`roles`) van het Entra-token (app-rollen op de app-registratie).
+const ROL_RANG = { users: 1, admin: 2, superuser: 3 }
+function tokenRollen(payload) {
+  const raw = Array.isArray(payload && payload.roles) ? payload.roles : (payload && payload.role ? [payload.role] : [])
+  return raw.map((r) => String(r).toLowerCase()).filter((r) => ROL_RANG[r])
+}
+function rolRang(roles) {
+  return Math.max(0, ...(Array.isArray(roles) ? roles : []).map((r) => ROL_RANG[String(r).toLowerCase()] || 0))
+}
+// True als de rollen minstens `minRol` halen (bijv. admin telt voor een users-check).
+function magMinstens(roles, minRol) {
+  return rolRang(roles) >= (ROL_RANG[minRol] || 99)
+}
+
 function wachtwoordOk(wachtwoord) {
   return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
 }
@@ -72,11 +87,16 @@ async function autoriseer(request, body) {
     if (m) {
       try {
         const p = await verifyJwt(m[1])
-        if (entraUserToegestaan(p)) {
-          const roles = p.roles || (p.role ? [p.role] : [])
-          return { ok: true, methode: "entra", user: p.preferred_username || p.email || p.oid || "onbekend", roles: roles.length ? roles : ["admin"] }
+        const rollen = tokenRollen(p)
+        if (rollen.length) {
+          // Toegewezen app-rol(len) → dat is de gate én de rechten (#43).
+          return { ok: true, methode: "entra", user: p.preferred_username || p.email || p.oid || "onbekend", roles: rollen }
         }
-        // geldig token maar niet op de allowlist (#91) → val terug op wachtwoord-check
+        // Geen bekende app-rol maar wél op de e-mail-allowlist → transitie: geef admin (#91).
+        if (entraUserToegestaan(p)) {
+          return { ok: true, methode: "entra", user: p.preferred_username || p.email || p.oid || "onbekend", roles: ["admin"] }
+        }
+        // geldig token, geen rol en niet op allowlist → val terug op wachtwoord-check
       } catch {
         // ongeldig token → val terug op wachtwoord-check
       }
@@ -94,4 +114,4 @@ function heeftRol(roles, ...toegestaan) {
   return Array.isArray(roles) && roles.some((r) => toegestaan.includes(r))
 }
 
-module.exports = { autoriseer, heeftRol, wachtwoordOk, entraActief, entraUserToegestaan }
+module.exports = { autoriseer, heeftRol, magMinstens, wachtwoordOk, entraActief, entraUserToegestaan, tokenRollen }

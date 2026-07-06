@@ -16,7 +16,7 @@
 const crypto = require("crypto")
 const { app } = require("@azure/functions")
 const { STORAGE_ACCOUNT, httpsRequest, readBlobText } = require("./lib/storage")
-const { autoriseer } = require("./_auth")
+const { autoriseer, magMinstens } = require("./_auth")
 
 const CONTAINER = "standaardvragen"
 const INDEX_BLOB = "_index.json"
@@ -134,9 +134,10 @@ app.http("standaardvragen", {
       const body = await request.json()
       const action = body.action || "save"
 
-      if (!(await autoriseer(request, body)).ok) {
-        return json(401, { error: "Onjuist wachtwoord" })
-      }
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return json(401, { error: "Onjuist wachtwoord" })
+      // Standaardvragen bewerken (save/delete/import) = admin (#43).
+      if (!magMinstens(auth.roles, "admin")) return json(403, { error: "Onvoldoende rechten voor deze actie" })
 
       if (action === "save") {
         if (!body.entry) return json(400, { error: "entry is verplicht" })

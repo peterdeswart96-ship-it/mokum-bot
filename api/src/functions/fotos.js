@@ -17,7 +17,7 @@ const crypto = require("crypto")
 const https = require("https") // foto-proxy (getBlobBytes) leest ruwe bytes via https.get; require was bij de #71-refactor weggevallen
 const { app } = require("@azure/functions")
 const { STORAGE_ACCOUNT, httpsRequest } = require("./lib/storage")
-const { autoriseer } = require("./_auth")
+const { autoriseer, magMinstens } = require("./_auth")
 
 const FOTOS_CONTAINER = "fotos"
 const CATALOG_BLOB = "_catalog.json"
@@ -183,9 +183,11 @@ app.http("fotos", {
       const action = body.action || "upload"
 
       // Alle muterende acties zijn beheer-gated (dual-mode: Entra-token óf wachtwoord — #42)
-      if (!(await autoriseer(request, body)).ok) {
-        return json(401, { error: "Onjuist wachtwoord" })
-      }
+      const auth = await autoriseer(request, body)
+      if (!auth.ok) return json(401, { error: "Onjuist wachtwoord" })
+      // Rol-afdwinging per actie (#43): foto's beheren = users; verwijderen/nummering = admin; container aanmaken = superuser.
+      const minRol = { ensure: "superuser", upload: "users", update: "users", delete: "admin", "assign-refs": "admin" }[action] || "admin"
+      if (!magMinstens(auth.roles, minRol)) return json(403, { error: "Onvoldoende rechten voor deze actie" })
 
       if (action === "ensure") {
         const r = await ensureContainer(sasToken)
