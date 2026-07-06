@@ -21,6 +21,19 @@ const ENTRA_AUDIENCE = process.env.ENTRA_AUDIENCE || "" // client-ID of api://<c
 const ENTRA_JWKS_URI = process.env.ENTRA_JWKS_URI || "" // <issuer>/discovery/v2.0/keys
 const entraActief = () => !!(ENTRA_ISSUER && ENTRA_AUDIENCE && ENTRA_JWKS_URI)
 
+// Allowlist (#91): alleen deze gebruikers mogen via Entra binnen. Komma-gescheiden
+// e-mails/oid's in de App Setting ENTRA_ALLOWED_USERS. Secure-by-default: een lege/
+// ongezette lijst = GEEN Entra-toegang (het wachtwoord-pad blijft werken, dus niemand
+// raakt buitengesloten). Voorkomt dat elk zelf-geregistreerd CIAM-account admin wordt.
+const ENTRA_ALLOWED = (process.env.ENTRA_ALLOWED_USERS || "")
+  .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+function entraUserToegestaan(payload) {
+  if (!ENTRA_ALLOWED.length) return false
+  const ids = [payload && payload.preferred_username, payload && payload.email, payload && payload.oid]
+    .filter(Boolean).map((s) => String(s).toLowerCase())
+  return ids.some((id) => ENTRA_ALLOWED.includes(id))
+}
+
 function wachtwoordOk(wachtwoord) {
   return crypto.createHash("sha256").update(wachtwoord || "").digest("hex") === DASHBOARD_HASH
 }
@@ -59,8 +72,11 @@ async function autoriseer(request, body) {
     if (m) {
       try {
         const p = await verifyJwt(m[1])
-        const roles = p.roles || (p.role ? [p.role] : [])
-        return { ok: true, methode: "entra", user: p.preferred_username || p.email || p.oid || "onbekend", roles: roles.length ? roles : ["admin"] }
+        if (entraUserToegestaan(p)) {
+          const roles = p.roles || (p.role ? [p.role] : [])
+          return { ok: true, methode: "entra", user: p.preferred_username || p.email || p.oid || "onbekend", roles: roles.length ? roles : ["admin"] }
+        }
+        // geldig token maar niet op de allowlist (#91) → val terug op wachtwoord-check
       } catch {
         // ongeldig token → val terug op wachtwoord-check
       }
@@ -78,4 +94,4 @@ function heeftRol(roles, ...toegestaan) {
   return Array.isArray(roles) && roles.some((r) => toegestaan.includes(r))
 }
 
-module.exports = { autoriseer, heeftRol, wachtwoordOk, entraActief }
+module.exports = { autoriseer, heeftRol, wachtwoordOk, entraActief, entraUserToegestaan }
