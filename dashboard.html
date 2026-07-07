@@ -60,6 +60,21 @@
   .hdr-ball img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .hdr-ball span { width: 19px; height: 19px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #000; }
   header h1 { font-size: 15px; font-weight: 800; letter-spacing: 0.11em; color: var(--text); }
+  /* #95 ingelogd account + rol */
+  .hdr-account { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); margin-right: 4px; }
+  .acc-who { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .acc-role { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+  .acc-superuser { color: #e5484d; background: rgba(229,72,77,.12); border-color: rgba(229,72,77,.35); }
+  .acc-admin { color: #2e9d57; background: rgba(46,157,87,.12); border-color: rgba(46,157,87,.35); }
+  .acc-users { color: #4a90d9; background: rgba(74,144,217,.14); border-color: rgba(74,144,217,.35); }
+  .acc-none { color: var(--muted-2); background: var(--card-2); border-color: var(--border); }
+  @media (max-width: 680px) { .acc-who { display: none; } }
+  /* #94 toast-melding */
+  #toast-host { position: fixed; right: 16px; bottom: 16px; z-index: 100000; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .toast { max-width: 340px; padding: 11px 14px; border-radius: 10px; font-size: 13px; line-height: 1.4; color: var(--text); background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(8px); transition: opacity .25s, transform .25s; }
+  .toast.show { opacity: 1; transform: none; }
+  .toast-warn { border-left: 4px solid #e5a23d; }
+  .toast-info { border-left: 4px solid var(--accent); }
   header .hdr-sub { color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
   .hdr-actions { display: flex; align-items: center; gap: 10px; }
   .icon-btn { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); }
@@ -322,6 +337,7 @@
       </div>
     </div>
     <div class="hdr-actions">
+      <div id="hdr-account" class="hdr-account" style="display:none;"></div>
       <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" title="Licht/donker thema wisselen" aria-label="Thema wisselen"><span id="theme-icon">🌙</span></button>
       <button class="logout-btn" onclick="logout()">Uitloggen</button>
     </div>
@@ -1584,6 +1600,7 @@ function logout() {
 function toonDashboard() {
   document.getElementById("login-screen").style.display = "none"
   document.getElementById("dashboard").style.display = "block"
+  updateAccountUI()
   laadGesprekken()
 }
 
@@ -1633,16 +1650,28 @@ function loginMicrosoft() {
 // via Entra bent ingelogd. Dekt álle beheer-POSTs in één keer (dual-mode: zonder
 // Entra blijft het wachtwoord in de body werken).
 const _origFetch = window.fetch.bind(window)
+let _last403 = 0
 window.fetch = async function (url, opts) {
   opts = opts || {}
+  let u = ""
   try {
-    const u = typeof url === "string" ? url : (url && url.url) || ""
+    u = typeof url === "string" ? url : (url && url.url) || ""
     if (u.indexOf(API) === 0 && entraIngelogd()) {
       const tok = await getEntraToken()
       if (tok) opts = Object.assign({}, opts, { headers: Object.assign({}, opts.headers, { Authorization: "Bearer " + tok }) })
     }
   } catch (e) {}
-  return _origFetch(url, opts)
+  const resp = await _origFetch(url, opts)
+  // #94: centrale, duidelijke melding bij 403 (onvoldoende rechten) — dekt alle beheer-calls.
+  try {
+    if (u.indexOf(API) === 0 && resp.status === 403 && Date.now() - _last403 > 1500) {
+      _last403 = Date.now()
+      resp.clone().json()
+        .then((d) => toonToast("⛔ " + ((d && d.error) || "Je hebt geen rechten voor deze actie."), "warn"))
+        .catch(() => toonToast("⛔ Je hebt geen rechten voor deze actie.", "warn"))
+    }
+  } catch (e) {}
+  return resp
 }
 
 // Auth-header voor beheer-GET's (die geen body hebben, dus geen wachtwoord in de body kunnen zetten).
@@ -1651,6 +1680,46 @@ window.fetch = async function (url, opts) {
 function authHeaders() {
   const pwd = sessionStorage.getItem("mkm-pwd")
   return (pwd && !entraIngelogd()) ? { "X-Dashboard-Wachtwoord": pwd } : {}
+}
+
+// #95 — wie is er ingelogd + welke rol? (Entra-account/roles-claim óf wachtwoord-modus)
+const FE_ROL_RANG = { users: 1, admin: 2, superuser: 3 }
+function hoogsteRol(rollen) {
+  let best = null, r = 0
+  for (const x of (rollen || [])) { const n = FE_ROL_RANG[String(x).toLowerCase()] || 0; if (n > r) { r = n; best = String(x).toLowerCase() } }
+  return best
+}
+function huidigeGebruiker() {
+  if (entraIngelogd()) {
+    const c = (entraAccount && entraAccount.idTokenClaims) || {}
+    const rollen = Array.isArray(c.roles) ? c.roles : []
+    return { naam: entraAccount.name || entraAccount.username || "Onbekend", email: entraAccount.username || "", rol: hoogsteRol(rollen), methode: "Microsoft" }
+  }
+  if (sessionStorage.getItem("mkm-pwd")) return { naam: "Gedeeld wachtwoord", email: "", rol: "admin", methode: "wachtwoord" }
+  return null
+}
+function updateAccountUI() {
+  const el = document.getElementById("hdr-account"); if (!el) return
+  const g = huidigeGebruiker()
+  if (!g) { el.style.display = "none"; return }
+  el.style.display = "flex"
+  const rolLbl = { superuser: "superuser", admin: "admin", users: "user" }[g.rol] || "—"
+  const bron = g.methode === "Microsoft" ? "Microsoft-account" : "gedeeld wachtwoord"
+  const titel = (g.naam + (g.email ? " (" + g.email + ")" : "") + " · via " + bron).replace(/"/g, "&quot;")
+  el.innerHTML = '<span class="acc-who" title="' + titel + '">👤 ' + g.naam + '</span>' +
+    '<span class="acc-role acc-' + (g.rol || "none") + '">' + rolLbl + "</span>"
+}
+
+// Lichte toast-melding rechtsonder, auto-verdwijnend (o.a. voor de 403-melding, #94).
+function toonToast(msg, type) {
+  let host = document.getElementById("toast-host")
+  if (!host) { host = document.createElement("div"); host.id = "toast-host"; document.body.appendChild(host) }
+  const t = document.createElement("div")
+  t.className = "toast toast-" + (type || "info")
+  t.textContent = msg
+  host.appendChild(t)
+  requestAnimationFrame(() => t.classList.add("show"))
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 300) }, 4200)
 }
 
 function showTab(name, btn) {
