@@ -15,6 +15,7 @@ site gepubliceerd (geen `public/`) — het zijn bronbestanden, o.a. voor de
 | `mokum-wordmark@2x.png` | Idem, 490×62 (scherper/retina) | reserve |
 | `entra-bg-mokumbar.jpg` | Bar met verlichte MOKUM-letters, 1920×1080 (~288 KB) | **Achtergrondafbeelding** (aanrader) |
 | `entra-bg-pooltafels.jpg` | Pooltafel-rij, 1920×1080 (~234 KB) | Achtergrondafbeelding (alternatief) |
+| `mokum-square-badge.png` | Rond embleem op donkere schijf, 240×240 (~28 KB) — werkt op licht én donker | **Square logo (light + dark)** in de sign-in form |
 | `favicon-mokum-32.png` | Drie rode Amsterdamse kruisen op donkere schijf, 32×32 | **Favicon** (upload) |
 | `favicon-mokum-64.png` | Idem, 64×64 | reserve |
 
