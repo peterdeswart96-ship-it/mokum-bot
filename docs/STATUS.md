@@ -1,29 +1,31 @@
 # Projectstand — Mokum-bot
 
-_Laatst bijgewerkt: 2026-07-05. Zie `docs/sessions/` voor uitgebreide logs per chat, en `git log` / gesloten issues voor details._
+_Laatst bijgewerkt: 2026-07-07. Zie `docs/sessions/` voor uitgebreide logs per chat, en `git log` / gesloten issues voor details._
 
 ## Live op productie (recent gebouwd)
-- **🔒 #42 Fase B — dual-mode auth (Entra + wachtwoord)** live: `autoriseer()` uit `_auth.js` op alle 9 beheer-checkpunten (dashboard 7×, fotos, standaardvragen); `auth.js` login houdt `checkPwd`. App Settings `ENTRA_ISSUER/AUDIENCE/JWKS_URI` gezet → Entra-token wordt geaccepteerd náást het wachtwoord (geen verstoring). Commit `3e7a32a`.
-- **#79 backend — `/api/icoon-genereer`** live: Claude genereert een **gesaneerde SVG** (currentColor, geen script/handlers/externe refs), iteratief te verfijnen. Commit `c984809`. Frontend-knop + opslaan (na #78) = frontend-lane.
-- **CORS** — dashboard-endpoints staan nu `Authorization` toe (prep #42 Fase C). Commit `0c552e2`.
-- **Widget Customizer (frontend-lane)** — dashboardpagina + live preview (#77), icoon-tab preset+upload (#78), bubble-instellingen (#80), vrije positionering (#81). Commits `61cf2ba`/`75ba9c5`/`3eb2873`/`5cbbdc7`.
-- Ouder: backend opgesplitst in modules + `lib/` (#71), respons-robuustheid + CORS (#72), rate-limit + input-cap (#67), AVG-terugbel (#74), config-loader `data-client` + fallback (#75/#76), dashboard-auth (#65/#66/#68), standaardvragen (#33), ranglijsten (#60), foto-nummering (#55/#58/#63).
+- **🔒 Auth compleet (Entra External ID + rollen)** — dual-mode (Entra-token óf gedeeld wachtwoord) op alle beheer-endpoints. **#42 Fase C** (MSAL-login "Inloggen met Microsoft") live & geverifieerd. **#91** allowlist + default-deny (`ENTRA_ALLOWED_USERS`). **#43** rol-hiërarchie superuser⊇admin⊇users (`magMinstens()` per endpoint → 403). **#93** gesprekken `list`/`get` nu óók achter auth (PII/AVG-gat dicht; wachtwoord via header `X-Dashboard-Wachtwoord`). Rollen komen uit Entra security-groepen → app-rollen.
+- **🎨 #92 Mokum-branding** — dashboard: logo op login+header (donkere schijf, werkt in beide thema's), favicon met de drie Amsterdamse kruisen, tab-titel. **Entra-loginscherm** via de portal gebrand (donkere paginakleur, sfeerachtergrond, badge-logo, donkere wordmark, sign-in-tekst). Herbruikbare assets in `brand-assets/`.
+- **🤖 Botkwaliteit** — **#97** scherpere foto-triggers (`selecteerFotos`: woordgrens + AND + generiek-onderdrukking + cap 3). **#90** fuzzy disciplinenamen (`canoniekeDisciplines()` in de standaardvragen-match + promptregel). **#94/#95** header toont ingelogd account + rol; duidelijke 403-toast. **#96** tooltips op (bijna) alle knoppen (centrale injector).
+- Ouder: Widget Customizer-epic (#75–#84) compleet; backend modules + `lib/` (#71); standaardvragen (#33); ranglijsten (#60).
 
 ## Loopt / wacht
-- **#39 — multi-tenant white-label** (epic, **actief backend-track**). Ontwerp vastgelegd: `docs/multi-tenant-plan.md` (**eigen RG + storage account per klant**, **Managed Identity + RBAC** i.p.v. SAS, blob-registry, Mokum = default-tenant zonder migratie, toernooien uitgesteld).
-  - **Fase 0 ✅** — managed identity op `mokum-bot-api` (`bdb7606c-…`) + RBAC `Storage Blob Data Contributor` op `mokumbotrg904a`; `@azure/storage-blob` + `@azure/identity` toegevoegd.
-  - **Fase 1 ⏳ (gestart)** — SDK+MI blob-helper in `lib/storage.js` klaar + lokaal geverifieerd; **canary** `standaardvragen` GET leest nu via managed identity (live, 58 vragen). **Nog te doen:** overige lees- + alle schrijf-/delete-paden migreren, dan SAS uit de blob-callers. Zie de session-log 2026-07-05 voor de exacte lijst.
-- **#42 — Entra auth**: Fase B (backend) ✅. **Fase C** (MSAL-login in `dashboard.html`) = **frontend-sessie**; daarna Fase D (`DASHBOARD_HASH` uitfaseren, backend) + **#43 rollen** (`autoriseer()` geeft al `roles` terug). Waarden/plan in de #42-comment.
-- **Overige widget-customizer** (frontend): #82 teksten-editor, #83 export/embed, #84 docs/testronde.
+- **#39 — multi-tenant white-label** (epic, grootste openstaande backend-track). `docs/multi-tenant-plan.md`: eigen RG+storage per klant, Managed Identity + RBAC i.p.v. SAS. **Fase 0 ✅**; **Fase 1 ⏳** — canary `standaardvragen` leest via MI; nog te doen: overige lees- + alle schrijf-/delete-paden migreren, dan SAS eruit.
+- **#42 Fase D** — wachtwoord uitfaseren; **bewust uitgesteld** tot alle ~11 gebruikers (Nick/Mark=admin, 8× personeel=users) via Entra binnen zijn.
+- **#88** designsysteem (mooiere iconen, vormen, effecten) · **#89** content-verzamelissue (input Mokum, o.a. met Nick).
 
-## Open content-issues (input van gebruiker/Mokum nodig)
-- **#87** verzamel-issue content (drankprijzen, keu-shop/-reparatie, arrangementen, oefeningen). · **#56** website poolen-amsterdam.nl · **#57** screenshots handleidingen.
+## Direct oppakken / bevestigen
+- **#93 sluiten** zodra bevestigd dat de gesprekkenlijst laadt (laadt al als users-account → waarschijnlijk oké).
+- **#92 Entra-banner** in incognito bevestigen (donkere wordmark / CDN-cache); paginakleur donker houden.
+- **Games-foto's hertaggen** in het dashboard (nu `games`-only → specifieker), anders tonen ze nooit meer (gevolg van #97). Past bij de content-sessie met Nick.
+- **Entra-onboarding:** 8 personeelsleden in `Mokum-Users`, admin-consent verlenen.
+- **#98** admin-only knoppen per rol verbergen/uitschakelen (frontend kent de rol nu).
 
-## Volgende stap
-**#39 Fase 1 voortzetten** (backend): de overige blob-leespaden + schrijf-/delete-paden naar de managed-identity-helper migreren (per stuk deployen + verifiëren; Mokum = default → nul gedragswijziging), daarna SAS uit de blob-callers. Details + valkuilen in `docs/sessions/2026-07-05-backend-auth-icoon-multitenant.md`. Parallel loopt de frontend-lane (#82/#83/#84 + #42 Fase C).
+## Volgende grote stap
+**#39 Fase 1 voortzetten** (backend, MI-migratie) óf **#88 designsysteem** (frontend) — afhankelijk van prioriteit. Auth + branding + botkwaliteit-sprints zijn afgerond.
 
-## Werkwijze (kort — zie ook CLAUDE.md)
-- Deploy **direct naar main**; grote wijzigingen eerst lokaal-testen aanbieden. `develop` == `main` (zelfde Function App).
-- Meerdere chats werken tegelijk (gedeelde working copy): check branch/tree vóór elke git-actie, stage alleen eigen bestanden, clobber geen vreemde wijzigingen.
-- Geen grote Anthropic-runs zonder akkoord. Afgeronde issues sluiten met samenvatting.
-- **Azure RBAC:** `az role assignment create` faalt hier (MissingSubscription) → gebruik ARM-PUT via `az rest` (zie geheugen).
+## Werkwijze (kort — zie ook CLAUDE.md / wiki)
+- Deploy **direct naar main**; grote wijzigingen eerst lokaal-testen aanbieden. `develop` == `main`.
+- Gedeelde working copy, meerdere chats: stage alleen eigen bestanden, push de commit-SHA rechtstreeks na een ff-check. **Twee backend-commits vlak na elkaar kunnen elkaars deploy annuleren** → wacht op groen of `gh run rerun`.
+- Geen grote Anthropic-runs zonder akkoord. Issues sluiten met samenvatting na groene deploy + test.
+- **Azure RBAC:** `az role assignment create` faalt hier (MissingSubscription) → ARM-PUT via `az rest`.
+- **Geen ImageMagick/sharp** — beeldbewerking via Playwright (headless Chromium).
