@@ -4755,6 +4755,118 @@ function wcReloadPreview() {
   // wcPush() volgt automatisch zodra de iframe "ready" meldt
 }
 
+// ── Tooltips: centrale, onderhoudbare toewijzing (#96) ───────────────────────────
+// Vult title (+ aria-label op icon-only knoppen) op knoppen die er nog GEEN hebben.
+// Bestaande title of een .tip/.tipbox-wrapper blijft intact. Dekt ook dynamisch
+// gerenderde knoppen via een MutationObserver. Sleutel = onclick-functienaam, of
+// "functie:eerste-argument" voor knoppen die één functie met verschillende doelen delen.
+const TOOLTIP_MAP = {
+  "showTab:fotos": "Beheer de foto's en menukaarten die de bot bij antwoorden kan tonen",
+  "showTab:widget": "Pas het uiterlijk van de chat-widget aan (bèta, nog in ontwikkeling)",
+  "showTab:handleiding": "Open de handleiding met uitleg per onderdeel",
+  "showTab:analyse": "Terug naar Analyse",
+  "showAnalyse:overzicht": "Statistieken: aantal gesprekken, drukke dagen en geschatte kosten",
+  "showAnalyse:vragen": "Alle bezoekersvragen met het botantwoord — markeer, filter en voeg kennis/foto's toe",
+  "showAnalyse:rubriekvragen": "Standaardvragen per rubriek met een vast antwoord beheren",
+  "showAnalyse:website": "Analyse van de website",
+  "showHTab:overzicht": "Handleiding — overzicht", "showHTab:vragen": "Handleiding — vragen beheren",
+  "showHTab:talen": "Handleiding — talen", "showHTab:kennisbronnen": "Handleiding — kennisbronnen",
+  "showHTab:fotos": "Handleiding — foto's", "showHTab:kosten": "Handleiding — API-kosten",
+  "showHTab:rubrieken": "Handleiding — rubrieken", "showHTab:problemen": "Handleiding — veelvoorkomende problemen",
+  "login": "Inloggen met het gedeelde wachtwoord",
+  "loginMicrosoft": "Inloggen met je Microsoft-account (Entra)",
+  "logout": "Uitloggen en terug naar het inlogscherm",
+  "toggleFilterPanel": "Toon of verberg de filteropties",
+  "toggleOnbeantwoord": "Toon alleen gesprekken waarin de bot waarschijnlijk geen antwoord wist",
+  "toggleNietOk": "Toon alleen wat nog te doen is (nog niet als OK gemarkeerd)",
+  "toggleOk": "Toon óók de als OK gemarkeerde gesprekken",
+  "toggleTeReviewen": "Toon alleen 'to review'-gesprekken",
+  "toggleFotoNodig": "Toon alleen gesprekken waar nog een foto bij hoort",
+  "toggleTest": "Toon óók testvragen (met #test)",
+  "toggleGroeperen": "Voeg identieke vragen samen tot één rij met een teller",
+  "resetZoek": "Wis de zoekterm en alle filters", "resetFilter": "Wis alle filters",
+  "zetPeriode:vandaag": "Alleen gesprekken van vandaag",
+  "zetPeriode:7": "Gesprekken van de laatste 7 dagen",
+  "zetPeriode:30": "Gesprekken van de laatste 30 dagen",
+  "zetPeriode:90": "Gesprekken van de laatste 90 dagen",
+  "zetPeriode:jaar": "Gesprekken van dit jaar", "zetPeriode:alles": "Alle gesprekken, ongeacht datum",
+  "nieuweKennis": "Voeg kennis toe via de geleide wizard — Claude denkt mee met titel, categorie en concepttekst",
+  "nieuweFoto": "Voeg één foto toe via de geleide wizard — Claude stelt categorie, onderschrift en trigger words voor",
+  "nieuweFotoVanuitVraag": "Voeg een foto toe die bij deze vraag past (wizard, onderwerp voorgevuld)",
+  "kennisVanuitVraag": "Voeg kennis toe die bij deze vraag past (wizard)",
+  "startAnalyse:mark": "Laat Claude de gesprekken analyseren en verbeterpunten voorstellen",
+  "startAnalyse:sander": "Laat Claude de gesprekken analyseren",
+  "bulkUploadFotos": "Selecteer meerdere foto's om in één keer te uploaden",
+  "uploadFoto": "Upload de gekozen foto", "voerUploadUit": "Upload de gekozen foto('s)",
+  "showFTab:upload": "Foto's uploaden", "showFTab:overzicht": "Overzicht van alle foto's",
+  "nieuweStandaardvraag": "Voeg een nieuwe standaardvraag met vast antwoord toe",
+  "saveStandaardvraag": "Sla deze standaardvraag op",
+  "deleteStandaardvraag": "Verwijder deze standaardvraag definitief",
+  "previewStandaardvraag": "Bekijk hoe dit antwoord er in de chat uitziet",
+  "rvFotoAdd": "Koppel een foto aan deze standaardvraag", "rvFotoPrevStap": "Vorige stap",
+  "wcShowSub:icoon": "Icoon van de widget kiezen of genereren",
+  "wcShowSub:bubble": "De begroetings-bubble instellen",
+  "wcShowSub:positie": "Positie van de widget op de pagina",
+  "wcShowSub:teksten": "Teksten en voorbeeldvragen bewerken",
+  "wcShowSub:opslaan": "Opslaan en de embed-code kopiëren",
+  "wcSetDevice:desktop": "Preview op een desktop-scherm", "wcSetDevice:mobile": "Preview op een mobiel scherm",
+  "wcPickAnchor:top-left": "Zet de widget linksboven", "wcPickAnchor:top-right": "Zet de widget rechtsboven",
+  "wcPickAnchor:bottom-left": "Zet de widget linksonder", "wcPickAnchor:bottom-right": "Zet de widget rechtsonder",
+  "wcPickPreset": "Kies dit voorbeeld-icoon",
+  "wcAiGenerate": "Genereer een icoon met AI op basis van je beschrijving",
+  "wcAiRefine": "Verfijn het gegenereerde icoon",
+  "wcIconReset": "Verwijder het eigen icoon en gebruik weer een preset",
+  "wcDownloadIcon": "Download het icoon als bestand",
+  "wcDownloadConfig": "Download de klant-configuratie (JSON)",
+  "wcCopy": "Kopieer naar het klembord",
+  "wcAddRubriek": "Voeg een rubriek toe", "wcAddTopic": "Voeg een onderwerp toe",
+  "wcBubbleAdd": "Voeg een bubble-tekst toe",
+  "wcRubMove": "Verplaats deze rubriek", "wcTopMove": "Verplaats dit onderwerp",
+  "wcBubbleMove": "Verplaats deze bubble-tekst", "wcToggleQ": "Toon of verberg de voorbeeldvragen",
+  "wizardStap2": "Naar de volgende stap", "wizardStap3": "Naar de volgende stap",
+  "wizardStap4": "Bekijk de preview", "wizardTerug": "Naar de vorige stap",
+  "fotoWizardStap2": "Naar de volgende stap", "fotoWizardUpload": "Upload de foto",
+  "snelkeuze": "Snelkeuze: gebruik deze categorie als startpunt voor de wizard",
+  "setHModel:haiku": "Reken met het Haiku-model (in gebruik, goedkoopst)",
+  "setHModel:sonnet": "Reken met het Sonnet-model (krachtiger)",
+  "setHModel:opus": "Reken met het Opus-model (meest capabel)",
+  "switchInvoer:typ": "Zelf de kennistekst typen", "switchInvoer:bestand": "Een bestand (.txt/.md) uploaden",
+  "filterEnRender": "Pas de gekozen periode en filters toe",
+  "fwToonStap": "Ga naar deze stap van de wizard",
+}
+function tooltipVoorKnop(btn) {
+  const oc = (btn.getAttribute("onclick") || "").replace(/event\.(stopPropagation|preventDefault)\(\)\s*;?/g, "")
+  const m = oc.match(/([a-zA-Z_$][\w$]*)\s*\(\s*['"]?([a-z0-9-]*)/i)
+  if (!m) return null
+  const fn = m[1], arg = (m[2] || "").trim()
+  if (arg && TOOLTIP_MAP[fn + ":" + arg]) return TOOLTIP_MAP[fn + ":" + arg]
+  return TOOLTIP_MAP[fn] || null
+}
+function _tipToe(btn) {
+  if (!btn || btn.dataset.tipDone) return
+  btn.dataset.tipDone = "1"
+  if (btn.title || (btn.closest && btn.closest(".tip"))) return // bestaande tooltip respecteren
+  const tip = tooltipVoorKnop(btn)
+  if (!tip) return
+  btn.title = tip
+  const tekst = (btn.textContent || "").replace(/\s+/g, " ").trim()
+  if (!btn.getAttribute("aria-label") && tekst.length <= 2) btn.setAttribute("aria-label", tip) // icon-only
+}
+function pasTooltipsToe(root) {
+  const scope = root && root.querySelectorAll ? root : document
+  scope.querySelectorAll("button").forEach(_tipToe)
+}
+try {
+  pasTooltipsToe(document)
+  new MutationObserver((muts) => {
+    for (const mm of muts) for (const n of mm.addedNodes) {
+      if (!n || n.nodeType !== 1) continue
+      if (n.tagName === "BUTTON") _tipToe(n)
+      if (n.querySelectorAll) n.querySelectorAll("button").forEach(_tipToe)
+    }
+  }).observe(document.body, { childList: true, subtree: true })
+} catch (e) {}
+
 // Init — MSAL eerst (vangt de redirect na Microsoft-login), dan dashboard tonen
 // bij een geldige Entra- óf wachtwoord-sessie.
 ;(async function () {
