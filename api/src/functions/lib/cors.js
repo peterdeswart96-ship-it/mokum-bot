@@ -15,7 +15,8 @@ function dashboardCors(request, methods) {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": methods,
     // Authorization toestaan zodat Fase C (MSAL) een Bearer-token cross-origin kan meesturen (#42/#79).
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    // X-Dashboard-Wachtwoord: wachtwoord-pad voor GET-beheercalls zonder body (#93).
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Dashboard-Wachtwoord",
     "Vary": "Origin",
   }
 }

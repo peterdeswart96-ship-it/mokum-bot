@@ -103,7 +103,10 @@ async function autoriseer(request, body) {
     }
   }
   // 2) Legacy gedeeld wachtwoord (dual-mode). Legacy = volledige rechten (admin).
-  if (wachtwoordOk(body && body.wachtwoord)) {
+  // Wachtwoord mag in de body (POST) óf in de header X-Dashboard-Wachtwoord meekomen —
+  // dat laatste voor GET-beheercalls die geen body hebben (#93).
+  const headerWachtwoord = header(request, "x-dashboard-wachtwoord")
+  if (wachtwoordOk((body && body.wachtwoord) || headerWachtwoord)) {
     return { ok: true, methode: "wachtwoord", user: "gedeeld", roles: ["admin"] }
   }
   return { ok: false }

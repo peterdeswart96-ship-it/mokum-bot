@@ -27,6 +27,14 @@ app.http("gesprekken", {
       }
       const action = new URL(request.url).searchParams.get("action") || "list"
       const blobName = new URL(request.url).searchParams.get("blob")
+      // #93: gesprekken bevatten bezoekers-PII + terugbelgegevens. Lezen (list/get) vereist
+      // auth (min. users), net als de schrijfacties. GET heeft geen body → autoriseer() leest
+      // een Entra-Bearer of het wachtwoord uit de header X-Dashboard-Wachtwoord.
+      if (action === "list" || action === "get") {
+        const auth = await autoriseer(request, {})
+        if (!auth.ok) return { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Niet ingelogd" }) }
+        if (!magMinstens(auth.roles, "users")) return { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onvoldoende rechten voor deze actie" }) }
+      }
       if (action === "list") {
         const options = {
           hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
