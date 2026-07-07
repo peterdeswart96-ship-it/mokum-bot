@@ -3504,7 +3504,10 @@ async function gesprekActie(payload) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...payload, wachtwoord }),
   })
-  return resp.json()
+  let data = {}
+  try { data = await resp.json() } catch {}
+  // status meegeven zodat callers 403 (geen rechten) los kunnen herkennen (#94).
+  return { ...data, ok: resp.ok, status: resp.status }
 }
 async function markTestGesprek(i, isTest) {
   const row = _gesprekRijen[i]; if (!row) return
@@ -3587,31 +3590,49 @@ async function verwijderSelectie() {
   if (!confirm(tekst)) return
   const btn = document.getElementById("verwijder-selectie-btn")
   if (btn) { btn.disabled = true; btn.style.opacity = "0.6" }
-  let fout = 0
+  const verwijderd = new Set()
+  let permFout = 0, andereFout = 0
   // In batches verwijderen (sneller, maar API niet overspoelen)
   const CONCURRENCY = 6
   for (let i = 0; i < naams.length; i += CONCURRENCY) {
     const deel = naams.slice(i, i + CONCURRENCY)
     await Promise.all(deel.map(async (naam) => {
-      try { const r = await gesprekActie({ action: "delete", blob: naam }); if (!r.success) fout++ } catch { fout++ }
+      try {
+        const r = await gesprekActie({ action: "delete", blob: naam })
+        if (r.success) verwijderd.add(naam)
+        else if (r.status === 403) permFout++
+        else andereFout++
+      } catch { andereFout++ }
     }))
   }
-  alleGesprekken = alleGesprekken.filter(g => !geselecteerdeNaams.has(g.naam))
-  geselecteerdeNaams.clear()
+  // Alleen echt verwijderde gesprekken uit lijst + selectie halen; geweigerde blijven staan.
+  if (verwijderd.size) alleGesprekken = alleGesprekken.filter(g => !verwijderd.has(g.naam))
+  const teHouden = [...geselecteerdeNaams].filter(n => !verwijderd.has(n))
+  geselecteerdeNaams.clear(); teHouden.forEach(n => geselecteerdeNaams.add(n))
   zoekGesprekken()
   if (btn) { btn.disabled = false; btn.style.opacity = "" }
-  if (fout) alert(`${fout} gesprek(ken) konden niet verwijderd worden. Probeer het opnieuw.`)
+  // 403 wordt al via de toast gemeld (#94); alleen overige fouten hier tonen.
+  if (andereFout) alert(`${andereFout} gesprek(ken) konden niet verwijderd worden. Probeer het opnieuw.`)
 }
 async function deleteGesprek(i) {
   const row = _gesprekRijen[i]; if (!row) return
   const naams = row.naams || []
   if (!naams.length) return
   if (!confirm(`${naams.length > 1 ? naams.length + " gesprekken van deze vraag" : "Dit gesprek"} definitief verwijderen?`)) return
-  let fout = 0
-  for (const naam of naams) { try { const r = await gesprekActie({ action: "delete", blob: naam }); if (!r.success) fout++ } catch { fout++ } }
-  alleGesprekken = alleGesprekken.filter(g => !naams.includes(g.naam))
-  zoekGesprekken()
-  if (fout) alert(`${fout} gesprek(ken) konden niet verwijderd worden.`)
+  const verwijderd = []
+  let permFout = 0, andereFout = 0
+  for (const naam of naams) {
+    try {
+      const r = await gesprekActie({ action: "delete", blob: naam })
+      if (r.success) verwijderd.push(naam)
+      else if (r.status === 403) permFout++
+      else andereFout++
+    } catch { andereFout++ }
+  }
+  // Alleen daadwerkelijk verwijderde gesprekken uit beeld halen — niet de geweigerde.
+  if (verwijderd.length) { alleGesprekken = alleGesprekken.filter(g => !verwijderd.includes(g.naam)); zoekGesprekken() }
+  // 403 (geen rechten) wordt al via de toast gemeld (#94); alleen overige fouten hier tonen.
+  if (andereFout) alert(`${andereFout} gesprek(ken) konden niet verwijderd worden.`)
 }
 
 function resetZoek() {
