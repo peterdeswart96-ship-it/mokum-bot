@@ -1642,6 +1642,14 @@ window.fetch = async function (url, opts) {
   return _origFetch(url, opts)
 }
 
+// Auth-header voor beheer-GET's (die geen body hebben, dus geen wachtwoord in de body kunnen zetten).
+// In Entra-modus zet de fetch-wrapper hierboven al de Bearer; in wachtwoord-modus sturen we het
+// wachtwoord mee als header X-Dashboard-Wachtwoord (#93 — gesprekken-list/get is nu auth-vereist).
+function authHeaders() {
+  const pwd = sessionStorage.getItem("mkm-pwd")
+  return (pwd && !entraIngelogd()) ? { "X-Dashboard-Wachtwoord": pwd } : {}
+}
+
 function showTab(name, btn) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"))
   document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"))
@@ -2710,7 +2718,7 @@ async function deleteFoto(bestand) {
 // Data laden
 async function laadGesprekken() {
   try {
-    const resp = await fetch(`${API}/gesprekken?action=list`)
+    const resp = await fetch(`${API}/gesprekken?action=list`, { headers: authHeaders() })
     const data = await resp.json()
     // Azure geeft de blob-namen alfabetisch (oudste eerst). De namen beginnen met
     // de timestamp, dus aflopend sorteren = nieuwste eerst. Zo laden we de 200
@@ -2726,7 +2734,7 @@ async function laadGesprekken() {
       const deel = batch.slice(i, i + CONCURRENCY)
       const resultaten = await Promise.all(deel.map(async (naam) => {
         try {
-          const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`)
+          const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`, { headers: authHeaders() })
           const g = await r.json()
           return { naam, ...g }
         } catch { return null }
