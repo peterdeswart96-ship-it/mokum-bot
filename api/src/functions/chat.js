@@ -752,6 +752,47 @@ async function getSummerLeagueContext() {
   )
 }
 
+// Woorden die te breed zijn om in hun eentje een foto te triggeren (#97).
+// - Een LOSSE trigger die alleen zo'n woord is, telt niet (bijv. kale "pool" of "games").
+// - Een MEERWOORD-trigger die ALLEEN uit zulke woorden bestaat ("pool tables") geldt als
+//   'generiek' en wordt onderdrukt zodra er een specifiekere match is ("english pool").
+const FOTO_GENERIEK = new Set([
+  "pool", "poolen", "biljart", "tafel", "tafels", "table", "tables",
+  "games", "game", "spel", "spellen", "mokum", "foto", "fotos",
+])
+
+// Kiest de best passende foto's voor een bericht (#97).
+// AND-triggers op woordgrens (via textTokens): een (meerwoord-)trigger matcht alleen als
+// ÁLLE woorden als los woord in de vraag staan (order-onafhankelijk; 'pool' matcht dus niet
+// in 'liverpool'). Specifieker (meer woorden / een niet-generiek woord) wint; puur-generieke
+// matches vallen af zodra er iets specifiekers matchte. Hooguit `maxFotos`, meest specifiek eerst.
+function selecteerFotos(catalog, message, maxFotos = 3) {
+  if (!Array.isArray(catalog) || !catalog.length) return []
+  const q = new Set(textTokens(message))
+  if (!q.size) return []
+  const scored = []
+  let ietsSpecifieks = false
+  for (const f of catalog) {
+    if (!f || f.actief === false || !Array.isArray(f.triggerWords)) continue
+    let best = 0, specifiek = false, matchte = false
+    for (const t of f.triggerWords) {
+      const tw = textTokens(String(t || ""))
+      if (!tw.length) continue
+      if (tw.length === 1 && FOTO_GENERIEK.has(tw[0])) continue // losse generieke woorden triggeren niet
+      if (!tw.every((tok) => q.has(tok))) continue
+      matchte = true
+      if (tw.length > best) best = tw.length
+      if (tw.some((tok) => !FOTO_GENERIEK.has(tok))) specifiek = true
+    }
+    if (matchte) { scored.push({ f, best, specifiek }); if (specifiek) ietsSpecifieks = true }
+  }
+  if (!scored.length) return []
+  const over = ietsSpecifieks ? scored.filter((s) => s.specifiek) : scored
+  over.forEach((s, i) => (s._i = i))
+  over.sort((a, b) => (Number(b.specifiek) - Number(a.specifiek)) || (b.best - a.best) || (a._i - b._i))
+  return over.slice(0, maxFotos).map((s) => s.f)
+}
+
 // Foto-catalogus: toon relevante foto's (inline of in apart venster) o.b.v. trigger words
 async function getFotoContext(message, sasToken) {
   if (!sasToken) return null
@@ -760,12 +801,7 @@ async function getFotoContext(message, sasToken) {
   let catalog
   try { catalog = JSON.parse(raw) } catch { return null }
   if (!Array.isArray(catalog) || !catalog.length) return null
-  const q = normalizeText(message || "")
-  const matches = catalog.filter(
-    (f) =>
-      f && f.actief !== false && Array.isArray(f.triggerWords) &&
-      f.triggerWords.some((t) => t && q.includes(normalizeText(String(t))))
-  )
+  const matches = selecteerFotos(catalog, message)
   if (!matches.length) return null
   const lines = matches.map((f) => {
     const cap = f.onderschrift || "Bekijk"
