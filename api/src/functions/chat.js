@@ -71,7 +71,7 @@ REGELS:
 - Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
 - LIDMAATSCHAP NIET PROACTIEF PROMOTEN: voeg NOOIT uit jezelf een wervende afsluiter over lidmaatschap toe (zoals "Interesse in lidmaatschap? Mail naar info@pooleninmokum.com — of stuur een appje naar Nick!"). Mokum wil lidmaatschap niet actief via de bot promoten. Alleen als iemand er EXPLICIET naar vraagt (bijv. "hoe word ik lid?", "kost lidmaatschap iets?") geef je kort en feitelijk antwoord en verwijs je naar info@pooleninmokum.com — zonder verkooptoon en zonder dit aan andere antwoorden te plakken. Dit geldt OOK bij leden-gerelateerde onderwerpen (leden-only events): je mag het onderwerp gewoon feitelijk uitleggen ("exclusief voor leden"), maar sluit NOOIT af met een wervende wedervraag of uitnodiging richting lidmaatschap, zoals "Wil je meer over lidmaatschap weten?", "Ben je al lid?" of "Wil je ook lid worden?". Stel zulke wedervragen uitsluitend als de bezoeker er zelf expliciet naar vraagt.
 - Bij vragen over eten, drinken, het menu, vegetarische opties, allergenen of specifieke gerechten: geef altijd de link naar de menukaart mee via [Bekijk de menukaart (PDF)](https://poolen-amsterdam.nl/wp-content/uploads/Mokum-menu-3.pdf) en beantwoord de vraag op basis van de beschikbare menu-informatie.
-- Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket, K-Ball), English pool (blackball), darts (301, 501, cricket), biljart (libre, bandstoten, driebanden) en shuffleboard volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers.
+- Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket, K-Ball), English pool (blackball), darts (301, 501, cricket), biljart (libre, bandstoten, driebanden) en shuffleboard volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers. Herken ook slordige schrijfwijzen/typo's van deze namen en beantwoord gewoon met de juiste regels: bijv. "k ball"/"kball"/"k-ball"/"kbal" = K-Ball; "9ball"/"9 ball"/"9-ball"/"negenball" = 9-ball (idem 8-ball en 10-ball); "black ball" = blackball (English pool); "straight pool"/"14.1" = straight pool; "3 banden" = driebanden.
 - OFFICIËLE-REGELS-BRON: sluit een antwoord over de SPELREGELS van een spelvorm af met precies één regel in de vorm "📖 Officiële regels: [naam](url)" (vertaal alleen het woord "Officiële regels" mee naar de taal van de bezoeker; de URL blijft gelijk). Gebruik per spelvorm deze bron: Pool 8-/9-/10-ball + straight pool → gebruik ALTIJD exact deze vaste bron-regel: "📖 Officiële regels: [WPA](https://wpapool.com/rules-of-play/) — dezelfde regels gelden bij KNBB- en EPBF-toernooien." (alleen "Officiële regels" meevertalen); One Pocket → [One Pocket Organization](https://www.onepocket.org/rules/); English pool / blackball → [WPA Blackball](https://wpapool.com/); biljart libre/bandstoten/driebanden/kader → [UMB](https://umb-carom.org) (NL: [KNBB Carambole](https://www.carambole.nl)); darts 301/501/cricket → [WDF](https://dartswdf.com/rules); shuffleboard → [Shuffleboard Federation](https://www.shuffleboard.net). Voor **K-Ball** is er GÉÉN officiële bond (bedacht door Danny Kuykendall) — voeg dan GEEN "officiële regels"-regel toe. Voeg deze bron-regel ALLEEN toe bij echte spelregel-uitleg, niet bij andere antwoorden (zoals tarieven of openingstijden).
 
 KENNISBRON INSTRUCTIE:
@@ -380,6 +380,26 @@ function normalizeText(s) {
 
 function textTokens(s) {
   return normalizeText(s).split(" ").filter(Boolean)
+}
+
+// Trekt veelvoorkomende schrijfwijzen/typo's van spel-/discipline-namen gelijk (#90),
+// zodat varianten in de standaardvragen-match op elkaar aansluiten. Verwacht al-genormaliseerde
+// tekst (lowercase, zonder leestekens). Bijv. "9 ball"/"9-ball"/"9ball" → "9ball", "k ball"/"kbal" → "kball".
+function canoniekeDisciplines(norm) {
+  return (" " + (norm || "") + " ")
+    .replace(/ (8|9|10) ?ball /g, " $1ball ")
+    .replace(/ negen ?ball /g, " 9ball ")
+    .replace(/ acht ?ball /g, " 8ball ")
+    .replace(/ tien ?ball /g, " 10ball ")
+    .replace(/ k ?bal?l /g, " kball ")
+    .replace(/ black ?ball /g, " blackball ")
+    .replace(/ one ?pocket /g, " onepocket ")
+    .replace(/ straight ?pool /g, " straightpool ")
+    .replace(/ drie ?banden /g, " driebanden ")
+    .replace(/ (3|drie) banden /g, " driebanden ")
+    .replace(/ band ?stoten /g, " bandstoten ")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
 async function fetchPlayersIndex(sasToken) {
@@ -849,8 +869,8 @@ async function getStandaardAntwoord(message, sasToken) {
   try { index = JSON.parse(raw) } catch { return null }
   if (!Array.isArray(index) || !index.length) return null
 
-  const qNorm = normalizeText(message)
-  const qTokens = textTokens(message)
+  const qNorm = canoniekeDisciplines(normalizeText(message))
+  const qTokens = qNorm.split(" ").filter(Boolean)
   let best = null
   for (const e of index) {
     // Alleen goedgekeurde (definitieve) antwoorden cachen; concepten + "altijd live"-vragen
@@ -860,11 +880,11 @@ async function getStandaardAntwoord(message, sasToken) {
       const vraag = e.vraag && e.vraag[lang]
       const antwoord = e.antwoord && e.antwoord[lang]
       if (!vraag || !antwoord || !antwoord.trim()) continue
-      const vNorm = normalizeText(vraag)
+      const vNorm = canoniekeDisciplines(normalizeText(vraag))
       let score
       if (vNorm && vNorm === qNorm) score = 1
       else {
-        const j = jaccard(qTokens, textTokens(vraag))
+        const j = jaccard(qTokens, vNorm.split(" ").filter(Boolean))
         if (j.shared < STD_SHARED_MIN || j.score < STD_JACCARD_MIN) continue
         score = j.score
       }
