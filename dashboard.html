@@ -1276,6 +1276,24 @@
       .pl-fres:hover { background:var(--divider); }
       .pl-ovfoot { display:flex; justify-content:space-between; align-items:center; gap:10px; }
       .pl-muted { font-size:11px; color:var(--muted); }
+      .pl-meds { background:var(--card-2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+      .pl-meds-head { font-size:13px; font-weight:600; margin-bottom:8px; }
+      .pl-medrow { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+      .pl-medrow .pl-in { flex:1; }
+      .pl-ovbadge { color:#e5a23d; font-weight:700; font-size:12px; }
+      .pl-ovsum { font-size:13px; color:var(--text-2); margin:6px 0 12px; }
+      .pl-ovlijst { font-size:13px; font-weight:700; color:var(--accent); margin:14px 0 6px; }
+      .pl-ovcat { border:1px solid var(--border); border-radius:10px; margin-bottom:6px; overflow:hidden; }
+      .pl-ovcathead { display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:pointer; font-size:13px; background:var(--card-2); }
+      .pl-ovcathead:hover { background:var(--divider); }
+      .pl-ovchev { color:var(--muted); width:12px; display:inline-block; }
+      .pl-ovrow { display:flex; align-items:center; gap:10px; padding:7px 12px; border-top:1px solid var(--border); flex-wrap:wrap; }
+      .pl-ovnaam { flex:1; min-width:140px; font-size:13px; }
+      .pl-ovacts { display:flex; gap:5px; }
+      .pl-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+      .pl-badge-warn { color:#e5a23d; background:rgba(229,162,61,.12); border:1px solid rgba(229,162,61,.3); }
+      .pl-badge-ok { color:#2e9d57; background:rgba(46,157,87,.12); border:1px solid rgba(46,157,87,.3); }
+      .pl-ovcard textarea.pl-in { width:100%; box-sizing:border-box; resize:vertical; }
     </style>
     <main>
       <div class="insight-box" style="margin-bottom:16px;">💶 Beheer de <b>prijslijsten</b> die de bot live gebruikt: <b>Eten &amp; Drinken</b> (menukaart), <b>Shop</b> (keu-shop) en <b>Speel tarieven</b>. Wijzig prijzen inline, zet items op (on)beschikbaar, koppel foto's — en klik <b>Opslaan</b>. De bot leest de nieuwe prijzen meteen; er is geen aparte menukaart-PDF meer. <b>Let op:</b> de eten/drinken-prijzen zijn uit de oude PDF geseed — controleer ze tegen de fysieke kaart.</div>
@@ -1283,6 +1301,7 @@
         <button class="pl-subtab active" data-pl="etenDrinken" onclick="showPTab('etenDrinken')">🍺 Eten &amp; Drinken</button>
         <button class="pl-subtab" data-pl="shop" onclick="showPTab('shop')">🛒 Shop</button>
         <button class="pl-subtab" data-pl="tarieven" onclick="showPTab('tarieven')">🎱 Speel tarieven</button>
+        <button class="pl-subtab" data-pl="overzicht" onclick="showPTab('overzicht')">📋 Overzicht<span id="pl-ov-badge" class="pl-ovbadge"></span></button>
       </div>
       <div id="pl-body"><div class="pl-empty">Laden…</div></div>
       <div class="pl-savebar">
@@ -4823,6 +4842,7 @@ async function laadPrijslijsten() {
     _pl = await r.json()
   } catch (e) { _pl = null }
   if (!_pl || typeof _pl !== "object") _pl = {}
+  _pl.mededelingen = Array.isArray(_pl.mededelingen) ? _pl.mededelingen : []
   _pl.etenDrinken = Array.isArray(_pl.etenDrinken) ? _pl.etenDrinken : []
   _pl.shop = Array.isArray(_pl.shop) ? _pl.shop : []
   _pl.tarieven = Array.isArray(_pl.tarieven) ? _pl.tarieven : []
@@ -4830,6 +4850,83 @@ async function laadPrijslijsten() {
   if (!alleFotos.length) { try { const rr = await fetch(`${API}/fotos`); alleFotos = (await rr.json()).fotos || [] } catch (e) {} }
   renderPrijslijsten()
 }
+// Mededelingen/beleid — beheerd via de Overzicht-tab; bot leest ze live.
+function plMedsHtml() {
+  const meds = _pl.mededelingen || []
+  return `<div class="pl-meds"><div class="pl-meds-head">ℹ️ Mededelingen &amp; beleid <span class="pl-muted">— de bot meldt dit actief waar relevant (bijv. bij vragen over alcohol/sterke drank)</span></div>` +
+    meds.map((m, i) => `<div class="pl-medrow"><input class="pl-in" value="${fAttr(m)}" placeholder="Bijv. Mokum schenkt alleen alcohol tot 14,9%…" onchange="plSetMed(${i}, this.value)"><button class="pl-iconbtn pl-del" title="Deze mededeling verwijderen" onclick="plDelMed(${i})">🗑</button></div>`).join("") +
+    `<button class="pl-iconbtn" style="margin-top:4px;" onclick="plAddMed()">+ Mededeling</button></div>`
+}
+function plSetMed(i, val) { if (_pl.mededelingen) { _pl.mededelingen[i] = val; _plDirty = true; plUpdateStatus() } }
+function plAddMed() { _pl.mededelingen = _pl.mededelingen || []; _pl.mededelingen.push(""); _plDirty = true; renderPrijslijsten() }
+function plDelMed(i) { _pl.mededelingen.splice(i, 1); _plDirty = true; renderPrijslijsten() }
+// Status per product: OK = (info én foto) óf handmatig OK; anders wat er mist.
+function plItemStatus(it) {
+  const heeftInfo = !!(it.info && String(it.info).trim())
+  const heeftFoto = (it.fotos || []).length > 0
+  if (it.okHandmatig || (heeftInfo && heeftFoto)) return { ok: true, label: "OK", mist: [] }
+  const mist = []
+  if (!heeftFoto) mist.push("Foto")
+  if (!heeftInfo) mist.push("Info")
+  return { ok: false, label: mist.join(" + ") + " aanvullen", mist }
+}
+function plTeDoen() {
+  let n = 0
+  for (const key of ["etenDrinken", "shop"]) for (const it of (_pl[key] || [])) if (!plItemStatus(it).ok) n++
+  return n
+}
+function plUpdateOverzichtBadge() {
+  const b = document.getElementById("pl-ov-badge"); if (!b || !_pl) return
+  const n = plTeDoen()
+  b.textContent = n ? " " + n : ""
+}
+let _plOvOpen = {}
+function plToggleOvCat(k) { _plOvOpen[k] = !_plOvOpen[k]; renderPrijslijsten() }
+function plMarkOk(key, id) { const it = plItem(key, id); if (it) { it.okHandmatig = true; _plDirty = true; renderPrijslijsten() } }
+function plUnmarkOk(key, id) { const it = plItem(key, id); if (it) { delete it.okHandmatig; _plDirty = true; renderPrijslijsten() } }
+function plRenderOverzicht() {
+  let html = plMedsHtml()
+  let totaal = 0, ok = 0
+  const secties = []
+  for (const [key, titel] of [["etenDrinken", "🍺 Eten & Drinken"], ["shop", "🛒 Shop"]]) {
+    const items = _pl[key] || []
+    if (!items.length) continue
+    const cats = [], perCat = {}
+    for (const it of items) { const c = it.categorie || "Overig"; if (!perCat[c]) { perCat[c] = []; cats.push(c) } perCat[c].push(it) }
+    let lijstHtml = `<div class="pl-ovlijst">${fEsc(titel)}</div>`
+    for (const c of cats) {
+      const arr = perCat[c]; let cOk = 0
+      for (const it of arr) { totaal++; if (plItemStatus(it).ok) { ok++; cOk++ } }
+      const teDoen = arr.length - cOk, k = key + ":" + c, open = !!_plOvOpen[k]
+      const badge = teDoen ? `<span class="pl-badge pl-badge-warn">${teDoen} aan te vullen</span>` : `<span class="pl-badge pl-badge-ok">✓ compleet</span>`
+      lijstHtml += `<div class="pl-ovcat"><div class="pl-ovcathead" onclick="plToggleOvCat('${fJs(k)}')"><span class="pl-ovchev">${open ? "▾" : "▸"}</span> <b>${fEsc(c)}</b> <span class="pl-muted">${cOk}/${arr.length}</span> ${badge}</div>`
+      if (open) for (const it of arr) {
+        const s = plItemStatus(it)
+        lijstHtml += `<div class="pl-ovrow"><span class="pl-ovnaam">${fEsc(it.naam || "(naamloos)")}</span><span class="pl-badge ${s.ok ? "pl-badge-ok" : "pl-badge-warn"}">${fEsc(s.label)}${it.okHandmatig ? " (handmatig)" : ""}</span><span class="pl-ovacts"><button class="pl-iconbtn" title="Product-info" onclick="plInfoOpen('${key}','${fJs(it.id)}')">ℹ️</button><button class="pl-iconbtn" title="Foto koppelen" onclick="plFotoOpen('${key}','${fJs(it.id)}')">📷</button>${it.okHandmatig ? `<button class="pl-iconbtn" title="OK-markering weghalen" onclick="plUnmarkOk('${key}','${fJs(it.id)}')">↩︎</button>` : `<button class="pl-iconbtn" title="Markeer OK (geen foto/info nodig)" onclick="plMarkOk('${key}','${fJs(it.id)}')">✓</button>`}</span></div>`
+      }
+      lijstHtml += `</div>`
+    }
+    secties.push(lijstHtml)
+  }
+  const sum = `<div class="pl-ovsum">${ok} van ${totaal} producten compleet${ok < totaal ? ` · <b>${totaal - ok}</b> aan te vullen` : " 🎉"}</div>`
+  return html + sum + (secties.join("") || `<div class="pl-empty">Nog geen producten.</div>`)
+}
+// Product-info bewerken (modal)
+let _plInfoCtx = null
+function plInfoOpen(key, id) { _plInfoCtx = { key, id }; plInfoRender() }
+function plInfoClose() { _plInfoCtx = null; const ov = document.getElementById("pl-info-ov"); if (ov) ov.remove(); renderPrijslijsten() }
+function plInfoRender() {
+  if (!_plInfoCtx) return
+  const it = plItem(_plInfoCtx.key, _plInfoCtx.id); if (!it) return
+  let ov = document.getElementById("pl-info-ov")
+  if (!ov) { ov = document.createElement("div"); ov.id = "pl-info-ov"; ov.className = "pl-ov"; ov.onclick = (e) => { if (e.target === ov) plInfoClose() }; document.body.appendChild(ov) }
+  ov.innerHTML = `<div class="pl-ovcard">
+    <div class="pl-ovhead"><b>Product-info — ${fEsc(it.naam || "item")}</b><button class="pl-iconbtn" title="Sluiten" onclick="plInfoClose()">✕</button></div>
+    <textarea class="pl-in" rows="5" placeholder="Extra info over dit product (ingrediënten, smaak, herkomst, allergenen…). De bot gebruikt dit bij vragen over dit product." oninput="plSetInfo(this.value)">${fEsc(it.info || "")}</textarea>
+    <div class="pl-ovfoot"><span class="pl-muted">Vooral handig voor eten en speciale drankjes.</span><button class="btn" onclick="plInfoClose()">Klaar</button></div>
+  </div>`
+}
+function plSetInfo(val) { const it = plItem(_plInfoCtx.key, _plInfoCtx.id); if (it) { it.info = val; _plDirty = true } }
 function showPTab(tab) {
   _plTab = tab
   document.querySelectorAll(".pl-subtab").forEach(b => b.classList.toggle("active", b.dataset.pl === tab))
@@ -4837,8 +4934,9 @@ function showPTab(tab) {
 }
 function renderPrijslijsten() {
   const host = document.getElementById("pl-body"); if (!host || !_pl) return
-  host.innerHTML = _plTab === "tarieven" ? plRenderTarieven() : plRenderItems(_plTab)
+  host.innerHTML = _plTab === "tarieven" ? plRenderTarieven() : _plTab === "overzicht" ? plRenderOverzicht() : plRenderItems(_plTab)
   plUpdateStatus()
+  plUpdateOverzichtBadge()
 }
 function plUpdateStatus() {
   const el = document.getElementById("pl-status"); if (el) el.textContent = _plDirty ? "● Niet-opgeslagen wijzigingen" : ""
@@ -4864,6 +4962,7 @@ function plRenderItemRow(lijst, it) {
     <div class="pl-prijs"><span>€</span><input class="pl-in" value="${fAttr(it.prijs)}" placeholder="0,00" onchange="plSet('${lijst}','${id}','prijs',this.value)"></div>
     <input class="pl-in pl-cat-in" value="${fAttr(it.categorie)}" placeholder="Categorie" onchange="plSet('${lijst}','${id}','categorie',this.value); renderPrijslijsten()">
     <label class="pl-toggle" title="Aan = de bot mag dit item noemen"><input type="checkbox" ${it.beschikbaar !== false ? "checked" : ""} onchange="plSet('${lijst}','${id}','beschikbaar',this.checked)"> beschikbaar</label>
+    <button class="pl-iconbtn" title="Product-info bewerken" onclick="plInfoOpen('${lijst}','${id}')">ℹ️${(it.info && String(it.info).trim()) ? " ✓" : ""}</button>
     <button class="pl-iconbtn" title="Foto's koppelen aan dit item" onclick="plFotoOpen('${lijst}','${id}')">📷${n ? " " + n : ""}</button>
     <button class="pl-iconbtn pl-del" title="Dit item verwijderen" onclick="plDelItem('${lijst}','${id}')">🗑</button>
   </div>`
