@@ -4,6 +4,8 @@ const crypto = require("crypto")
 
 // Gedeelde helper uit lib/ (#71): robuust uitlezen van een Claude-respons (filtert text-blocks).
 const { leesClaudeTekst } = require("./lib/claude")
+// Bundled fallback voor de prijslijsten (menukaart + tarieven) zolang er nog niets in blob staat (#99).
+const PRIJSLIJSTEN_DEFAULT = require("./data/prijslijsten-default.json")
 
 const SYSTEM_PROMPT = `Je bent Mokum Bot, de digitale gast van Mokum Pool & Darts in Amsterdam Oost. Je helpt bezoekers snel aan de juiste informatie — zonder gedoe.
 
@@ -33,15 +35,10 @@ OPENINGSTIJDEN:
 - Vrijdag & zaterdag: 12:00 - 02:00
 - Zondag: 12:00 - 01:00
 
-TARIEVEN (BELANGRIJK: pool, biljart, darts en shuffleboard reken je PER TAFEL/BAAN/BORD — de speelplek — NIET per persoon. De prijs is hetzelfde, of je nu met 1, 2, 3 of meer mensen speelt; vermenigvuldig die tarieven dus NOOIT met het aantal spelers. De ENIGE uitzondering is de digitale game tafel — die is wél per speler):
-- Pool (American & English): €15,00/uur per tafel tot 19:00, €19,00/uur per tafel na 19:00
-- Biljart: €15,00/uur per tafel tot 19:00, €19,00/uur per tafel na 19:00
-- Maximaal 5 personen per pooltafel en per biljarttafel
-- Darts: €8,50/uur per bord (hele dag)
-- Shuffleboard: €14,50/uur per baan tot 19:00, €18,50/uur per baan na 19:00
-- Digitale game tafel: kost 1 credit (= €1,00) PER speler die meedoet aan een spel (dit is de enige activiteit die per persoon wordt gerekend). Bijvoorbeeld: met 4 spelers betaal je 4 credits = €4,00
-- Gezelschapsspelletjes bij de stamtafel: gratis / kosteloos te gebruiken
-- Parkeren: €2,20 per uur bij minimale besteding van €15
+TARIEVEN — REGELS (de ACTUELE PRIJZEN staan in de PRIJSLIJSTEN-sectie verderop in deze prompt; die is leidend — noem prijzen daaruit en verzin ze nooit):
+- Pool, biljart, darts en shuffleboard reken je PER TAFEL/BAAN/BORD (de speelplek), NIET per persoon: de prijs is hetzelfde of je nu met 1, 2, 3 of meer mensen speelt — vermenigvuldig een speeltarief dus NOOIT met het aantal spelers. De ENIGE uitzondering is de digitale game tafel: die is WÉL per speler.
+- Maximaal 5 personen per pooltafel en per biljarttafel.
+- Gezelschapsspelletjes bij de stamtafel: gratis / kosteloos te gebruiken.
 
 OPRICHTERS:
 - Nick van den Berg (professioneel poolspeler, meerdere Europese titels)
@@ -70,7 +67,7 @@ REGELS:
 - UITZONDERING — bij antwoorden over RESULTATEN, RANGLIJSTEN, WINNAARS of SPELERSPRESTATIES doe je dit NIET: geen multiple-choice menu en GEEN wedervragen. Beantwoord die direct met de aangeleverde data en sluit af volgens de resultaten-regel verderop (alleen het KNBB-rating-aanbod). Als er een data-sectie (BESTE SPELERS, VOLLEDIG OVERZICHT, SPELER-RESULTATEN, ...) is meegegeven, toon je die DATA — nooit een keuzemenu in plaats daarvan.
 - Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
 - LIDMAATSCHAP NIET PROACTIEF PROMOTEN: voeg NOOIT uit jezelf een wervende afsluiter over lidmaatschap toe (zoals "Interesse in lidmaatschap? Mail naar info@pooleninmokum.com — of stuur een appje naar Nick!"). Mokum wil lidmaatschap niet actief via de bot promoten. Alleen als iemand er EXPLICIET naar vraagt (bijv. "hoe word ik lid?", "kost lidmaatschap iets?") geef je kort en feitelijk antwoord en verwijs je naar info@pooleninmokum.com — zonder verkooptoon en zonder dit aan andere antwoorden te plakken. Dit geldt OOK bij leden-gerelateerde onderwerpen (leden-only events): je mag het onderwerp gewoon feitelijk uitleggen ("exclusief voor leden"), maar sluit NOOIT af met een wervende wedervraag of uitnodiging richting lidmaatschap, zoals "Wil je meer over lidmaatschap weten?", "Ben je al lid?" of "Wil je ook lid worden?". Stel zulke wedervragen uitsluitend als de bezoeker er zelf expliciet naar vraagt.
-- Bij vragen over eten, drinken, het menu, vegetarische opties, allergenen of specifieke gerechten: geef altijd de link naar de menukaart mee via [Bekijk de menukaart (PDF)](https://poolen-amsterdam.nl/wp-content/uploads/Mokum-menu-3.pdf) en beantwoord de vraag op basis van de beschikbare menu-informatie.
+- Bij vragen over eten, drinken, het menu, prijzen, vegetarische opties of specifieke gerechten/dranken: beantwoord op basis van de PRIJSLIJSTEN-sectie (menukaart) verderop in deze prompt — die is leidend voor beschikbaarheid en prijzen. Noem concrete prijzen uit die lijst en verzin nooit prijzen. (Er is geen aparte PDF-menukaart meer.)
 - Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket, K-Ball), English pool (blackball), darts (301, 501, cricket), biljart (libre, bandstoten, driebanden) en shuffleboard volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers. Herken ook slordige schrijfwijzen/typo's van deze namen en beantwoord gewoon met de juiste regels: bijv. "k ball"/"kball"/"k-ball"/"kbal" = K-Ball; "9ball"/"9 ball"/"9-ball"/"negenball" = 9-ball (idem 8-ball en 10-ball); "black ball" = blackball (English pool); "straight pool"/"14.1" = straight pool; "3 banden" = driebanden.
 - OFFICIËLE-REGELS-BRON: sluit een antwoord over de SPELREGELS van een spelvorm af met precies één regel in de vorm "📖 Officiële regels: [naam](url)" (vertaal alleen het woord "Officiële regels" mee naar de taal van de bezoeker; de URL blijft gelijk). Gebruik per spelvorm deze bron: Pool 8-/9-/10-ball + straight pool → gebruik ALTIJD exact deze vaste bron-regel: "📖 Officiële regels: [WPA](https://wpapool.com/rules-of-play/) — dezelfde regels gelden bij KNBB- en EPBF-toernooien." (alleen "Officiële regels" meevertalen); One Pocket → [One Pocket Organization](https://www.onepocket.org/rules/); English pool / blackball → [WPA Blackball](https://wpapool.com/); biljart libre/bandstoten/driebanden/kader → [UMB](https://umb-carom.org) (NL: [KNBB Carambole](https://www.carambole.nl)); darts 301/501/cricket → [WDF](https://dartswdf.com/rules); shuffleboard → [Shuffleboard Federation](https://www.shuffleboard.net). Voor **K-Ball** is er GÉÉN officiële bond (bedacht door Danny Kuykendall) — voeg dan GEEN "officiële regels"-regel toe. Voeg deze bron-regel ALLEEN toe bij echte spelregel-uitleg, niet bij andere antwoorden (zoals tarieven of openingstijden).
 
@@ -843,6 +840,67 @@ async function getFotoContext(message, sasToken) {
   }
 }
 
+// --- Prijslijsten: menukaart + speeltarieven live uit blob in de prompt (#99) ---
+function fmtPrijs(p) {
+  const s = String(p == null ? "" : p).trim()
+  return s ? "€" + s : ""
+}
+function groepPerCat(items) {
+  const m = new Map()
+  for (const e of items) {
+    const c = e.categorie || "Overig"
+    if (!m.has(c)) m.set(c, [])
+    m.get(c).push(e)
+  }
+  return m
+}
+function bouwPrijslijstTekst(doc) {
+  const out = []
+  const tarieven = (doc.tarieven || []).filter((t) => t && t.beschikbaar !== false)
+  if (tarieven.length) {
+    out.push("SPEEL TARIEVEN (per tafel/baan/bord tenzij anders vermeld — nooit vermenigvuldigen met het aantal spelers):")
+    for (const t of tarieven) {
+      const prijs = t.prijsNa19 && t.prijsNa19 !== t.prijsTot19
+        ? `${fmtPrijs(t.prijsTot19)} tot 19:00 / ${fmtPrijs(t.prijsNa19)} na 19:00`
+        : fmtPrijs(t.prijsTot19)
+      out.push(`- ${t.naam}: ${prijs}${t.eenheid ? " (" + t.eenheid + ")" : ""}${t.notitie ? " — " + t.notitie : ""}`)
+    }
+    out.push("")
+  }
+  const eten = (doc.etenDrinken || []).filter((e) => e && e.beschikbaar !== false && e.naam)
+  if (eten.length) {
+    out.push("MENUKAART (eten & drinken):")
+    for (const [cat, items] of groepPerCat(eten)) {
+      out.push(`[${cat}]`)
+      for (const e of items) out.push(`- ${e.naam} — ${fmtPrijs(e.prijs)}${e.beschrijving ? " (" + e.beschrijving + ")" : ""}`)
+    }
+    out.push("")
+  }
+  const shop = (doc.shop || []).filter((s) => s && s.beschikbaar !== false && s.naam)
+  if (shop.length) {
+    out.push("SHOP (keu-shop):")
+    for (const [cat, items] of groepPerCat(shop)) {
+      out.push(`[${cat}]`)
+      for (const s of items) out.push(`- ${s.naam} — ${fmtPrijs(s.prijs)}${s.beschrijving ? " (" + s.beschrijving + ")" : ""}`)
+    }
+  }
+  return out.join("\n").trim()
+}
+async function getPrijslijstenContext(sasToken) {
+  let doc = null
+  try {
+    if (sasToken) {
+      const raw = await fetchWithTimeout(
+        `https://${STORAGE_ACCOUNT}.blob.core.windows.net/prijslijsten/prijslijsten.json?${sasToken}`, 2500)
+      if (raw) { try { doc = JSON.parse(raw) } catch {} }
+    }
+  } catch {}
+  if (!doc) doc = PRIJSLIJSTEN_DEFAULT
+  const tekst = bouwPrijslijstTekst(doc)
+  if (!tekst) return null
+  return `---\nPRIJSLIJSTEN (leidend voor prijzen en beschikbaarheid; bedragen in euro's). Noem concrete prijzen uit deze lijst en verzin nooit prijzen; staat iets niet in de lijst of is het niet beschikbaar, zeg dat eerlijk. Er is geen aparte PDF-menukaart meer.\n\n${tekst}\n---`
+}
+
 // --- Standaardvragen: vast (goedgekeurd) antwoord serveren i.p.v. Claude (issue #33) ---
 const STD_CONTAINER = "standaardvragen"
 const STD_JACCARD_MIN = 0.72 // drempel voor een "lijkende" (niet exact getypte) vraag
@@ -1272,6 +1330,13 @@ app.http("chat", {
       } catch (err) {
         console.log("Foto ophalen mislukt:", err.message)
       }
+      let prijslijstContext = null
+      try {
+        prijslijstContext = await getPrijslijstenContext(sasToken)
+        if (prijslijstContext) console.log("Prijslijsten-context toegevoegd")
+      } catch (err) {
+        console.log("Prijslijsten ophalen mislukt:", err.message)
+      }
       // Statische system prompt apart houden zodat hij gecachet kan worden;
       // wisselende context (kennisbron, toernooidata) komt ná de cache-breakpoint.
       const dynamicParts = []
@@ -1286,6 +1351,7 @@ app.http("chat", {
       if (tournamentContext) dynamicParts.push(tournamentContext)
       if (resultatenContext) dynamicParts.push(resultatenContext)
       if (fotoContext) dynamicParts.push(fotoContext.text)
+      if (prijslijstContext) dynamicParts.push(prijslijstContext)
       const systemBlocks = [
         { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       ]
