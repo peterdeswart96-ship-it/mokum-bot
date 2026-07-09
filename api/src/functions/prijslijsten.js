@@ -85,7 +85,9 @@ function normItem(raw) {
     naam: asText(e.naam),
     prijs: asText(e.prijs),
     ...(e.beschrijving ? { beschrijving: asText(e.beschrijving) } : {}),
+    ...(e.info ? { info: asText(e.info) } : {}),
     beschikbaar: asBool(e.beschikbaar),
+    ...(e.okHandmatig ? { okHandmatig: true } : {}),
     fotos: asFotos(e.fotos),
   }
 }
@@ -106,6 +108,7 @@ function normDoc(raw) {
   const d = raw || {}
   return {
     ...(d._meta ? { _meta: d._meta } : {}),
+    mededelingen: Array.isArray(d.mededelingen) ? d.mededelingen.map((m) => asText(m).trim()).filter(Boolean) : [],
     etenDrinken: Array.isArray(d.etenDrinken) ? d.etenDrinken.map(normItem) : [],
     shop: Array.isArray(d.shop) ? d.shop.map(normItem) : [],
     tarieven: Array.isArray(d.tarieven) ? d.tarieven.map(normTarief) : [],

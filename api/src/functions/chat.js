@@ -67,7 +67,7 @@ REGELS:
 - UITZONDERING — bij antwoorden over RESULTATEN, RANGLIJSTEN, WINNAARS of SPELERSPRESTATIES doe je dit NIET: geen multiple-choice menu en GEEN wedervragen. Beantwoord die direct met de aangeleverde data en sluit af volgens de resultaten-regel verderop (alleen het KNBB-rating-aanbod). Als er een data-sectie (BESTE SPELERS, VOLLEDIG OVERZICHT, SPELER-RESULTATEN, ...) is meegegeven, toon je die DATA — nooit een keuzemenu in plaats daarvan.
 - Bij vragen over coaching, clinic, lessen, training of privéles: verwijs altijd door naar [nickvandenberg.com](https://nickvandenberg.com/) — dit is de website van Nick van den Berg voor pool clinics en privélessen.
 - LIDMAATSCHAP NIET PROACTIEF PROMOTEN: voeg NOOIT uit jezelf een wervende afsluiter over lidmaatschap toe (zoals "Interesse in lidmaatschap? Mail naar info@pooleninmokum.com — of stuur een appje naar Nick!"). Mokum wil lidmaatschap niet actief via de bot promoten. Alleen als iemand er EXPLICIET naar vraagt (bijv. "hoe word ik lid?", "kost lidmaatschap iets?") geef je kort en feitelijk antwoord en verwijs je naar info@pooleninmokum.com — zonder verkooptoon en zonder dit aan andere antwoorden te plakken. Dit geldt OOK bij leden-gerelateerde onderwerpen (leden-only events): je mag het onderwerp gewoon feitelijk uitleggen ("exclusief voor leden"), maar sluit NOOIT af met een wervende wedervraag of uitnodiging richting lidmaatschap, zoals "Wil je meer over lidmaatschap weten?", "Ben je al lid?" of "Wil je ook lid worden?". Stel zulke wedervragen uitsluitend als de bezoeker er zelf expliciet naar vraagt.
-- Bij vragen over eten, drinken, het menu, prijzen, vegetarische opties of specifieke gerechten/dranken: beantwoord op basis van de PRIJSLIJSTEN-sectie (menukaart) verderop in deze prompt — die is leidend voor beschikbaarheid en prijzen. Noem concrete prijzen uit die lijst en verzin nooit prijzen. (Er is geen aparte PDF-menukaart meer.)
+- Bij vragen over eten, drinken, het menu, prijzen, vegetarische opties of specifieke gerechten/dranken: beantwoord op basis van de PRIJSLIJSTEN-sectie (menukaart) verderop in deze prompt — die is leidend voor beschikbaarheid en prijzen. Noem concrete prijzen uit die lijst en verzin nooit prijzen. (Er is geen aparte PDF-menukaart meer.) Bij vragen over alcohol, sterke drank, borrel of shots: meld actief het relevante beleid uit de MEDEDELINGEN-sectie (o.a. dat Mokum alleen alcoholische dranken tot 14,9% schenkt — geen sterke drank daarboven).
 - Spelregels: leg de regels van pool (8-ball, 9-ball, 10-ball, straight pool, one pocket, K-Ball), English pool (blackball), darts (301, 501, cricket), biljart (libre, bandstoten, driebanden) en shuffleboard volledig uit als ernaar gevraagd wordt. Dit is nuttige informatie voor bezoekers. Herken ook slordige schrijfwijzen/typo's van deze namen en beantwoord gewoon met de juiste regels: bijv. "k ball"/"kball"/"k-ball"/"kbal" = K-Ball; "9ball"/"9 ball"/"9-ball"/"negenball" = 9-ball (idem 8-ball en 10-ball); "black ball" = blackball (English pool); "straight pool"/"14.1" = straight pool; "3 banden" = driebanden.
 - OFFICIËLE-REGELS-BRON: sluit een antwoord over de SPELREGELS van een spelvorm af met precies één regel in de vorm "📖 Officiële regels: [naam](url)" (vertaal alleen het woord "Officiële regels" mee naar de taal van de bezoeker; de URL blijft gelijk). Gebruik per spelvorm deze bron: Pool 8-/9-/10-ball + straight pool → gebruik ALTIJD exact deze vaste bron-regel: "📖 Officiële regels: [WPA](https://wpapool.com/rules-of-play/) — dezelfde regels gelden bij KNBB- en EPBF-toernooien." (alleen "Officiële regels" meevertalen); One Pocket → [One Pocket Organization](https://www.onepocket.org/rules/); English pool / blackball → [WPA Blackball](https://wpapool.com/); biljart libre/bandstoten/driebanden/kader → [UMB](https://umb-carom.org) (NL: [KNBB Carambole](https://www.carambole.nl)); darts 301/501/cricket → [WDF](https://dartswdf.com/rules); shuffleboard → [Shuffleboard Federation](https://www.shuffleboard.net). Voor **K-Ball** is er GÉÉN officiële bond (bedacht door Danny Kuykendall) — voeg dan GEEN "officiële regels"-regel toe. Voeg deze bron-regel ALLEEN toe bij echte spelregel-uitleg, niet bij andere antwoorden (zoals tarieven of openingstijden).
 
@@ -856,6 +856,12 @@ function groepPerCat(items) {
 }
 function bouwPrijslijstTekst(doc) {
   const out = []
+  const meds = (doc.mededelingen || []).filter(Boolean)
+  if (meds.length) {
+    out.push("MEDEDELINGEN / BELEID (vermeld dit actief waar relevant):")
+    for (const m of meds) out.push(`- ${m}`)
+    out.push("")
+  }
   const tarieven = (doc.tarieven || []).filter((t) => t && t.beschikbaar !== false)
   if (tarieven.length) {
     out.push("SPEEL TARIEVEN (per tafel/baan/bord tenzij anders vermeld — nooit vermenigvuldigen met het aantal spelers):")
@@ -872,7 +878,7 @@ function bouwPrijslijstTekst(doc) {
     out.push("MENUKAART (eten & drinken):")
     for (const [cat, items] of groepPerCat(eten)) {
       out.push(`[${cat}]`)
-      for (const e of items) out.push(`- ${e.naam} — ${fmtPrijs(e.prijs)}${e.beschrijving ? " (" + e.beschrijving + ")" : ""}`)
+      for (const e of items) out.push(`- ${e.naam} — ${fmtPrijs(e.prijs)}${e.beschrijving ? " (" + e.beschrijving + ")" : ""}${e.info ? " · " + e.info : ""}`)
     }
     out.push("")
   }

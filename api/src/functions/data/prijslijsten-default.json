@@ -3,6 +3,9 @@
     "bron": "Eten/Drinken geseed uit Mokum-menu-3.pdf (2026-07-08); tarieven uit de chat-systeemprompt. Prijzen a.u.b. in het dashboard controleren tegen de fysieke kaart.",
     "prijsNotatie": "bedrag in euro's zonder €-teken, Nederlandse komma (bijv. \"3,40\")"
   },
+  "mededelingen": [
+    "Mokum schenkt alleen alcoholische dranken tot 14,9% alcohol — geen sterke drank/spirits daarboven."
+  ],
   "etenDrinken": [
     { "id": "heineken-fluitje", "categorie": "Bier — tap", "naam": "Heineken fluitje", "prijs": "3,40", "beschikbaar": true, "fotos": [] },
     { "id": "heineken-vaasje", "categorie": "Bier — tap", "naam": "Heineken vaasje", "prijs": "3,70", "beschikbaar": true, "fotos": [] },
