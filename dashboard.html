@@ -347,6 +347,7 @@
   <div class="tab-bar">
     <button class="tab active" id="toptab-analyse" onclick="showAnalyse('overzicht')">🔍 Analyse</button>
     <button class="tab" onclick="showTab('fotos', this)">📷 Foto's</button>
+    <button class="tab" onclick="showTab('prijslijsten', this)">💶 Prijslijsten</button>
     <button class="tab" onclick="showTab('widget', this)">🎨 Widget <span style="display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:#e5484d;border-radius:5px;padding:1px 5px;margin-left:4px;vertical-align:middle;">bèta</span></button>
     <button class="tab" onclick="showTab('handleiding', this)">📖 Handleiding</button>
   </div>
@@ -1239,6 +1240,58 @@
     </main>
   </div>
 
+  <!-- TAB: PRIJSLIJSTEN (#99) -->
+  <div id="tab-prijslijsten" class="tab-content">
+    <style>
+      #tab-prijslijsten .pl-subnav { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+      .pl-subtab { background:var(--card-2); border:1px solid var(--border); color:var(--muted); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+      .pl-subtab.active { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+      .pl-toolbar { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+      .pl-count { font-size:12px; color:var(--muted); }
+      .pl-empty { padding:20px; text-align:center; color:var(--muted-2); font-size:13px; border:1px dashed var(--border); border-radius:10px; }
+      .pl-cat { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); margin:16px 0 6px; }
+      .pl-row, .pl-trow { display:flex; gap:8px; align-items:center; padding:5px 0; flex-wrap:wrap; }
+      .pl-in { background:var(--input); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:7px 9px; font-size:13px; }
+      .pl-in:focus { outline:none; border-color:var(--accent); }
+      .pl-naam { flex:1; min-width:150px; }
+      .pl-cat-in { width:150px; }
+      .pl-notitie { flex-basis:100%; }
+      .pl-prijs { display:flex; align-items:center; gap:3px; background:var(--input); border:1px solid var(--border); border-radius:8px; padding:0 8px; }
+      .pl-prijs > span { color:var(--muted); font-size:13px; }
+      .pl-prijs .pl-in { border:none; background:none; width:66px; padding:7px 2px; }
+      .pl-toggle { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--text-2); white-space:nowrap; }
+      .pl-iconbtn { background:var(--card-2); border:1px solid var(--border); color:var(--text-2); border-radius:8px; padding:6px 9px; cursor:pointer; font-size:13px; }
+      .pl-iconbtn:hover { border-color:var(--accent); }
+      .pl-del:hover { border-color:var(--bad); color:var(--bad); }
+      .pl-savebar { position:sticky; bottom:0; background:var(--bg); border-top:1px solid var(--border); margin-top:18px; padding:12px 0; display:flex; justify-content:flex-end; align-items:center; gap:14px; }
+      .pl-status { font-size:12px; color:#e5a23d; }
+      .pl-ov { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99999; display:flex; align-items:center; justify-content:center; padding:16px; }
+      .pl-ovcard { background:var(--card); border:1px solid var(--border); border-radius:14px; width:100%; max-width:520px; max-height:82vh; display:flex; flex-direction:column; padding:16px; gap:10px; }
+      .pl-ovhead { display:flex; justify-content:space-between; align-items:center; }
+      .pl-chips { display:flex; flex-wrap:wrap; gap:5px; min-height:22px; }
+      .pl-chip { display:inline-flex; align-items:center; gap:5px; background:var(--divider); border:1px solid var(--border); border-radius:14px; padding:2px 4px 2px 10px; font-size:11px; color:var(--text); }
+      .pl-chip button { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; }
+      .pl-fresults { overflow-y:auto; border:1px solid var(--border); border-radius:8px; background:var(--input); max-height:38vh; }
+      .pl-fres { padding:6px 10px; font-size:12px; cursor:pointer; border-bottom:1px solid var(--border); }
+      .pl-fres:hover { background:var(--divider); }
+      .pl-ovfoot { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+      .pl-muted { font-size:11px; color:var(--muted); }
+    </style>
+    <main>
+      <div class="insight-box" style="margin-bottom:16px;">💶 Beheer de <b>prijslijsten</b> die de bot live gebruikt: <b>Eten &amp; Drinken</b> (menukaart), <b>Shop</b> (keu-shop) en <b>Speel tarieven</b>. Wijzig prijzen inline, zet items op (on)beschikbaar, koppel foto's — en klik <b>Opslaan</b>. De bot leest de nieuwe prijzen meteen; er is geen aparte menukaart-PDF meer. <b>Let op:</b> de eten/drinken-prijzen zijn uit de oude PDF geseed — controleer ze tegen de fysieke kaart.</div>
+      <div class="pl-subnav">
+        <button class="pl-subtab active" data-pl="etenDrinken" onclick="showPTab('etenDrinken')">🍺 Eten &amp; Drinken</button>
+        <button class="pl-subtab" data-pl="shop" onclick="showPTab('shop')">🛒 Shop</button>
+        <button class="pl-subtab" data-pl="tarieven" onclick="showPTab('tarieven')">🎱 Speel tarieven</button>
+      </div>
+      <div id="pl-body"><div class="pl-empty">Laden…</div></div>
+      <div class="pl-savebar">
+        <span id="pl-status" class="pl-status"></span>
+        <button class="btn-red" id="pl-save-btn" onclick="bewaarPrijslijsten()">💾 Opslaan</button>
+      </div>
+    </main>
+  </div>
+
   <!-- TAB: WIDGET CUSTOMIZER (#77) -->
   <div id="tab-widget" class="tab-content">
     <style>
@@ -1731,6 +1784,7 @@ function showTab(name, btn) {
   const subnav = document.getElementById("analyse-subnav")
   if (subnav) subnav.style.display = "none"
   if (name === "fotos") laadFotos()
+  if (name === "prijslijsten") laadPrijslijsten()
   if (name === "widget") initWidgetCustomizer()
   if (name === "rubriekvragen") laadStandaardvragen()
   // Tab is nu zichtbaar → speel de cascade-intro van die tab opnieuw af.
@@ -4753,6 +4807,151 @@ function wcReloadPreview() {
   wcReady = false
   wcIframe().src = "widget-preview.html?v=" + Date.now()
   // wcPush() volgt automatisch zodra de iframe "ready" meldt
+}
+
+// ── Prijslijsten-beheer (#99): Eten & Drinken, Shop, Speel tarieven ──────────────
+let _pl = null            // geladen document { etenDrinken, shop, tarieven }
+let _plTab = "etenDrinken"
+let _plDirty = false
+let _plFotoCtx = null
+
+async function laadPrijslijsten() {
+  const host = document.getElementById("pl-body")
+  if (host) host.innerHTML = `<div class="pl-empty">Laden…</div>`
+  try {
+    const r = await fetch(`${API}/prijslijsten`)
+    _pl = await r.json()
+  } catch (e) { _pl = null }
+  if (!_pl || typeof _pl !== "object") _pl = {}
+  _pl.etenDrinken = Array.isArray(_pl.etenDrinken) ? _pl.etenDrinken : []
+  _pl.shop = Array.isArray(_pl.shop) ? _pl.shop : []
+  _pl.tarieven = Array.isArray(_pl.tarieven) ? _pl.tarieven : []
+  _plDirty = false
+  if (!alleFotos.length) { try { const rr = await fetch(`${API}/fotos`); alleFotos = (await rr.json()).fotos || [] } catch (e) {} }
+  renderPrijslijsten()
+}
+function showPTab(tab) {
+  _plTab = tab
+  document.querySelectorAll(".pl-subtab").forEach(b => b.classList.toggle("active", b.dataset.pl === tab))
+  renderPrijslijsten()
+}
+function renderPrijslijsten() {
+  const host = document.getElementById("pl-body"); if (!host || !_pl) return
+  host.innerHTML = _plTab === "tarieven" ? plRenderTarieven() : plRenderItems(_plTab)
+  plUpdateStatus()
+}
+function plUpdateStatus() {
+  const el = document.getElementById("pl-status"); if (el) el.textContent = _plDirty ? "● Niet-opgeslagen wijzigingen" : ""
+}
+function plItem(lijst, id) { return (_pl[lijst] || []).find(x => x.id === id) }
+function plSet(lijst, id, veld, val) { const it = plItem(lijst, id); if (it) { it[veld] = val; _plDirty = true; plUpdateStatus() } }
+function plRenderItems(lijst) {
+  const items = _pl[lijst] || []
+  const cats = [], perCat = {}
+  for (const it of items) { const c = it.categorie || "Overig"; if (!perCat[c]) { perCat[c] = []; cats.push(c) } perCat[c].push(it) }
+  let html = `<div class="pl-toolbar"><button class="btn-red" onclick="plAddItem('${lijst}')">+ Item toevoegen</button><span class="pl-count">${items.length} item(s)</span></div>`
+  if (!items.length) html += `<div class="pl-empty">Nog geen items. Klik op “+ Item toevoegen”.</div>`
+  for (const c of cats) {
+    html += `<div class="pl-cat">${fEsc(c)}</div>`
+    for (const it of perCat[c]) html += plRenderItemRow(lijst, it)
+  }
+  return html
+}
+function plRenderItemRow(lijst, it) {
+  const id = fJs(it.id), n = (it.fotos || []).length
+  return `<div class="pl-row">
+    <input class="pl-in pl-naam" value="${fAttr(it.naam)}" placeholder="Naam" onchange="plSet('${lijst}','${id}','naam',this.value)">
+    <div class="pl-prijs"><span>€</span><input class="pl-in" value="${fAttr(it.prijs)}" placeholder="0,00" onchange="plSet('${lijst}','${id}','prijs',this.value)"></div>
+    <input class="pl-in pl-cat-in" value="${fAttr(it.categorie)}" placeholder="Categorie" onchange="plSet('${lijst}','${id}','categorie',this.value); renderPrijslijsten()">
+    <label class="pl-toggle" title="Aan = de bot mag dit item noemen"><input type="checkbox" ${it.beschikbaar !== false ? "checked" : ""} onchange="plSet('${lijst}','${id}','beschikbaar',this.checked)"> beschikbaar</label>
+    <button class="pl-iconbtn" title="Foto's koppelen aan dit item" onclick="plFotoOpen('${lijst}','${id}')">📷${n ? " " + n : ""}</button>
+    <button class="pl-iconbtn pl-del" title="Dit item verwijderen" onclick="plDelItem('${lijst}','${id}')">🗑</button>
+  </div>`
+}
+function plAddItem(lijst) {
+  _pl[lijst].push({ id: "item-" + Math.random().toString(36).slice(2, 9), categorie: "", naam: "", prijs: "", beschikbaar: true, fotos: [] })
+  _plDirty = true; renderPrijslijsten()
+}
+function plDelItem(lijst, id) {
+  if (!confirm("Dit item uit de lijst verwijderen?")) return
+  _pl[lijst] = _pl[lijst].filter(x => x.id !== id); _plDirty = true; renderPrijslijsten()
+}
+function plTarief(id) { return (_pl.tarieven || []).find(x => x.id === id) }
+function plSetT(id, veld, val) { const t = plTarief(id); if (t) { t[veld] = val; _plDirty = true; plUpdateStatus() } }
+function plRenderTarieven() {
+  const tar = _pl.tarieven || []
+  let html = `<div class="pl-toolbar"><button class="btn-red" onclick="plAddTarief()">+ Tarief toevoegen</button><span class="pl-count">${tar.length} tarief(en)</span></div>`
+  if (!tar.length) html += `<div class="pl-empty">Nog geen tarieven.</div>`
+  for (const t of tar) {
+    const id = fJs(t.id)
+    html += `<div class="pl-trow">
+      <input class="pl-in pl-naam" value="${fAttr(t.naam)}" placeholder="Naam" onchange="plSetT('${id}','naam',this.value)">
+      <div class="pl-prijs" title="Tot 19:00"><span>€</span><input class="pl-in" value="${fAttr(t.prijsTot19)}" placeholder="tot 19u" onchange="plSetT('${id}','prijsTot19',this.value)"></div>
+      <div class="pl-prijs" title="Na 19:00"><span>€</span><input class="pl-in" value="${fAttr(t.prijsNa19)}" placeholder="na 19u" onchange="plSetT('${id}','prijsNa19',this.value)"></div>
+      <input class="pl-in pl-cat-in" value="${fAttr(t.eenheid)}" placeholder="Eenheid" onchange="plSetT('${id}','eenheid',this.value)">
+      <label class="pl-toggle" title="Aan = per speler i.p.v. per tafel/baan/bord"><input type="checkbox" ${t.perPersoon ? "checked" : ""} onchange="plSetT('${id}','perPersoon',this.checked)"> per speler</label>
+      <label class="pl-toggle"><input type="checkbox" ${t.beschikbaar !== false ? "checked" : ""} onchange="plSetT('${id}','beschikbaar',this.checked)"> beschikbaar</label>
+      <button class="pl-iconbtn pl-del" title="Dit tarief verwijderen" onclick="plDelTarief('${id}')">🗑</button>
+      <input class="pl-in pl-notitie" value="${fAttr(t.notitie)}" placeholder="Notitie (bijv. per tafel — niet per persoon)" onchange="plSetT('${id}','notitie',this.value)">
+    </div>`
+  }
+  return html
+}
+function plAddTarief() {
+  _pl.tarieven.push({ id: "tarief-" + Math.random().toString(36).slice(2, 9), naam: "", prijsTot19: "", prijsNa19: "", eenheid: "", perPersoon: false, notitie: "", beschikbaar: true })
+  _plDirty = true; renderPrijslijsten()
+}
+function plDelTarief(id) {
+  if (!confirm("Dit tarief verwijderen?")) return
+  _pl.tarieven = _pl.tarieven.filter(x => x.id !== id); _plDirty = true; renderPrijslijsten()
+}
+// Foto-koppeling (hergebruikt de fotobibliotheek alleFotos)
+function plFotoOpen(lijst, id) { _plFotoCtx = { lijst, id, zoek: "" }; plFotoRender() }
+function plFotoClose() { _plFotoCtx = null; const ov = document.getElementById("pl-foto-ov"); if (ov) ov.remove(); renderPrijslijsten() }
+function plFotoRender() {
+  if (!_plFotoCtx) return
+  const it = plItem(_plFotoCtx.lijst, _plFotoCtx.id); if (!it) return
+  let ov = document.getElementById("pl-foto-ov")
+  if (!ov) { ov = document.createElement("div"); ov.id = "pl-foto-ov"; ov.className = "pl-ov"; ov.onclick = (e) => { if (e.target === ov) plFotoClose() }; document.body.appendChild(ov) }
+  const chips = (it.fotos || []).map(b => {
+    const f = alleFotos.find(x => x.bestand === b); const cap = f ? (f.onderschrift || f.bestand) : b
+    return `<span class="pl-chip">${fEsc(cap)}<button title="Ontkoppelen" onclick="plFotoDel('${fJs(b)}')">×</button></span>`
+  }).join("") || `<span class="pl-muted">Nog geen foto's gekoppeld.</span>`
+  ov.innerHTML = `<div class="pl-ovcard">
+    <div class="pl-ovhead"><b>Foto's koppelen — ${fEsc(it.naam || "item")}</b><button class="pl-iconbtn" title="Sluiten" onclick="plFotoClose()">✕</button></div>
+    <div class="pl-chips">${chips}</div>
+    <input class="pl-in" id="pl-fotozoek" placeholder="🔎 Zoek foto om te koppelen…" oninput="_plFotoCtx.zoek=this.value; plFotoResults()" value="${fAttr(_plFotoCtx.zoek)}">
+    <div class="pl-fresults" id="pl-fresults"></div>
+    <div class="pl-ovfoot"><span class="pl-muted">Nieuwe foto nodig? Voeg 'm toe in de tab <b>📷 Foto's</b> en koppel 'm hier.</span><button class="btn" onclick="plFotoClose()">Klaar</button></div>
+  </div>`
+  plFotoResults()
+}
+function plFotoResults() {
+  const box = document.getElementById("pl-fresults"); if (!box || !_plFotoCtx) return
+  const it = plItem(_plFotoCtx.lijst, _plFotoCtx.id); if (!it) return
+  const gekoppeld = new Set(it.fotos || []), zoek = (_plFotoCtx.zoek || "").toLowerCase()
+  let pool = alleFotos.filter(f => !gekoppeld.has(f.bestand))
+  if (zoek) pool = pool.filter(f => [(f.onderschrift || ""), (f.categorie || ""), (f.bestand || "")].join(" ").toLowerCase().includes(zoek))
+  if (!pool.length) { box.innerHTML = `<div class="pl-muted" style="padding:8px;">${alleFotos.length ? "Geen foto's gevonden." : "Geen foto's in de bibliotheek — voeg ze toe via de tab Foto's."}</div>`; return }
+  box.innerHTML = pool.slice(0, 40).map(f => {
+    const label = (f.onderschrift || f.bestand) + (f.categorie ? ` — ${f.categorie}` : "")
+    return `<div class="pl-fres" onclick="plFotoAdd('${fJs(f.bestand)}')"><span style="color:var(--good);font-weight:700;">＋</span> ${fEsc(label)}</div>`
+  }).join("") + (pool.length > 40 ? `<div class="pl-muted" style="padding:5px 9px;">…en nog ${pool.length - 40}. Verfijn met zoeken.</div>` : "")
+}
+function plFotoAdd(bestand) { const it = plItem(_plFotoCtx.lijst, _plFotoCtx.id); if (!it) return; it.fotos = it.fotos || []; if (!it.fotos.includes(bestand)) it.fotos.push(bestand); _plDirty = true; plFotoRender() }
+function plFotoDel(bestand) { const it = plItem(_plFotoCtx.lijst, _plFotoCtx.id); if (!it) return; it.fotos = (it.fotos || []).filter(b => b !== bestand); _plDirty = true; plFotoRender() }
+async function bewaarPrijslijsten() {
+  const btn = document.getElementById("pl-save-btn"); if (btn) { btn.disabled = true; btn.textContent = "Opslaan…" }
+  try {
+    const resp = await fetch(`${API}/prijslijsten`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", doc: _pl, wachtwoord: sessionStorage.getItem("mkm-pwd") || "" }),
+    })
+    const d = await resp.json().catch(() => ({}))
+    if (resp.ok && d.success) { _pl = d.doc || _pl; _plDirty = false; toonToast("✅ Prijslijsten opgeslagen", "info"); renderPrijslijsten() }
+    else if (resp.status !== 403) { toonToast("Opslaan mislukt: " + (d.error || resp.status), "warn") }
+  } catch (e) { toonToast("Opslaan mislukt (netwerkfout)", "warn") }
+  if (btn) { btn.disabled = false; btn.textContent = "💾 Opslaan" }
 }
 
 // ── Tooltips: centrale, onderhoudbare toewijzing (#96) ───────────────────────────
