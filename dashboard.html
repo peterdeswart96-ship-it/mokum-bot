@@ -54,12 +54,13 @@
 
   /* Dashboard */
   #dashboard { display: none; }
-  header { background: var(--bg); padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1320px; margin: 0 auto; }
-  .hdr-brand { display: flex; align-items: center; gap: 12px; }
+  header { background: var(--bg); padding: 16px 22px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; max-width: 1320px; margin: 0 auto; }
+  .hdr-left { display: flex; align-items: center; }
+  .hdr-center { text-align: center; }
   .hdr-ball { width: 36px; height: 36px; border-radius: 50%; background: #000; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 3px; }
   .hdr-ball img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .hdr-ball span { width: 19px; height: 19px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #000; }
-  header h1 { font-size: 15px; font-weight: 800; letter-spacing: 0.11em; color: var(--text); }
+  header h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.04em; color: var(--text); }
   /* #95 ingelogd account + rol */
   .hdr-account { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); margin-right: 4px; }
   .acc-who { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -75,8 +76,8 @@
   .toast.show { opacity: 1; transform: none; }
   .toast-warn { border: 1.5px solid #e5484d; }
   .toast-info { border-left: 4px solid var(--accent); }
-  header .hdr-sub { color: var(--accent); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
-  .hdr-actions { display: flex; align-items: center; gap: 10px; }
+  header .hdr-sub { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0.03em; }
+  .hdr-actions { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
   .icon-btn { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); }
   .icon-btn:hover { border-color: var(--accent); }
   .logout-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 9px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; box-shadow: var(--shadow); }
@@ -329,12 +330,12 @@
 <!-- Dashboard -->
 <div id="dashboard">
   <header>
-    <div class="hdr-brand">
+    <div class="hdr-left">
       <div class="hdr-ball"><img src="mokum-logo.png" alt="Mokum Pool &amp; Darts"></div>
-      <div>
-        <h1><span style="color:var(--accent)">Mokum</span> Dashboard</h1>
-        <div class="hdr-sub" id="header-sub">Beheer</div>
-      </div>
+    </div>
+    <div class="hdr-center">
+      <h1><span style="color:var(--accent)">Mokum</span> Dashboard</h1>
+      <div class="hdr-sub" id="header-sub">Beheer</div>
     </div>
     <div class="hdr-actions">
       <div id="hdr-account" class="hdr-account" style="display:none;"></div>
