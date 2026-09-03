@@ -36,15 +36,23 @@ app.http("gesprekken", {
         if (!magMinstens(auth.roles, "users")) return { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Onvoldoende rechten voor deze actie" }) }
       }
       if (action === "list") {
-        const options = {
-          hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
-          path: `/gesprekken?restype=container&comp=list&maxresults=500&${sasToken}`,
-          method: "GET",
-          headers: { "x-ms-version": "2020-04-08" },
-        }
-        const result = await httpsRequest(options)
-        const matches = [...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)]
-        const namen = matches.map(m => m[1])
+        // Paginatie via NextMarker (zelfde patroon als 'cleanup' hieronder) — bij
+        // een enkele pagina met maxresults=500 vielen gesprekken ná de 500e (oudste-eerst
+        // sortering) stil weg zodra de container die grens passeerde.
+        const namen = []
+        let marker = ""
+        do {
+          const options = {
+            hostname: `${STORAGE_ACCOUNT}.blob.core.windows.net`,
+            path: `/gesprekken?restype=container&comp=list&maxresults=5000${marker ? `&marker=${encodeURIComponent(marker)}` : ""}&${sasToken}`,
+            method: "GET",
+            headers: { "x-ms-version": "2020-04-08" },
+          }
+          const result = await httpsRequest(options)
+          namen.push(...[...result.body.matchAll(/<Name>([^<]+)<\/Name>/g)].map(m => m[1]))
+          const nm = result.body.match(/<NextMarker>([^<]*)<\/NextMarker>/)
+          marker = nm ? nm[1] : ""
+        } while (marker)
         return {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
