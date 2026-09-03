@@ -3180,7 +3180,10 @@ function renderChartOnderwerpen() {
 
 // Kosten
 function renderKosten() {
-  const n = gefilterdEcht().length
+  // "Analyseer met AI" stuurt bij een klik altijd hooguit 50 gesprekken (zie startAnalyse:
+  // analyseBron.slice(0, 50)) — cap de schatting hierop zodat ze overeenkomt met wat een
+  // klik écht kost, i.p.v. mee te schommelen met hoeveel er toevallig in de browser geladen zijn.
+  const n = Math.min(gefilterdEcht().length, 50)
   const tokensPerGesprek = 3 * (800 + 600)  // 3 berichten gemiddeld
   const totaalTokens = n * tokensPerGesprek
   const input = (n * 3 * 800 / 1e6) * 1    // Haiku 4.5: $1 per 1M input tokens
