@@ -369,7 +369,7 @@
     <main>
 
       <div class="metrics" id="metrics-mark">
-        <div class="metric"><div class="metric-val red" id="m-totaal">—</div><div class="metric-label">Totaal gesprekken</div></div>
+        <div class="metric" title="Werkelijk aantal gesprekken in opslag (incl. testvragen) — de overige cijfers en grafieken gebruiken de laatste 200-500 geladen gesprekken voor snelheid."><div class="metric-val red" id="m-totaal">—</div><div class="metric-label">Totaal gesprekken</div></div>
         <div class="metric"><div class="metric-val" id="m-vandaag">—</div><div class="metric-label">Vandaag</div></div>
         <div class="metric"><div class="metric-val" id="m-week">—</div><div class="metric-label">Deze week</div></div>
         <div class="metric"><div class="metric-val" id="m-actief">—</div><div class="metric-label">Actieve dagen</div></div>
@@ -1614,6 +1614,7 @@ function toggleTheme() {
 document.addEventListener("DOMContentLoaded", applyThemeIcon)
 
 let alleGesprekken = []
+let totaalBlobsInStorage = 0 // écht aantal blobs in de container; alleGesprekken.length is beperkt tot wat er geladen is (200-500)
 let gefilterd = []
 let alleenOnbeantwoord = false
 let alleenTest = false
@@ -2893,10 +2894,17 @@ async function laadGesprekken(achtergrond) {
     // de timestamp, dus aflopend sorteren = nieuwste eerst.
     const namen = (data.namen || []).slice().sort().reverse()
 
+    // Écht totaal in opslag — komt gratis mee met de lijst-aanroep hierboven, dus meteen
+    // tonen (ook al is er verder niets nieuws om te renderen). Anders blijft de tegel
+    // voor altijd op de 200-detailload-limiet staan zodra de opslag die grens passeert.
+    totaalBlobsInStorage = namen.length
+    const totEl = document.getElementById("m-totaal")
+    if (totEl) totEl.textContent = totaalBlobsInStorage
+
     const bekend = new Set(alleGesprekken.map(g => g.naam))
     // Eerste load: de 200 meest recente. Achtergrond-ververs: alleen wat nog niet geladen is.
     const nieuweNamen = achtergrond ? namen.filter(n => !bekend.has(n)) : namen.slice(0, 200)
-    if (achtergrond && !nieuweNamen.length) return // niets nieuws — geen re-render nodig
+    if (achtergrond && !nieuweNamen.length) return // niets nieuws om te laden — de tegel hierboven is al bijgewerkt
 
     // Gesprekken parallel ophalen in batches (sneller dan één voor één),
     // met een concurrency-limiet zodat we de API niet overspoelen.
@@ -2982,7 +2990,8 @@ function updateMetricsMarkNick() {
   const weekGeleden = new Date(nu); weekGeleden.setDate(weekGeleden.getDate() - 7)
 
   const bron = gefilterdEcht()
-  document.getElementById("m-totaal").textContent = echteGesprekken().length
+  // m-totaal wordt al direct in laadGesprekken() gezet vanuit totaalBlobsInStorage (het
+  // écht aantal in opslag) — niet hier opnieuw op basis van de gecapte alleGesprekken-lijst.
   document.getElementById("m-vandaag").textContent = bron.filter(g => new Date(g.timestamp).toDateString() === vandaag).length
   document.getElementById("m-week").textContent = bron.filter(g => new Date(g.timestamp) >= weekGeleden).length
   document.getElementById("m-actief").textContent = new Set(bron.map(g => new Date(g.timestamp).toDateString())).size
