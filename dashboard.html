@@ -1662,6 +1662,7 @@ function logout() {
   sessionStorage.removeItem("mkm-auth")
   sessionStorage.removeItem("mkm-expiry")
   sessionStorage.removeItem("mkm-pwd")
+  stopAutoRefresh()
   if (msalApp && entraAccount) {
     // Lokale MSAL-sessie opruimen zonder naar Microsoft te redirecten.
     try { msalApp.logoutRedirect({ account: entraAccount, onRedirectNavigate: () => false }) } catch (e) {}
@@ -1675,7 +1676,27 @@ function toonDashboard() {
   document.getElementById("dashboard").style.display = "block"
   updateAccountUI()
   laadGesprekken()
+  startAutoRefresh()
 }
+
+// Ververst nieuwe gesprekken op de achtergrond zodat je niet meer hoeft uit/in te
+// loggen om net binnengekomen vragen te zien. Pauzeert als het browsertabblad niet
+// zichtbaar is (geen zin om te pollen als niemand kijkt) en ververst meteen zodra je
+// terugkeert naar het tabblad.
+let autoRefreshTimer = null
+function startAutoRefresh() {
+  if (autoRefreshTimer) return
+  autoRefreshTimer = setInterval(() => {
+    if (document.hidden || !isIngelogd()) return
+    laadGesprekken(true)
+  }, 120000) // elke 2 minuten
+}
+function stopAutoRefresh() {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null }
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && isIngelogd()) laadGesprekken(true)
+})
 
 // ── Microsoft Entra (MSAL) — dual-mode login, Fase C (#42) ─────────────────
 // Náást het gedeelde wachtwoord kun je met een Microsoft-account inloggen. De
@@ -2861,23 +2882,28 @@ async function deleteFoto(bestand) {
   else alert("Mislukt: " + (r.error || "onbekend"))
 }
 
-// Data laden
-async function laadGesprekken() {
+// Data laden. achtergrond=true bij een auto-ververs (zie startAutoRefresh): haalt dan
+// alléén de nog niet geladen (nieuwe) gesprekken op i.p.v. alles opnieuw, en reset geen
+// actief filter of datumkeuze — anders zou elke stille ververs die ongemerkt leegmaken.
+async function laadGesprekken(achtergrond) {
   try {
     const resp = await fetch(`${API}/gesprekken?action=list`, { headers: authHeaders() })
     const data = await resp.json()
     // Azure geeft de blob-namen alfabetisch (oudste eerst). De namen beginnen met
-    // de timestamp, dus aflopend sorteren = nieuwste eerst. Zo laden we de 200
-    // MEEST RECENTE gesprekken i.p.v. de oudste 200.
+    // de timestamp, dus aflopend sorteren = nieuwste eerst.
     const namen = (data.namen || []).slice().sort().reverse()
+
+    const bekend = new Set(alleGesprekken.map(g => g.naam))
+    // Eerste load: de 200 meest recente. Achtergrond-ververs: alleen wat nog niet geladen is.
+    const nieuweNamen = achtergrond ? namen.filter(n => !bekend.has(n)) : namen.slice(0, 200)
+    if (achtergrond && !nieuweNamen.length) return // niets nieuws — geen re-render nodig
 
     // Gesprekken parallel ophalen in batches (sneller dan één voor één),
     // met een concurrency-limiet zodat we de API niet overspoelen.
-    const gesprekken = []
-    const batch = namen.slice(0, 200)
+    const opgehaald = []
     const CONCURRENCY = 12
-    for (let i = 0; i < batch.length; i += CONCURRENCY) {
-      const deel = batch.slice(i, i + CONCURRENCY)
+    for (let i = 0; i < nieuweNamen.length; i += CONCURRENCY) {
+      const deel = nieuweNamen.slice(i, i + CONCURRENCY)
       const resultaten = await Promise.all(deel.map(async (naam) => {
         try {
           const r = await fetch(`${API}/gesprekken?action=get&blob=${encodeURIComponent(naam)}`, { headers: authHeaders() })
@@ -2885,24 +2911,38 @@ async function laadGesprekken() {
           return { naam, ...g }
         } catch { return null }
       }))
-      for (const g of resultaten) { if (g) gesprekken.push(g) }
+      for (const g of resultaten) { if (g) opgehaald.push(g) }
     }
 
-    alleGesprekken = gesprekken.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-    gefilterd = [...alleGesprekken]
+    alleGesprekken = (achtergrond ? [...opgehaald, ...alleGesprekken] : opgehaald)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 500) // veiligheidsgrens tegen onbeperkte groei bij een lang openstaand tabblad
 
-    // Stel standaard datumfilter in
-    const nu = new Date()
-    const maandGeleden = new Date(nu)
-    maandGeleden.setMonth(maandGeleden.getMonth() - 1)
-    document.getElementById("datum-van").value = maandGeleden.toISOString().split("T")[0]
-    document.getElementById("datum-tot").value = nu.toISOString().split("T")[0]
+    if (!achtergrond) {
+      // Stel standaard datumfilter in (alleen bij eerste load — niet stil overschrijven
+      // tijdens een auto-ververs als de gebruiker zelf al een periode koos).
+      const nu = new Date()
+      const maandGeleden = new Date(nu)
+      maandGeleden.setMonth(maandGeleden.getMonth() - 1)
+      document.getElementById("datum-van").value = maandGeleden.toISOString().split("T")[0]
+      document.getElementById("datum-tot").value = nu.toISOString().split("T")[0]
+      gefilterd = [...alleGesprekken]
+    } else {
+      // Een actief zoekfilter (tekst, periode of statusvinkjes) opnieuw toepassen zodat
+      // nieuwe gesprekken er meteen doorheen gefilterd worden i.p.v. het filter te resetten.
+      const zoekActief = document.getElementById("zoek-input")?.value
+        || document.getElementById("zoek-van")?.value || document.getElementById("zoek-tot")?.value
+        || document.getElementById("verberg-ok")?.checked || document.getElementById("verberg-test")?.checked
+        || alleenOnbeantwoord || alleenNietOk || alleenOk || alleenTeReviewen || alleenFotoNodig || alleenTest
+      if (zoekActief) zoekGesprekken()
+      else gefilterd = [...alleGesprekken]
+    }
 
     updateAlles()
     // Foto-catalogus laden zodat we in Gesprekken kunnen tonen welke foto's getriggerd zijn
     zorgFotoCatalogus().then(() => { if (alleFotos.length) renderGesprekken() })
   } catch(e) {
-    document.getElementById("gesprekken-lijst").innerHTML = `<div class="empty">Fout bij laden: ${e.message}</div>`
+    if (!achtergrond) document.getElementById("gesprekken-lijst").innerHTML = `<div class="empty">Fout bij laden: ${e.message}</div>`
   }
 }
 
